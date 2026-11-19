@@ -59,7 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.removeAllItems()
         if case .available(let v) = Updater.shared.state {
             // a newer version was found: to the About page, where it installs
-            let u = ClosureMenuItem(title: String(format: L.t("updMenu"), v), key: "") { SettingsWindow.show(tab: 4) }
+            let u = ClosureMenuItem(title: String(format: L.t("updMenu"), v), key: "") { SettingsWindow.show(tab: SettingsWindow.updatesTab) }
             u.image = NSImage(systemSymbolName: "arrow.down.circle.fill", accessibilityDescription: nil)
             menu.addItem(u)
             menu.addItem(.separator())
@@ -78,7 +78,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let perm = ClosureMenuItem(title: L.t("permissions") + "…", key: "") { PermissionsWindow.show() }
         if !Permission.allRequiredGranted { perm.title = "⚠︎ " + perm.title }
         menu.addItem(perm)
-        menu.addItem(ClosureMenuItem(title: L.t("about"), key: "") { SettingsWindow.show(tab: 4) })
+        menu.addItem(ClosureMenuItem(title: L.t("about"), key: "") { SettingsWindow.show(tab: SettingsWindow.aboutTab) })
         menu.addItem(.separator())
         menu.addItem(ClosureMenuItem(title: L.t("quit"), key: "q") { NSApp.terminate(nil) })
     }

@@ -198,7 +198,8 @@ final class HotKeyField: NSButton {
 final class SettingsWindow: NSWindowController, NSWindowDelegate {
     static var shared: SettingsWindow?
 
-    /// `tab`: the page to open on (4: About).
+    /// `tab`: the page to open on.
+    static let updatesTab = 4, aboutTab = 5
     static func show(tab: Int? = nil) {
         if shared == nil { shared = SettingsWindow() }
         if let tab { shared?.tabsController?.selectedTabViewItemIndex = tab }
@@ -448,11 +449,13 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
         // the pages in a macOS settings toolbar: icons above names, the window as tall as each page
         let about = buildAbout()
+        let updatesView = updatesPage ?? NSView()
 
         let pageList: [(String, String, NSView)] = [("keyboard", L.t("hotkeys"), shortcuts),
                                                   ("gearshape", L.t("general"), general),
                                                   ("camera.viewfinder", L.t("quickTab"), quick),
                                                   ("lock.shield", L.t("permissions"), perms),
+                                                  ("arrow.down.circle", L.t("secUpdate"), updatesView),
                                                   ("info.circle", L.t("aboutTab"), about)]
         let tabs = SettingsTabs()
         tabsController = tabs
@@ -488,7 +491,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         refreshPermissions()
     }
 
-    // MARK: the About page
+    // MARK: the Updates and About pages
 
     private let updateDetail = NSTextField(labelWithString: "")
     private let updateButton = NSButton(title: "", target: nil, action: nil)
@@ -531,13 +534,14 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         controls.alignment = .centerY
         let updateRow = row(("arrow.down.circle.fill", .systemBlue), L.t("softwareUpdate"), nil, controls)
         (updateRow.arrangedSubviews.dropFirst().first as? NSStackView)?.addArrangedSubview(updateDetail)
-        let updates = section(L.t("secUpdate"), [
+        let updates = section(nil, [
             updateRow,
             row(("clock.arrow.circlepath", .systemGreen), L.t("autoCheck"), L.t("autoCheckDetail"),
                 toggle(Prefs.shared.autoCheckUpdates, #selector(toggleAutoCheck(_:)))),
-        ])
+        ], note(String(format: L.t("currentVersion"), Updater.current)))
         Updater.shared.onChange[ObjectIdentifier(self)] = { [weak self] st in self?.showUpdate(st) }
         showUpdate(Updater.shared.state)
+        updatesPage = updates
 
         // links
         func open(_ url: String) -> () -> Void { { if let u = URL(string: url) { NSWorkspace.shared.open(u) } } }
@@ -551,8 +555,11 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
             row(("pc", .systemTeal), L.t("originalWin"), nil, LinkButton("", "MrTangLuyao/sniplite ›", open("https://github.com/MrTangLuyao/sniplite"))),
             row(("doc.text.fill", .systemGray), L.t("license"), nil, license),
         ], note(L.t("aboutFoot")))
-        return stack([head, updates, links])
+        return stack([head, links])
     }
+
+    /// The Updates page, made with the About page (they share the update state).
+    private var updatesPage: NSView?
 
     private func showUpdate(_ st: Updater.State) {
         notesLink?.isHidden = true
