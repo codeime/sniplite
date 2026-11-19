@@ -71,10 +71,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(perm)
         menu.addItem(ClosureMenuItem(title: L.t("about"), key: "") {
             NSApp.activate()
-            NSApp.orderFrontStandardAboutPanel(options: [
-                .credits: NSAttributedString(string: "https://github.com/MrTangLuyao/sniplite",
-                                             attributes: [.font: NSFont.systemFont(ofSize: 11)]),
-            ])
+            // this repository, then the original it comes from
+            let credits = NSMutableAttributedString()
+            let center = NSMutableParagraphStyle()
+            center.alignment = .center
+            func line(_ text: String, link: String?, color: NSColor = .labelColor) {
+                var a: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 11), .paragraphStyle: center,
+                                                        .foregroundColor: color]
+                if let link { a[.link] = URL(string: link) }
+                credits.append(NSAttributedString(string: text, attributes: a))
+            }
+            line("github.com/codeime/sniplite", link: "https://github.com/codeime/sniplite")
+            line("\n" + L.t("basedOn") + " ", link: nil, color: .secondaryLabelColor)
+            line("MrTangLuyao/sniplite", link: "https://github.com/MrTangLuyao/sniplite")
+            NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
         })
         menu.addItem(.separator())
         menu.addItem(ClosureMenuItem(title: L.t("quit"), key: "q") { NSApp.terminate(nil) })

@@ -7,11 +7,11 @@
 
 # sniplite
 
-**Una herramienta diminuta y rápida para capturar la pantalla y fijar imágenes, con el núcleo escrito en ensamblador**
+**Una herramienta diminuta y rápida para capturar la pantalla y fijar imágenes en macOS**
 
 [![English](https://img.shields.io/badge/English-eaeef2?style=flat-square)](../README.md) [![简体中文](https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-eaeef2?style=flat-square)](README.zh-CN.md) [![繁體中文](https://img.shields.io/badge/%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87-eaeef2?style=flat-square)](README.zh-TW.md) [![日本語](https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-eaeef2?style=flat-square)](README.ja.md) [![한국어](https://img.shields.io/badge/%ED%95%9C%EA%B5%AD%EC%96%B4-eaeef2?style=flat-square)](README.ko.md) [![Français](https://img.shields.io/badge/Fran%C3%A7ais-eaeef2?style=flat-square)](README.fr.md) [![Deutsch](https://img.shields.io/badge/Deutsch-eaeef2?style=flat-square)](README.de.md) [![Español](https://img.shields.io/badge/Espa%C3%B1ol-1677e5?style=flat-square)](README.es.md)
 
-[![versión](https://img.shields.io/github/v/tag/MrTangLuyao/sniplite?sort=date&label=versi%C3%B3n&style=flat-square&color=1677e5)](https://github.com/MrTangLuyao/sniplite/releases) [![sistema](https://img.shields.io/badge/sistema-Windows%2010%20%2F%2011-3b82f6?style=flat-square)](#descargar) [![licencia](https://img.shields.io/badge/licencia-MIT-3b82f6?style=flat-square)](../LICENSE)
+[![versión](https://img.shields.io/github/v/release/codeime/sniplite?label=versi%C3%B3n&style=flat-square&color=1677e5)](https://github.com/codeime/sniplite/releases) [![sistema](https://img.shields.io/badge/sistema-macOS%2014%2B-3b82f6?style=flat-square)](#descargar) [![licencia](https://img.shields.io/badge/licencia-MIT-3b82f6?style=flat-square)](../LICENSE)
 
 [**Descargar**](#descargar) | [Atajos predeterminados](#atajos-predeterminados) | [Preguntas frecuentes](#preguntas-frecuentes)
 
@@ -25,102 +25,82 @@
 
 ## Características
 
-- **Rápido**: pulsa F1 y la captura está ahí, antes que en el 99 % de las herramientas de captura
-- **Ligero**: unos 280 KB, sin nada más que instalar; el núcleo de captura y dibujo está escrito en ensamblador
-- **Fijar**: fija una captura por encima de todas las ventanas para tenerla a la vista mientras trabajas
-- **Completo**: capturas, imágenes fijadas, flechas, texto, mosaico: no falta nada
-- **Reconocimiento de texto**: lee el texto de una captura, tablas incluidas; un módulo opcional que funciona por completo en tu equipo
-- **Capturas con desplazamiento**: desplaza la página y se va uniendo sola
-- **Limpio**: sin anuncios, de código abierto, sin archivos de registro, sin recopilar datos
-- **Multilingüe**: 8 idiomas; sigue el de Windows salvo que elijas otro
+- **Rápida**: pulsa F1 y la captura está lista al instante, en todas las pantallas
+- **Encuentra lo que señalas**: la ventana, o la parte de una ventana (un botón, un campo, una lista) bajo el ratón se selecciona sola; la rueda pasa a partes más grandes
+- **Dibujo**: rectángulos, elipses, líneas, flechas, lápiz, marcador, texto, números y mosaico, cada uno con su tamaño y opacidad; todo lo dibujado se puede seleccionar y cambiar después
+- **Fijar**: fija una captura, o lo que copiaste, sobre todas las ventanas; amplíala, cambia su opacidad, vuelve a dibujar en ella
+- **Reconocimiento de texto**: lee el texto de una captura, tablas incluidas, con Vision de Apple en este Mac (opcional, desactivado por defecto)
+- **Ligera**: unos 1,3 MB, nativa en Apple Silicon e Intel, unos 15–25 MB de memoria en reposo
+- **Limpia**: código abierto, sin anuncios, no recoge ni envía nada
+- **Idiomas**: English, 简体中文, 繁體中文, según el sistema
 
 ## Descargar
 
-Descarga el instalador más reciente en [Releases](https://github.com/MrTangLuyao/sniplite/releases/latest).
+Descarga `sniplite_<versión>_macos.zip` desde [Releases](https://github.com/codeime/sniplite/releases/latest), descomprímelo y mueve `sniplite.app` a Aplicaciones. Necesita macOS 14 Sonoma o posterior.
 
-También hay dos versiones portables, sin instalación: `sniplite_<versión>_portable_x64.exe`, y `sniplite_<versión>_portable_with_OCR_x64.exe`, que incluye el módulo de reconocimiento de texto.
+sniplite no está notarizada por Apple, así que al principio macOS la bloquea («no se puede abrir» o «está dañada»). Tras moverla a Aplicaciones, ejecuta una vez:
 
-**macOS**: una versión nativa para macOS 14 o posterior (Apple Silicon e Intel) está en [`macos`](../macos/README.md). Compílala con `macos/build.sh`, copia `sniplite.app` a Aplicaciones y, como no está notarizada, ejecuta una vez `xattr -dr com.apple.quarantine "/Applications/sniplite.app"`.
+```bash
+xattr -dr com.apple.quarantine "/Applications/sniplite.app"
+```
 
 > [!TIP]
-> El icono está en el extremo derecho de la barra de tareas; si no lo ves, haz clic en la flecha pequeña. Para tenerlo siempre a la vista, busca «Otros iconos de la bandeja del sistema» en la configuración de Windows y activa sniplite.
+> sniplite está en la barra de menús (unas tijeras) y no tiene icono en el Dock. La primera vez muestra qué permitir: Grabación de pantalla para capturar, y Accesibilidad para las teclas F1–F12 y para encontrar las partes de las ventanas.
 
 ## Atajos predeterminados
 
 | Tecla | Qué hace |
 | --- | --- |
 | **F1** | Capturar |
-| **Shift+F1** | Captura rápida: la pantalla donde está el ratón, directamente a un archivo (la carpeta se elige en los ajustes) |
-| **F3** | Fijar en pantalla la imagen o el texto copiado |
-| **Shift+F3** | Ocultar / mostrar todas las imágenes fijadas |
-| **F4** | Capturar y leer el texto (con el módulo de reconocimiento de texto) |
-| **Shift+F4** | Capturar y copiar el texto |
-| **Enter** | Copiar la captura |
-| **Ctrl+S** | Guardar la captura |
-| **Ctrl+T** | Fijar la captura en pantalla |
-| **Clic central** | Fijar la captura en pantalla |
-| **Ctrl+O** | Reconocer el texto de la selección |
-| **Ctrl+Shift+C** | Copiar el texto de la selección |
-| **Ctrl+L** | Captura con desplazamiento: desplaza y se une sola |
-| **Esc** | Cancelar la captura |
-| **Flechas**, **W A S D** | Mover el cursor o la selección un píxel; con Shift, diez |
-| **Rueda** | Al capturar: elegir una ventana mayor o menor; sobre una imagen fijada: zoom |
-| **Doble clic** | Cerrar una imagen fijada |
+| **⇧F1** | Captura rápida: la pantalla bajo el ratón directamente a un archivo (si está activada en los ajustes) |
+| **F3** | Fijar la imagen o el texto copiado |
+| **⇧F3** | Ocultar / mostrar todas las imágenes fijadas |
+| **F4** / **⇧F4** | Capturar y leer / copiar el texto (con el reconocimiento activado) |
+| **Intro** / doble clic | Copiar la captura |
+| **⌘S** | Guardar |
+| **⌘T** / clic central | Fijar |
+| **⌘Z** / **⇧⌘Z** | Deshacer / rehacer |
+| **Esc** / clic derecho | Un paso atrás; al final, cancelar |
+| **Flechas**, **W A S D** | Mover un píxel; con Mayúsculas, diez |
+| **Rueda** / dos dedos | Al elegir: una parte mayor o menor; con una herramienta: su tamaño; sobre una imagen fijada: zoom |
+| **⌥ + rueda** | Con una herramienta: su opacidad; sobre una imagen fijada: su opacidad |
+| **⌘E** (sobre una imagen fijada) | Volver a dibujar en ella |
+
+Todos los atajos están en [el README de la versión de macOS](../macos/README.md#shortcuts); los globales se cambian en los ajustes.
 
 ## Preguntas frecuentes
 
-**¿Cuánto ocupa?**
+**¿Por qué macOS dice que sniplite «no se puede abrir» o «está dañada»?**
 
-Muy poco: menos de 1 MB.
+No está notarizada por Apple. Ejecuta una vez el comando `xattr` de [Descargar](#descargar): quita la marca que macOS pone a los archivos descargados.
 
-**¿Por qué es tan rápido?**
+**¿Por qué F1 cambia el brillo?**
 
-Las partes que deben ser rápidas (captura, composición, dibujo y la pantalla de captura) están escritas en ensamblador x86-64 y el resto en C, sin el runtime de C. La captura se lee directamente de la tarjeta gráfica y se entrega a Windows para componerla en la GPU, mucho más rápido que los métodos habituales de captura en Windows.
+Los atajos F1–F12 necesitan el permiso de Accesibilidad (en macOS 27 se llama «Device Control and Data Access»). Actívalo desde el icono de la barra de menús, en Permissions….
 
-**¿Cómo se compara con otras herramientas?**
+**¿Hay que volver a dar los permisos tras actualizar?**
 
-| Programa | Descarga | Memoria en reposo | Del atajo a listo |
-| --- | --- | --- | --- |
-| **sniplite** | 0,4 MB | 11 MB | 12 ms |
-| Snipaste 2.11.3 | 19 MB | 50 MB | 121 ms |
-| PixPin 3.6.6 | 66 MB | 31 MB | 142 ms |
-| Greenshot 1.3.328 | 4 MB | 16 MB | 252 ms |
-| Flameshot 15.0.0 | 18 MB | 6 MB | sin medir |
-| ShareX 22.4.0 | 139 MB | 58 MB | sin medir |
+Normalmente sí: sniplite está firmada ad hoc, así que macOS ve cada versión como una app nueva. sniplite borra sola las entradas antiguas y abre su página de permisos; vuelve a arrastrarla a la lista.
 
-<sub>Es una prueba informal, solo como referencia.</sub>
+**¿Cómo leo el texto de una captura?**
 
-**¿Cómo saco el texto de una captura?**
-
-Selecciona una zona y pulsa el botón de texto (Ctrl+O): el texto aparece en un panel junto a la selección, donde puedes seleccionarlo, editarlo y copiarlo. Una tabla conserva sus columnas y se pega en una hoja de cálculo celda por celda, o como Markdown si lo prefieres. Ctrl+Shift+C copia el texto directamente. Hace falta el módulo de reconocimiento de texto (12 MB; los modelos PaddleOCR PP-OCRv6 con ONNX Runtime, todo en tu equipo): instálalo en la pestaña OCR de los ajustes, márcalo en el instalador o usa la versión portable con OCR. Mientras no esté instalado, los botones de texto no se muestran. F4 y Shift+F4 inician una captura que lee o copia el texto al momento.
-
-**¿Cómo hago una captura larga?**
-
-Selecciona la zona, pulsa el botón de captura con desplazamiento (Ctrl+L) y desplaza la página tú mismo. sniplite une lo que va pasando, y una franja junto a la zona muestra el resultado. Enter copia y Esc cancela; también puedes guardarla, fijarla o leer su texto.
+Activa Text recognition en Settings › General. Luego usa los botones de texto de la barra de herramientas, ⌘O, o F4 / ⇧F4. Funciona con Vision de Apple en este Mac; no se envía nada.
 
 **¿Cuánta memoria usa?**
 
-Unos 50 MB casi siempre, la mayor parte ocupada por el controlador gráfico, y un poco más justo después de capturar. Para usar menos, elige Ligero en la pestaña Captura de los ajustes: unos 2 MB, con capturas más lentas.
+Unos 15–25 MB en reposo. Una captura solo guarda la imagen de la pantalla mientras está abierta y luego la suelta.
 
-**¿Qué deja en mi equipo?**
+**¿Dónde están sus ajustes y su registro?**
 
-No necesita permisos de administrador ni toca el registro. Al cambiar un ajuste se crea un archivo de ajustes; bórralo para volver a los valores predeterminados.
+Los ajustes están en las preferencias de la app (`defaults read io.github.mrtangluyao.sniplite`); un registro breve de atajos, permisos y tiempos de reconocimiento está en `~/Library/Logs/sniplite.log`.
 
-**¿Cómo cambio el idioma?**
+**¿Cómo la desinstalo?**
 
-sniplite sigue el idioma de Windows. Para usar otro, abre los ajustes desde el icono de la bandeja y elígelo en Idioma.
+Ciérrala desde la barra de menús y borra `sniplite.app` de Aplicaciones. Para borrar también sus ajustes, ejecuta `defaults delete io.github.mrtangluyao.sniplite`; si sigue en Privacidad y seguridad de los Ajustes del Sistema, quítala también ahí.
 
-**¿Cómo se actualiza?**
+**¿Hay versión para Windows?**
 
-Una vez al día, sniplite pregunta a GitHub si hay una versión más reciente. Si la hay, aparece un aviso abajo a la derecha y un clic lo actualiza. Solo se comprueba el número de versión y no se envía nada; puedes desactivarlo en los ajustes.
-
-**¿Cómo se desinstala?**
-
-Haz clic en «Desinstalar sniplite» en la carpeta sniplite del menú Inicio. Se eliminan el programa, sus ajustes y sus accesos directos.
-
-**¿Tiene línea de comandos?**
-
-Sí. Ejecuta `sniplite help` para ver los comandos.
+Sí, la original: [MrTangLuyao/sniplite](https://github.com/MrTangLuyao/sniplite/releases/latest).
 
 ## Ajustes
 

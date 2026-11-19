@@ -7,11 +7,11 @@
 
 # sniplite
 
-**아주 가볍고 빠른 화면 캡처, 고정 도구. 핵심은 어셈블리로 작성했습니다**
+**아주 가볍고 빠른 macOS 화면 캡처·고정 도구**
 
 [![English](https://img.shields.io/badge/English-eaeef2?style=flat-square)](../README.md) [![简体中文](https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-eaeef2?style=flat-square)](README.zh-CN.md) [![繁體中文](https://img.shields.io/badge/%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87-eaeef2?style=flat-square)](README.zh-TW.md) [![日本語](https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-eaeef2?style=flat-square)](README.ja.md) [![한국어](https://img.shields.io/badge/%ED%95%9C%EA%B5%AD%EC%96%B4-1677e5?style=flat-square)](README.ko.md) [![Français](https://img.shields.io/badge/Fran%C3%A7ais-eaeef2?style=flat-square)](README.fr.md) [![Deutsch](https://img.shields.io/badge/Deutsch-eaeef2?style=flat-square)](README.de.md) [![Español](https://img.shields.io/badge/Espa%C3%B1ol-eaeef2?style=flat-square)](README.es.md)
 
-[![버전](https://img.shields.io/github/v/tag/MrTangLuyao/sniplite?sort=date&label=%EB%B2%84%EC%A0%84&style=flat-square&color=1677e5)](https://github.com/MrTangLuyao/sniplite/releases) [![시스템](https://img.shields.io/badge/%EC%8B%9C%EC%8A%A4%ED%85%9C-Windows%2010%20%2F%2011-3b82f6?style=flat-square)](#다운로드) [![라이선스](https://img.shields.io/badge/%EB%9D%BC%EC%9D%B4%EC%84%A0%EC%8A%A4-MIT-3b82f6?style=flat-square)](../LICENSE)
+[![버전](https://img.shields.io/github/v/release/codeime/sniplite?label=%EB%B2%84%EC%A0%84&style=flat-square&color=1677e5)](https://github.com/codeime/sniplite/releases) [![시스템](https://img.shields.io/badge/%EC%8B%9C%EC%8A%A4%ED%85%9C-macOS%2014%2B-3b82f6?style=flat-square)](#다운로드) [![라이선스](https://img.shields.io/badge/%EB%9D%BC%EC%9D%B4%EC%84%A0%EC%8A%A4-MIT-3b82f6?style=flat-square)](../LICENSE)
 
 [**다운로드**](#다운로드) | [기본 단축키](#기본-단축키) | [자주 묻는 질문](#자주-묻는-질문)
 
@@ -25,102 +25,82 @@
 
 ## 특징
 
-- **빠름**: F1을 누르면 바로 캡처. 스크린샷 프로그램의 99%보다 빨리 화면이 뜹니다
-- **가벼움**: 본체 약 280KB, 따로 설치할 런타임이 없고 캡처와 그리기의 핵심 코드는 어셈블리입니다
-- **화면 고정**: 스크린샷을 모든 창 위에 고정합니다. 다른 창으로 바꿔도 가려지지 않아 비교하며 보기 좋습니다
-- **충분한 기능**: 캡처, 고정, 화살표, 텍스트, 모자이크까지 모두 있습니다
-- **텍스트 인식**: 캡처 속의 글자와 표를 읽어 냅니다. 선택해서 설치하는 모듈이며 모두 이 컴퓨터에서 동작합니다
-- **스크롤 캡처**: 페이지를 스크롤하면 그 자리에서 이어 붙입니다
-- **깔끔함**: 광고 없음, 오픈 소스, 로그 없음, 데이터 수집 없음
-- **다국어**: 8개 언어 지원. 기본은 Windows 언어를 따르고 직접 고를 수도 있습니다
+- **빠름**: F1을 누르면 바로 캡처할 수 있고, 모든 디스플레이를 지원합니다
+- **자동 선택**: 마우스 아래의 창이나 창 안의 요소(버튼, 입력란, 목록)를 자동으로 고르고, 휠로 바깥쪽까지 넓힐 수 있습니다
+- **그리기**: 사각형, 타원, 직선, 화살표, 펜, 형광펜, 글자, 번호, 모자이크. 도구마다 굵기와 불투명도를 기억하고, 그린 것은 나중에 다시 골라 바꿀 수 있습니다
+- **고정**: 캡처나 복사한 내용을 모든 창 위에 고정합니다. 확대·축소, 불투명도 조절, 다시 편집이 됩니다
+- **글자 인식**: 캡처의 글자를 표의 열까지 살려 읽습니다. Apple의 Vision으로 이 Mac에서 동작합니다(선택, 기본은 꺼짐)
+- **가벼움**: 약 1.3 MB, Apple 실리콘과 Intel을 기본 지원, 대기 중 메모리 약 15–25 MB
+- **깔끔함**: 오픈 소스, 광고 없음, 데이터를 모으거나 보내지 않습니다
+- **언어**: English, 简体中文, 繁體中文 (시스템을 따름)
 
 ## 다운로드
 
-[Releases](https://github.com/MrTangLuyao/sniplite/releases/latest)에서 최신 설치 파일을 받으세요.
+[Releases](https://github.com/codeime/sniplite/releases/latest)에서 `sniplite_<버전>_macos.zip`을 내려받아 압축을 풀고 `sniplite.app`을 "응용 프로그램"으로 옮기세요. macOS 14 Sonoma 이상이 필요합니다.
 
-설치가 필요 없는 포터블 버전도 두 가지 있습니다. `sniplite_<버전>_portable_x64.exe` 와 텍스트 인식 모듈을 포함한 `sniplite_<버전>_portable_with_OCR_x64.exe` 입니다.
+sniplite는 Apple 공증을 받지 않아 처음에는 macOS가 막습니다("열 수 없음" 또는 "손상됨"). "응용 프로그램"으로 옮긴 뒤 한 번 실행하세요:
 
-**macOS**: macOS 14 이상(Apple 실리콘과 Intel)용 네이티브 버전은 [`macos`](../macos/README.md)에 있습니다. `macos/build.sh`로 빌드하고 `sniplite.app`을 응용 프로그램에 복사한 뒤, 공증되지 않았으므로 `xattr -dr com.apple.quarantine "/Applications/sniplite.app"`를 한 번 실행하세요.
+```bash
+xattr -dr com.apple.quarantine "/Applications/sniplite.app"
+```
 
 > [!TIP]
-> 아이콘은 작업 표시줄 오른쪽 끝에 있습니다. 보이지 않으면 그곳의 작은 화살표를 누르세요. 항상 보이게 하려면 Windows 설정에서 "기타 시스템 트레이 아이콘"을 검색해 sniplite를 켜세요.
+> sniplite는 메뉴 막대(가위 아이콘)에 있고 Dock에는 나타나지 않습니다. 처음 실행하면 필요한 권한을 보여 줍니다: 캡처를 위한 "화면 기록"과, F1–F12 키와 창 안의 요소를 찾기 위한 "손쉬운 사용"입니다.
 
 ## 기본 단축키
 
 | 키 | 동작 |
 | --- | --- |
 | **F1** | 캡처 |
-| **Shift+F1** | 빠른 캡처: 마우스가 있는 화면을 바로 파일로 저장 (저장 위치는 설정에서 지정) |
-| **F3** | 복사한 이미지나 텍스트를 화면에 고정 |
-| **Shift+F3** | 고정 이미지 모두 숨기기 / 표시 |
-| **F4** | 캡처하고 텍스트 인식 (텍스트 인식 모듈 필요) |
-| **Shift+F4** | 캡처하고 텍스트 바로 복사 |
-| **Enter** | 캡처 복사 |
-| **Ctrl+S** | 캡처 저장 |
-| **Ctrl+T** | 캡처를 화면에 고정 |
-| **가운데 클릭** | 캡처를 화면에 고정 |
-| **Ctrl+O** | 선택 영역의 텍스트 인식 |
-| **Ctrl+Shift+C** | 선택 영역의 텍스트 바로 복사 |
-| **Ctrl+L** | 스크롤 캡처 (스크롤하면 자동으로 이어 붙임) |
-| **Esc** | 캡처 취소 |
-| **방향키**, **W A S D** | 커서나 선택 영역을 1픽셀 이동, Shift를 누른 채로는 10픽셀 |
-| **휠** | 캡처 중에는 선택할 창 범위 변경, 고정 이미지에서는 확대/축소 |
-| **더블클릭** | 고정 이미지 닫기 |
+| **⇧F1** | 빠른 캡처: 마우스가 있는 화면을 바로 파일로 저장(설정에서 켠 경우) |
+| **F3** | 복사한 이미지나 글자를 고정 |
+| **⇧F3** | 모든 고정 숨기기 / 보이기 |
+| **F4** / **⇧F4** | 캡처하고 글자 읽기 / 복사(글자 인식이 켜져 있을 때) |
+| **Enter** / 더블 클릭 | 캡처 복사 |
+| **⌘S** | 저장 |
+| **⌘T** / 가운데 클릭 | 고정 |
+| **⌘Z** / **⇧⌘Z** | 실행 취소 / 다시 실행 |
+| **Esc** / 오른쪽 클릭 | 한 단계 뒤로, 마지막에는 취소 |
+| **화살표 키**, **W A S D** | 1픽셀 이동, Shift를 누르면 10픽셀 |
+| **휠** / 두 손가락 | 선택 중: 더 크거나 작은 요소, 도구 사용 중: 굵기, 고정 위: 확대·축소 |
+| **⌥ + 휠** | 도구 사용 중: 불투명도, 고정 위: 고정의 불투명도 |
+| **⌘E** (고정 위) | 고정에 다시 그리기 |
+
+모든 단축키는 [macOS 버전 README](../macos/README.md#shortcuts)에 있습니다. 전역 단축키는 설정에서 바꿀 수 있습니다.
 
 ## 자주 묻는 질문
 
-**크기는 얼마나 되나요?**
+**"열 수 없음" 또는 "손상됨"이라고 나오는 이유는?**
 
-아주 작습니다. 1MB도 안 됩니다.
+Apple 공증을 받지 않았기 때문입니다. [다운로드](#다운로드)의 `xattr` 명령을 한 번 실행하면 내려받은 파일에 붙는 표시가 지워집니다.
 
-**왜 이렇게 빠른가요?**
+**F1을 누르면 밝기가 바뀌는 이유는?**
 
-빨라야 하는 부분(캡처, 화면 합성, 그리기, 선택 화면)은 x86-64 어셈블리로, 나머지는 C로 작성했으며 C 런타임에 의존하지 않습니다. 스크린샷은 그래픽 카드에서 직접 읽어 GPU에서 합성하도록 Windows에 넘기므로, Windows에서 흔히 쓰는 캡처 방식보다 훨씬 빠릅니다.
+F1–F12 단축키에는 손쉬운 사용 권한이 필요합니다(macOS 27에서는 "Device Control and Data Access"). 메뉴 막대 아이콘의 Permissions…에서 허용하세요.
 
-**다른 프로그램과 비교하면 어떤가요?**
+**업데이트할 때마다 권한을 다시 줘야 하나요?**
 
-| 프로그램 | 다운로드 | 대기 중 메모리 | 단축키부터 캡처 준비까지 |
-| --- | --- | --- | --- |
-| **sniplite** | 0.4MB | 11MB | 12ms |
-| Snipaste 2.11.3 | 19MB | 50MB | 121ms |
-| PixPin 3.6.6 | 66MB | 31MB | 142ms |
-| Greenshot 1.3.328 | 4MB | 16MB | 252ms |
-| Flameshot 15.0.0 | 18MB | 6MB | 측정 못 함 |
-| ShareX 22.4.0 | 139MB | 58MB | 측정 못 함 |
+보통은 그렇습니다. sniplite는 애드혹 서명이라 macOS가 버전마다 다른 앱으로 봅니다. sniplite가 예전 항목을 알아서 지우고 권한 화면을 열어 주니, 다시 목록으로 끌어다 놓으세요.
 
-<sub>엄밀한 테스트가 아니며 참고용입니다.</sub>
+**캡처의 글자는 어떻게 읽나요?**
 
-**스크린샷의 글자를 꺼내려면?**
-
-영역을 선택하고 텍스트 인식 버튼(Ctrl+O)을 누르면 선택 영역 옆의 패널에 글자가 나타나며, 선택하고 고치고 복사할 수 있습니다. 표는 열을 그대로 유지해서 스프레드시트에 셀로 붙여 넣을 수 있고, Markdown 형식으로 바꿀 수도 있습니다. Ctrl+Shift+C는 글자를 바로 복사합니다. 이 기능에는 텍스트 인식 모듈(12MB, 모델은 PaddleOCR PP-OCRv6, 런타임은 ONNX Runtime이며 모두 이 컴퓨터에서 동작)이 필요합니다. 설정의 OCR 탭에서 설치하거나, 설치 프로그램에서 선택하거나, OCR 포함 포터블 버전을 사용하세요. 설치하기 전에는 텍스트 버튼이 표시되지 않습니다. F4와 Shift+F4는 캡처한 뒤 바로 텍스트를 인식하거나 복사합니다.
-
-**긴 스크린샷은 어떻게 찍나요?**
-
-영역을 선택하고 스크롤 캡처 버튼(Ctrl+L)을 누른 뒤 페이지를 직접 스크롤하세요. 지나간 내용을 sniplite가 자동으로 이어 붙이고, 옆의 띠에 지금까지의 결과가 보입니다. Enter로 복사하고 Esc로 취소합니다. 저장, 고정, 텍스트 인식도 할 수 있습니다.
+Settings › General에서 Text recognition을 켠 뒤, 도구 막대의 글자 버튼, ⌘O, 또는 F4 / ⇧F4를 쓰세요. Apple의 Vision으로 이 Mac에서 동작하며 아무것도 보내지 않습니다.
 
 **메모리는 얼마나 쓰나요?**
 
-평소에는 약 50MB이며 대부분 그래픽 드라이버가 차지합니다. 캡처 직후에는 잠깐 조금 더 씁니다. 더 줄이려면 설정의 캡처 탭에서 메모리 절약을 고르세요. 약 2MB만 쓰지만 캡처가 조금 느려집니다.
+대기 중에는 약 15–25 MB입니다. 캡처하는 동안에만 화면 이미지를 들고 있다가 끝나면 놓습니다.
 
-**컴퓨터에 무엇이 남나요?**
+**설정과 로그는 어디에 있나요?**
 
-관리자 권한이 필요 없고 레지스트리를 건드리지 않습니다. 설정을 바꾸면 설정 파일이 하나 생기며, 지우면 기본값으로 돌아갑니다.
+설정은 앱의 환경설정에 있습니다(`defaults read io.github.mrtangluyao.sniplite`). 단축키, 권한, 인식 시간에 대한 짧은 로그는 `~/Library/Logs/sniplite.log`에 있습니다.
 
-**언어는 어떻게 바꾸나요?**
+**어떻게 제거하나요?**
 
-기본은 Windows 언어를 따릅니다. 바꾸려면 트레이 아이콘에서 설정을 열고 언어에서 고르세요.
+메뉴 막대에서 종료하고 "응용 프로그램"에서 `sniplite.app`을 지우세요. 설정까지 지우려면 `defaults delete io.github.mrtangluyao.sniplite`를 실행하고, 시스템 설정의 "개인정보 보호 및 보안"에 남아 있으면 거기서도 지우세요.
 
-**업데이트는 어떻게 하나요?**
+**Windows 버전이 있나요?**
 
-하루에 한 번 GitHub에 새 버전이 있는지 확인합니다. 있으면 화면 오른쪽 아래에 알림이 뜨고, 한 번 클릭하면 업데이트됩니다. 버전 번호만 확인하며 데이터는 보내지 않습니다. 설정에서 끌 수 있습니다.
-
-**제거는 어떻게 하나요?**
-
-시작 메뉴의 sniplite 폴더에서 "sniplite 제거"를 누르세요. 프로그램, 설정, 바로 가기가 모두 삭제됩니다.
-
-**명령줄에서 쓸 수 있나요?**
-
-네. `sniplite help`를 실행하면 사용법이 나옵니다.
+네, 원래 버전입니다: [MrTangLuyao/sniplite](https://github.com/MrTangLuyao/sniplite/releases/latest).
 
 ## 설정 화면
 

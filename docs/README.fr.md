@@ -7,11 +7,11 @@
 
 # sniplite
 
-**Un outil de capture d'écran et d'épinglage minuscule et rapide, dont le cœur est écrit en assembleur**
+**Un outil de capture d'écran et d'épinglage minuscule et rapide pour macOS**
 
 [![English](https://img.shields.io/badge/English-eaeef2?style=flat-square)](../README.md) [![简体中文](https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-eaeef2?style=flat-square)](README.zh-CN.md) [![繁體中文](https://img.shields.io/badge/%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87-eaeef2?style=flat-square)](README.zh-TW.md) [![日本語](https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-eaeef2?style=flat-square)](README.ja.md) [![한국어](https://img.shields.io/badge/%ED%95%9C%EA%B5%AD%EC%96%B4-eaeef2?style=flat-square)](README.ko.md) [![Français](https://img.shields.io/badge/Fran%C3%A7ais-1677e5?style=flat-square)](README.fr.md) [![Deutsch](https://img.shields.io/badge/Deutsch-eaeef2?style=flat-square)](README.de.md) [![Español](https://img.shields.io/badge/Espa%C3%B1ol-eaeef2?style=flat-square)](README.es.md)
 
-[![version](https://img.shields.io/github/v/tag/MrTangLuyao/sniplite?sort=date&label=version&style=flat-square&color=1677e5)](https://github.com/MrTangLuyao/sniplite/releases) [![système](https://img.shields.io/badge/syst%C3%A8me-Windows%2010%20%2F%2011-3b82f6?style=flat-square)](#télécharger) [![licence](https://img.shields.io/badge/licence-MIT-3b82f6?style=flat-square)](../LICENSE)
+[![version](https://img.shields.io/github/v/release/codeime/sniplite?label=version&style=flat-square&color=1677e5)](https://github.com/codeime/sniplite/releases) [![système](https://img.shields.io/badge/syst%C3%A8me-macOS%2014%2B-3b82f6?style=flat-square)](#télécharger) [![licence](https://img.shields.io/badge/licence-MIT-3b82f6?style=flat-square)](../LICENSE)
 
 [**Télécharger**](#télécharger) | [Raccourcis par défaut](#raccourcis-par-défaut) | [Questions fréquentes](#questions-fréquentes)
 
@@ -25,102 +25,82 @@
 
 ## Points forts
 
-- **Rapide** : appuyez sur F1 et la capture est là, plus vite qu'avec 99 % des outils de capture
-- **Léger** : environ 280 Ko, rien d'autre à installer ; le cœur de la capture et du dessin est écrit en assembleur
-- **Épingles** : épinglez une capture au-dessus de toutes les fenêtres pour la garder sous les yeux pendant que vous travaillez
-- **Complet** : captures, épingles, flèches, texte, mosaïque : tout y est
-- **Reconnaissance de texte** : lit le texte d'une capture, tableaux compris ; un module facultatif qui fonctionne entièrement sur votre ordinateur
-- **Captures défilantes** : faites défiler une page, elle est assemblée au fur et à mesure
-- **Propre** : sans publicité, open source, sans journaux, sans collecte de données
-- **Multilingue** : 8 langues ; suit celle de Windows, sauf si vous en choisissez une
+- **Rapide** : appuyez sur F1, la capture est prête aussitôt, sur tous les écrans
+- **Sélection automatique** : la fenêtre, ou l'élément d'une fenêtre (un bouton, un champ, une liste) sous la souris est sélectionné pour vous ; la molette élargit vers les éléments plus grands
+- **Dessin** : rectangles, ellipses, lignes, flèches, crayon, surligneur, texte, numéros et mosaïque, chacun avec sa taille et son opacité ; tout ce qui est dessiné peut être sélectionné et modifié ensuite
+- **Épingles** : épinglez une capture, ou ce que vous avez copié, au-dessus de toutes les fenêtres ; zoomez, changez l'opacité, dessinez de nouveau dessus
+- **Reconnaissance de texte** : lit le texte d'une capture, tableaux compris, avec Vision d'Apple sur ce Mac (facultative, désactivée par défaut)
+- **Léger** : environ 1,3 Mo, natif sur Apple Silicon et Intel, environ 15 à 25 Mo de mémoire au repos
+- **Propre** : libre, sans publicité, rien n'est collecté ni envoyé
+- **Langues** : English, 简体中文, 繁體中文, selon le système
 
 ## Télécharger
 
-Récupérez le dernier installeur dans [Releases](https://github.com/MrTangLuyao/sniplite/releases/latest).
+Téléchargez `sniplite_<version>_macos.zip` depuis les [Releases](https://github.com/codeime/sniplite/releases/latest), décompressez-le et placez `sniplite.app` dans Applications. Il faut macOS 14 Sonoma ou plus récent.
 
-Il existe aussi deux versions portables, sans installation : `sniplite_<version>_portable_x64.exe`, et `sniplite_<version>_portable_with_OCR_x64.exe`, qui contient le module de reconnaissance de texte.
+sniplite n'est pas notarié par Apple, donc macOS le bloque au début (« ne peut pas être ouvert » ou « est endommagé »). Une fois l'app dans Applications, lancez une fois :
 
-**macOS** : une version native pour macOS 14 ou plus récent (Apple Silicon et Intel) se trouve dans [`macos`](../macos/README.md). Compilez-la avec `macos/build.sh`, copiez `sniplite.app` dans Applications puis, comme elle n’est pas notarisée, lancez une fois `xattr -dr com.apple.quarantine "/Applications/sniplite.app"`.
+```bash
+xattr -dr com.apple.quarantine "/Applications/sniplite.app"
+```
 
 > [!TIP]
-> L'icône se trouve à droite de la barre des tâches ; si vous ne la voyez pas, cliquez sur la petite flèche. Pour la garder visible, cherchez « Autres icônes de la barre d'état système » dans les paramètres de Windows et activez sniplite.
+> sniplite se trouve dans la barre des menus (une paire de ciseaux), sans icône dans le Dock. Au premier lancement, il indique quoi autoriser : l'Enregistrement de l'écran pour capturer, et l'Accessibilité pour les touches F1 à F12 et pour trouver les éléments des fenêtres.
 
 ## Raccourcis par défaut
 
 | Touche | Action |
 | --- | --- |
-| **F1** | Capturer |
-| **Shift+F1** | Capture rapide : l'écran où se trouve la souris, directement dans un fichier (dossier à choisir dans les préférences) |
-| **F3** | Épingler à l'écran l'image ou le texte copié |
-| **Shift+F3** | Masquer / afficher toutes les épingles |
-| **F4** | Capturer et lire le texte (avec le module de reconnaissance de texte) |
-| **Shift+F4** | Capturer et copier le texte |
-| **Enter** | Copier la capture |
-| **Ctrl+S** | Enregistrer la capture |
-| **Ctrl+T** | Épingler la capture à l'écran |
-| **Clic du milieu** | Épingler la capture à l'écran |
-| **Ctrl+O** | Reconnaître le texte de la sélection |
-| **Ctrl+Shift+C** | Copier le texte de la sélection |
-| **Ctrl+L** | Capture défilante : faites défiler, elle s'assemble |
-| **Esc** | Annuler la capture |
-| **Flèches**, **W A S D** | Déplacer le curseur ou la sélection d'un pixel ; de dix avec Shift |
-| **Molette** | Pendant la capture : choisir une fenêtre plus grande ou plus petite ; sur une épingle : zoomer |
-| **Double-clic** | Fermer une épingle |
+| **F1** | Capture |
+| **⇧F1** | Capture rapide : l'écran sous la souris directement dans un fichier (si activée dans les réglages) |
+| **F3** | Épingler l'image ou le texte copié |
+| **⇧F3** | Masquer / afficher toutes les épingles |
+| **F4** / **⇧F4** | Capturer et lire / copier le texte (si la reconnaissance est activée) |
+| **Entrée** / double-clic | Copier la capture |
+| **⌘S** | Enregistrer |
+| **⌘T** / clic du milieu | Épingler |
+| **⌘Z** / **⇧⌘Z** | Annuler / rétablir |
+| **Échap** / clic droit | Un pas en arrière ; à la fin, annuler |
+| **Flèches**, **W A S D** | Déplacer d'un pixel ; avec Maj, de dix |
+| **Molette** / deux doigts | En sélection : élément plus grand ou plus petit ; avec un outil : sa taille ; sur une épingle : zoom |
+| **⌥ + molette** | Avec un outil : son opacité ; sur une épingle : son opacité |
+| **⌘E** (sur une épingle) | Dessiner de nouveau sur l'épingle |
+
+Tous les raccourcis sont dans [le README de la version macOS](../macos/README.md#shortcuts) ; les raccourcis globaux se changent dans les réglages.
 
 ## Questions fréquentes
 
-**Quelle est sa taille ?**
+**Pourquoi macOS dit-il que sniplite « ne peut pas être ouvert » ou « est endommagé » ?**
 
-Minuscule : moins de 1 Mo.
+Il n'est pas notarié par Apple. Lancez une fois la commande `xattr` de [Télécharger](#télécharger) : elle retire la marque que macOS met sur les fichiers téléchargés.
 
-**Pourquoi est-il si rapide ?**
+**Pourquoi F1 change-t-il la luminosité ?**
 
-Les parties qui doivent aller vite (capture, composition, dessin et écran de capture) sont écrites en assembleur x86-64, le reste en C, sans bibliothèque d'exécution C. La capture est lue directement depuis la carte graphique et confiée à Windows pour être composée sur le GPU, ce qui est bien plus rapide que les méthodes de capture habituelles de Windows.
+Les raccourcis F1 à F12 demandent l'autorisation d'Accessibilité (appelée « Device Control and Data Access » sous macOS 27). Autorisez-la depuis l'icône de la barre des menus, dans Permissions….
 
-**Et par rapport aux autres outils ?**
+**Faut-il autoriser de nouveau après une mise à jour ?**
 
-| Outil | Téléchargement | Mémoire au repos | Délai après le raccourci |
-| --- | --- | --- | --- |
-| **sniplite** | 0,4 Mo | 11 Mo | 12 ms |
-| Snipaste 2.11.3 | 19 Mo | 50 Mo | 121 ms |
-| PixPin 3.6.6 | 66 Mo | 31 Mo | 142 ms |
-| Greenshot 1.3.328 | 4 Mo | 16 Mo | 252 ms |
-| Flameshot 15.0.0 | 18 Mo | 6 Mo | non mesuré |
-| ShareX 22.4.0 | 139 Mo | 58 Mo | non mesuré |
+En général, oui : sniplite est signé ad hoc, donc macOS voit chaque version comme une nouvelle app. sniplite efface lui-même les anciennes entrées et ouvre sa page des autorisations ; glissez-le de nouveau dans la liste.
 
-<sub>Test informel, à titre indicatif seulement.</sub>
+**Comment lire le texte d'une capture ?**
 
-**Comment récupérer le texte d'une capture ?**
-
-Sélectionnez une zone et cliquez sur le bouton de texte (Ctrl+O) : le texte apparaît dans un panneau à côté de la sélection, où vous pouvez le sélectionner, le modifier et le copier. Un tableau garde ses colonnes et se colle dans un tableur cellule par cellule, ou en Markdown si vous préférez. Ctrl+Shift+C copie le texte directement. Il faut le module de reconnaissance de texte (12 Mo ; les modèles PaddleOCR PP-OCRv6 avec ONNX Runtime, entièrement sur votre ordinateur) : installez-le depuis l'onglet OCR des préférences, cochez-le dans l'installeur, ou prenez la version portable avec OCR. Tant qu'il n'est pas installé, les boutons de texte ne sont pas affichés. F4 et Shift+F4 lancent une capture qui lit ou copie le texte aussitôt.
-
-**Comment faire une capture défilante ?**
-
-Sélectionnez la zone, cliquez sur le bouton de capture défilante (Ctrl+L) et faites défiler la page vous-même. sniplite assemble ce qui défile, et une bande à côté de la zone montre le résultat. Enter copie et Esc annule ; vous pouvez aussi enregistrer, épingler ou lire le texte.
+Activez Text recognition dans Settings › General. Utilisez ensuite les boutons de texte de la barre d'outils, ⌘O, ou F4 / ⇧F4. Cela fonctionne avec Vision d'Apple sur ce Mac ; rien n'est envoyé.
 
 **Combien de mémoire utilise-t-il ?**
 
-Environ 50 Mo la plupart du temps, presque entièrement pris par le pilote graphique, et un peu plus juste après une capture. Pour en utiliser moins, choisissez « Économe » dans l'onglet Capture des préférences : environ 2 Mo, avec des captures plus lentes.
+Environ 15 à 25 Mo au repos. Une capture ne garde l'image de l'écran que tant qu'elle est ouverte, puis la libère.
 
-**Que laisse-t-il sur mon ordinateur ?**
+**Où sont ses réglages et son journal ?**
 
-Il ne demande pas de droits d'administrateur et ne touche pas au registre. Modifier un réglage crée un fichier de réglages ; supprimez-le pour revenir aux valeurs par défaut.
-
-**Comment changer de langue ?**
-
-sniplite suit la langue de Windows. Pour en utiliser une autre, ouvrez les préférences depuis l'icône de la zone de notification et choisissez-la dans Langue.
-
-**Comment le mettre à jour ?**
-
-Une fois par jour, sniplite demande à GitHub s'il existe une version plus récente. Si oui, une notification apparaît en bas à droite, et un clic suffit pour mettre à jour. Seul le numéro de version est vérifié, rien n'est envoyé ; vous pouvez désactiver cela dans les préférences.
+Les réglages sont dans les préférences de l'app (`defaults read io.github.mrtangluyao.sniplite`) ; un court journal des raccourcis, des autorisations et des temps de reconnaissance est dans `~/Library/Logs/sniplite.log`.
 
 **Comment le désinstaller ?**
 
-Cliquez sur « Désinstaller sniplite » dans le dossier sniplite du menu Démarrer. Le programme, ses réglages et ses raccourcis sont supprimés.
+Quittez-le depuis la barre des menus et supprimez `sniplite.app` des Applications. Pour effacer aussi ses réglages, lancez `defaults delete io.github.mrtangluyao.sniplite` ; s'il apparaît encore dans Confidentialité et sécurité des Réglages Système, retirez-le là aussi.
 
-**Y a-t-il une ligne de commande ?**
+**Existe-t-il une version Windows ?**
 
-Oui. Lancez `sniplite help` pour la découvrir.
+Oui, l'originale : [MrTangLuyao/sniplite](https://github.com/MrTangLuyao/sniplite/releases/latest).
 
 ## Préférences
 

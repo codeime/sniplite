@@ -7,11 +7,11 @@
 
 # sniplite
 
-**極度輕量的截圖貼圖工具，核心用組合語言開發**
+**輕巧快速的 macOS 截圖貼圖工具**
 
 [![English](https://img.shields.io/badge/English-eaeef2?style=flat-square)](../README.md) [![简体中文](https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-eaeef2?style=flat-square)](README.zh-CN.md) [![繁體中文](https://img.shields.io/badge/%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87-1677e5?style=flat-square)](README.zh-TW.md) [![日本語](https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-eaeef2?style=flat-square)](README.ja.md) [![한국어](https://img.shields.io/badge/%ED%95%9C%EA%B5%AD%EC%96%B4-eaeef2?style=flat-square)](README.ko.md) [![Français](https://img.shields.io/badge/Fran%C3%A7ais-eaeef2?style=flat-square)](README.fr.md) [![Deutsch](https://img.shields.io/badge/Deutsch-eaeef2?style=flat-square)](README.de.md) [![Español](https://img.shields.io/badge/Espa%C3%B1ol-eaeef2?style=flat-square)](README.es.md)
 
-[![版本](https://img.shields.io/github/v/tag/MrTangLuyao/sniplite?sort=date&label=%E7%89%88%E6%9C%AC&style=flat-square&color=1677e5)](https://github.com/MrTangLuyao/sniplite/releases) [![系統](https://img.shields.io/badge/%E7%B3%BB%E7%B5%B1-Windows%2010%20%2F%2011-3b82f6?style=flat-square)](#下載) [![授權](https://img.shields.io/badge/%E6%8E%88%E6%AC%8A-MIT-3b82f6?style=flat-square)](../LICENSE)
+[![版本](https://img.shields.io/github/v/release/codeime/sniplite?label=%E7%89%88%E6%9C%AC&style=flat-square&color=1677e5)](https://github.com/codeime/sniplite/releases) [![系統](https://img.shields.io/badge/%E7%B3%BB%E7%B5%B1-macOS%2014%2B-3b82f6?style=flat-square)](#下載) [![授權](https://img.shields.io/badge/%E6%8E%88%E6%AC%8A-MIT-3b82f6?style=flat-square)](../LICENSE)
 
 [**下載**](#下載) | [預設快速鍵](#預設快速鍵) | [常見問題](#常見問題)
 
@@ -25,102 +25,82 @@
 
 ## 特色
 
-- **快**：按 F1 截圖，速度領先 99% 的截圖軟體
-- **輕**：本體約 280 KB，不用安裝任何執行環境，截圖和繪圖的核心程式碼用組合語言撰寫
-- **能貼圖**：把截圖釘在螢幕最上層，切到別的視窗也擋不住，對照著看很方便
-- **夠用**：功能齊全，截圖、貼圖、箭頭、文字、馬賽克樣樣都有
-- **能辨識文字**：截圖裡的文字和表格都能辨識出來，模組可選，全部在本機完成
-- **長截圖**：自己捲動頁面，邊捲邊自動拼接
-- **乾淨**：沒有廣告，開源，無記錄檔，不收集資料
-- **多語言**：內建 8 種語言，預設跟隨系統，也可以自己選
+- **快**：按 F1 截圖立刻就緒，多個顯示器同時截
+- **自動辨識**：自動框出滑鼠下的視窗或視窗裡的元素（按鈕、輸入框、列表），滾輪逐級擴大到外層
+- **標註**：矩形、橢圓、直線、箭頭、畫筆、螢光筆、文字、序號和馬賽克，每種工具各自記住大小和透明度；畫好的內容還能選取再改
+- **貼圖**：把截圖或複製的內容貼在所有視窗之上，可以縮放、調透明度、再次編輯
+- **文字辨識**：辨識截圖裡的文字，表格保持分欄，用 Apple 的 Vision 在本機執行（可選，預設關閉）
+- **輕量**：約 1.3 MB，原生支援 Apple 晶片和 Intel，閒置時記憶體約 15–25 MB
+- **乾淨**：開源，無廣告，不收集、不上傳任何資料
+- **多語言**：English、简体中文、繁體中文，預設跟隨系統
 
 ## 下載
 
-到 [Releases](https://github.com/MrTangLuyao/sniplite/releases/latest) 下載最新版安裝。
+從 [Releases](https://github.com/codeime/sniplite/releases/latest) 下載 `sniplite_<版本>_macos.zip`，解壓縮後把 `sniplite.app` 移到「應用程式」。需要 macOS 14 Sonoma 或更新版本。
 
-也有兩個免安裝版：`sniplite_<版本>_portable_x64.exe`，以及內含文字辨識模組的 `sniplite_<版本>_portable_with_OCR_x64.exe`。
+sniplite 沒有經過 Apple 公證，macOS 第一次會擋下它（顯示「無法打開」或「已損毀」）。移到「應用程式」後執行一次：
 
-**macOS**：適用於 macOS 14 以上（Apple 晶片與 Intel）的原生版在 [`macos`](../macos/README.md) 資料夾。用 `macos/build.sh` 編譯，把 `sniplite.app` 複製到「應用程式」，因為沒有公證，需要先執行一次 `xattr -dr com.apple.quarantine "/Applications/sniplite.app"`。
+```bash
+xattr -dr com.apple.quarantine "/Applications/sniplite.app"
+```
 
 > [!TIP]
-> 圖示在工作列右下角，沒看到的話點一下那裡的小箭頭。想讓它一直顯示，在 Windows 設定裡搜尋“其他系統匣圖示”，把 sniplite 打開。
+> sniplite 在選單列（一把剪刀），Dock 裡沒有圖示。第一次啟動會列出需要的權限：螢幕錄製用來截圖，輔助使用用來回應 F1–F12 和辨識視窗裡的元素。
 
 ## 預設快速鍵
 
-| 按鍵 | 功能 |
+| 按鍵 | 作用 |
 | --- | --- |
 | **F1** | 截圖 |
-| **Shift+F1** | 快速截圖：滑鼠所在的螢幕直接存成檔案（儲存位置在偏好設定裡設定） |
+| **⇧F1** | 快速截圖：把滑鼠所在的螢幕直接存成檔案（在設定裡開啟後） |
 | **F3** | 把複製的圖片或文字貼到螢幕上 |
-| **Shift+F3** | 隱藏 / 顯示所有貼圖 |
-| **F4** | 截圖並辨識文字（需要文字辨識模組） |
-| **Shift+F4** | 截圖並直接複製文字 |
-| **Enter** | 複製截圖 |
-| **Ctrl+S** | 儲存截圖 |
-| **Ctrl+T** | 把截圖貼到螢幕上 |
-| **滑鼠中鍵** | 把截圖貼到螢幕上 |
-| **Ctrl+O** | 辨識選取範圍裡的文字 |
-| **Ctrl+Shift+C** | 直接複製選取範圍裡的文字 |
-| **Ctrl+L** | 長截圖，捲動頁面自動拼接 |
-| **Esc** | 取消截圖 |
-| **方向鍵**、**W A S D** | 把滑鼠或選取範圍移動一個像素，同時按住 Shift 移動十個 |
-| **滾輪** | 截圖時換視窗範圍，貼圖時縮放 |
-| **點兩下** | 關閉貼圖 |
+| **⇧F3** | 隱藏 / 顯示所有貼圖 |
+| **F4** / **⇧F4** | 截圖並辨識 / 複製文字（開啟文字辨識時） |
+| **Enter** / 按兩下 | 複製截圖 |
+| **⌘S** | 儲存截圖 |
+| **⌘T** / 滑鼠中鍵 | 貼圖 |
+| **⌘Z** / **⇧⌘Z** | 還原 / 重做 |
+| **Esc** / 右鍵 | 逐級後退，最後取消截圖 |
+| **方向鍵**、**W A S D** | 移動 1 像素；按住 Shift 移動 10 像素 |
+| **滾輪** / 雙指滑動 | 選擇區域時：更大或更小的元素；選了工具時：調大小；貼圖上：縮放 |
+| **⌥+滾輪** | 選了工具時：調透明度；貼圖上：調貼圖透明度 |
+| **⌘E**（在貼圖上） | 再次編輯貼圖 |
+
+全部快速鍵見 [macOS 版說明](../macos/README.zh-CN.md#快捷键)；全域快速鍵可以在設定裡修改。
 
 ## 常見問題
 
-**軟體有多大？**
+**macOS 顯示 sniplite「無法打開」或「已損毀」怎麼辦？**
 
-極其輕量，不到 1 MB。
+它沒有經過 Apple 公證。執行一次[下載](#下載)裡的 `xattr` 指令即可，它會去掉 macOS 給下載檔案加的隔離標記。
 
-**為什麼這麼快？**
+**按 F1 為什麼是調亮度？**
 
-截圖、畫面合成、繪製和截圖介面這些要快的部分用 x86-64 組合語言撰寫，其餘部分用 C，整個程式不依賴 C 執行階段程式庫。截圖直接從顯示卡讀取螢幕畫面，交給系統在顯示卡上合成顯示，比 Windows 常用的截圖方法快很多。
+F1–F12 快速鍵需要輔助使用權限（macOS 27 上叫「裝置控制和資料取用」）。點選單列圖示，在「權限…」裡開啟。
 
-**和其他截圖軟體比怎麼樣？**
+**更新後要重新授權嗎？**
 
-| 軟體 | 下載大小 | 閒置時記憶體 | 按下快速鍵到可以截圖 |
-| --- | --- | --- | --- |
-| **sniplite** | 0.4 MB | 11 MB | 12 毫秒 |
-| Snipaste 2.11.3 | 19 MB | 50 MB | 121 毫秒 |
-| PixPin 3.6.6 | 66 MB | 31 MB | 142 毫秒 |
-| Greenshot 1.3.328 | 4 MB | 16 MB | 252 毫秒 |
-| Flameshot 15.0.0 | 18 MB | 6 MB | 沒測成 |
-| ShareX 22.4.0 | 139 MB | 58 MB | 沒測成 |
+通常要：sniplite 用的是臨時簽署，macOS 會把每個版本當成新 App。sniplite 會自動清掉舊的授權項目並打開權限頁，重新拖進列表即可。
 
-<sub>這是一次不嚴謹的測試，僅供參考。</sub>
+**怎麼辨識截圖裡的文字？**
 
-**怎麼把截圖裡的文字取出來？**
-
-框選一塊區域，按辨識文字按鈕（Ctrl+O），文字會出現在選取範圍旁邊的面板裡，可以選取、修改和複製。表格會保持分欄，貼到 Excel 裡直接分格，也可以切換成 Markdown 格式。Ctrl+Shift+C 可以直接複製文字。這需要文字辨識模組（12 MB，模型是 PaddleOCR PP-OCRv6，執行庫是 ONNX Runtime，全部在本機執行）：可以在偏好設定的文字辨識分頁安裝，安裝時勾選，或者直接用帶 OCR 的免安裝版。沒裝模組時不顯示文字按鈕。按 F4 或 Shift+F4 可以直接開始截圖並辨識或複製文字。
-
-**怎麼截長圖？**
-
-框選區域，按長截圖按鈕（Ctrl+L），然後自己捲動頁面。sniplite 會把捲過的內容自動拼起來，旁邊的預覽條顯示已經拼好的部分。按 Enter 複製，按 Esc 取消，也可以儲存、貼圖或辨識其中的文字。
+先在「設定 › 一般」裡打開文字辨識，然後用工具列的文字按鈕、⌘O，或 F4 / ⇧F4。用 Apple 的 Vision 在本機執行，不會上傳。
 
 **佔多少記憶體？**
 
-平時大約 50 MB，主要是顯示卡驅動程式佔的，剛截完圖會短暫多佔一些。想更省的話，可以在偏好設定的“截圖”分頁選“省記憶體”，只佔 2 MB 左右，代價是截圖會慢一點。
+閒置時約 15–25 MB。截圖時螢幕畫面只在截圖介面打開期間佔用，結束後釋放。
 
-**會在電腦上留下什麼？**
+**設定和日誌在哪裡？**
 
-不需要系統管理員權限，不改登錄檔。改過設定後會多一個設定檔，刪掉它就還原預設值。
-
-**怎麼換語言？**
-
-預設跟隨 Windows 的語言。想換的話，從系統匣圖示開啟偏好設定，在語言一欄選擇。
-
-**怎麼更新？**
-
-軟體每天會到 GitHub 看一眼有沒有新版本，有的話右下角會提示，點一下就能更新。只查版本號，不上傳任何資料，不想要可以在偏好設定裡關掉。
+設定存在 App 的偏好設定裡（`defaults read io.github.mrtangluyao.sniplite`）；快速鍵、權限和辨識耗時的簡要日誌在 `~/Library/Logs/sniplite.log`。
 
 **怎麼解除安裝？**
 
-在開始功能表的 sniplite 資料夾裡點“解除安裝 sniplite”，程式、設定和捷徑都會刪掉。
+從選單列結束，把 `sniplite.app` 從「應用程式」刪掉。要連設定一起刪，執行 `defaults delete io.github.mrtangluyao.sniplite`；如果系統設定的「隱私權與安全性」裡還有它，也一併刪掉。
 
-**能用命令列嗎？**
+**有 Windows 版嗎？**
 
-能，執行 `sniplite help` 就能看到用法。
+有，就是原版：[MrTangLuyao/sniplite](https://github.com/MrTangLuyao/sniplite/releases/latest)。
 
 ## 偏好設定
 

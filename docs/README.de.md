@@ -7,11 +7,11 @@
 
 # sniplite
 
-**Ein winziges, schnelles Werkzeug für Screenshots und Pins, im Kern in Assembler geschrieben**
+**Ein winziges, schnelles Werkzeug für Screenshots und Pins auf macOS**
 
 [![English](https://img.shields.io/badge/English-eaeef2?style=flat-square)](../README.md) [![简体中文](https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-eaeef2?style=flat-square)](README.zh-CN.md) [![繁體中文](https://img.shields.io/badge/%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87-eaeef2?style=flat-square)](README.zh-TW.md) [![日本語](https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-eaeef2?style=flat-square)](README.ja.md) [![한국어](https://img.shields.io/badge/%ED%95%9C%EA%B5%AD%EC%96%B4-eaeef2?style=flat-square)](README.ko.md) [![Français](https://img.shields.io/badge/Fran%C3%A7ais-eaeef2?style=flat-square)](README.fr.md) [![Deutsch](https://img.shields.io/badge/Deutsch-1677e5?style=flat-square)](README.de.md) [![Español](https://img.shields.io/badge/Espa%C3%B1ol-eaeef2?style=flat-square)](README.es.md)
 
-[![Version](https://img.shields.io/github/v/tag/MrTangLuyao/sniplite?sort=date&label=Version&style=flat-square&color=1677e5)](https://github.com/MrTangLuyao/sniplite/releases) [![System](https://img.shields.io/badge/System-Windows%2010%20%2F%2011-3b82f6?style=flat-square)](#download) [![Lizenz](https://img.shields.io/badge/Lizenz-MIT-3b82f6?style=flat-square)](../LICENSE)
+[![Version](https://img.shields.io/github/v/release/codeime/sniplite?label=Version&style=flat-square&color=1677e5)](https://github.com/codeime/sniplite/releases) [![System](https://img.shields.io/badge/System-macOS%2014%2B-3b82f6?style=flat-square)](#download) [![Lizenz](https://img.shields.io/badge/Lizenz-MIT-3b82f6?style=flat-square)](../LICENSE)
 
 [**Download**](#download) | [Standard-Tastenkürzel](#standard-tastenkürzel) | [Häufige Fragen](#häufige-fragen)
 
@@ -25,102 +25,82 @@
 
 ## Merkmale
 
-- **Schnell**: F1 drücken, und der Screenshot ist da, schneller als bei 99 % der Screenshot-Programme
-- **Schlank**: etwa 280 KB, nichts weiter zu installieren; der Kern für Aufnahme und Zeichnen ist in Assembler geschrieben
-- **Pins**: einen Screenshot über allen Fenstern anheften, damit er beim Arbeiten im Blick bleibt
-- **Komplett**: Screenshots, Pins, Pfeile, Text, Verpixeln, alles dabei
-- **Texterkennung**: liest den Text einer Aufnahme, auch Tabellen; ein optionales Modul, das vollständig auf dem eigenen Computer läuft
-- **Scrollaufnahmen**: Seite scrollen, sie wird laufend zusammengesetzt
-- **Sauber**: keine Werbung, Open Source, keine Protokolle, keine Datensammlung
-- **Mehrsprachig**: 8 Sprachen; richtet sich nach Windows, solange Sie keine wählen
+- **Schnell**: F1 drücken, und die Aufnahme ist sofort bereit, auf allen Bildschirmen
+- **Findet, worauf Sie zeigen**: das Fenster oder der Teil eines Fensters (ein Knopf, ein Feld, eine Liste) unter der Maus wird für Sie ausgewählt; das Mausrad geht zu größeren Teilen
+- **Zeichnen**: Rechtecke, Ellipsen, Linien, Pfeile, Stift, Marker, Text, Nummern und Mosaik, jedes mit eigener Größe und Deckkraft; alles Gezeichnete lässt sich später auswählen und ändern
+- **Pins**: eine Aufnahme oder Kopiertes über allen Fenstern anheften; zoomen, Deckkraft ändern, wieder darauf zeichnen
+- **Texterkennung**: liest den Text einer Aufnahme, Tabellen eingeschlossen, mit Apples Vision auf diesem Mac (optional, standardmäßig aus)
+- **Leicht**: etwa 1,3 MB, nativ auf Apple Silicon und Intel, etwa 15–25 MB Speicher im Leerlauf
+- **Sauber**: Open Source, keine Werbung, nichts wird gesammelt oder hochgeladen
+- **Sprachen**: English, 简体中文, 繁體中文, je nach System
 
 ## Download
 
-Den neuesten Installer gibt es unter [Releases](https://github.com/MrTangLuyao/sniplite/releases/latest).
+Laden Sie `sniplite_<Version>_macos.zip` unter [Releases](https://github.com/codeime/sniplite/releases/latest) herunter, entpacken Sie es und verschieben Sie `sniplite.app` in den Ordner Programme. Nötig ist macOS 14 Sonoma oder neuer.
 
-Dazu gibt es zwei portable Versionen ohne Installation: `sniplite_<Version>_portable_x64.exe` und `sniplite_<Version>_portable_with_OCR_x64.exe`, die das Texterkennungsmodul mitbringt.
+sniplite ist nicht von Apple beglaubigt, daher blockiert macOS es zunächst („kann nicht geöffnet werden“ oder „ist beschädigt“). Führen Sie nach dem Verschieben einmal aus:
 
-**macOS**: Eine native Version für macOS 14 oder neuer (Apple Silicon und Intel) liegt in [`macos`](../macos/README.md). Mit `macos/build.sh` bauen, `sniplite.app` nach „Programme“ kopieren und, da sie nicht notarisiert ist, einmal `xattr -dr com.apple.quarantine "/Applications/sniplite.app"` ausführen.
+```bash
+xattr -dr com.apple.quarantine "/Applications/sniplite.app"
+```
 
 > [!TIP]
-> Das Symbol sitzt am rechten Ende der Taskleiste; ist es nicht zu sehen, klicken Sie dort auf den kleinen Pfeil. Damit es sichtbar bleibt, suchen Sie in den Windows-Einstellungen nach „Weitere Taskleistensymbole“ und schalten sniplite ein.
+> sniplite sitzt in der Menüleiste (eine Schere) und hat kein Symbol im Dock. Beim ersten Start zeigt es, was zu erlauben ist: Bildschirmaufnahme zum Aufnehmen und Bedienungshilfen für die Tasten F1–F12 und um die Teile von Fenstern zu finden.
 
 ## Standard-Tastenkürzel
 
 | Taste | Funktion |
 | --- | --- |
-| **F1** | Aufnehmen |
-| **Shift+F1** | Schnellaufnahme: der Bildschirm unter der Maus direkt in eine Datei (Ordner in den Einstellungen) |
+| **F1** | Aufnahme |
+| **⇧F1** | Schnellaufnahme: der Bildschirm unter der Maus direkt in eine Datei (wenn in den Einstellungen eingeschaltet) |
 | **F3** | Kopiertes Bild oder kopierten Text anheften |
-| **Shift+F3** | Alle Pins aus- / einblenden |
-| **F4** | Aufnehmen und Text erkennen (mit dem Texterkennungsmodul) |
-| **Shift+F4** | Aufnehmen und Text kopieren |
-| **Enter** | Aufnahme kopieren |
-| **Ctrl+S** | Aufnahme speichern |
-| **Ctrl+T** | Aufnahme anheften |
-| **Mittelklick** | Aufnahme anheften |
-| **Ctrl+O** | Text der Auswahl erkennen |
-| **Ctrl+Shift+C** | Text der Auswahl kopieren |
-| **Ctrl+L** | Scrollaufnahme: scrollen, sie wird zusammengesetzt |
-| **Esc** | Aufnahme abbrechen |
-| **Pfeiltasten**, **W A S D** | Cursor oder Auswahl um 1 Pixel verschieben, mit Shift um 10 |
-| **Mausrad** | Bei der Aufnahme: größeres oder kleineres Fenster wählen; auf einem Pin: zoomen |
-| **Doppelklick** | Pin schließen |
+| **⇧F3** | Alle Pins aus- / einblenden |
+| **F4** / **⇧F4** | Aufnehmen und Text lesen / kopieren (bei eingeschalteter Texterkennung) |
+| **Eingabe** / Doppelklick | Aufnahme kopieren |
+| **⌘S** | Speichern |
+| **⌘T** / Mittelklick | Anheften |
+| **⌘Z** / **⇧⌘Z** | Widerrufen / Wiederholen |
+| **Esc** / Rechtsklick | Einen Schritt zurück; am Ende abbrechen |
+| **Pfeiltasten**, **W A S D** | Um ein Pixel verschieben; mit Umschalt um zehn |
+| **Mausrad** / zwei Finger | Beim Auswählen: größerer oder kleinerer Teil; mit Werkzeug: seine Größe; auf einem Pin: Zoom |
+| **⌥ + Mausrad** | Mit Werkzeug: seine Deckkraft; auf einem Pin: dessen Deckkraft |
+| **⌘E** (auf einem Pin) | Wieder auf den Pin zeichnen |
+
+Alle Tastenkürzel stehen im [README der macOS-Version](../macos/README.md#shortcuts); die globalen lassen sich in den Einstellungen ändern.
 
 ## Häufige Fragen
 
-**Wie groß ist es?**
+**Warum meldet macOS, sniplite „kann nicht geöffnet werden“ oder „ist beschädigt“?**
 
-Winzig: unter 1 MB.
+Es ist nicht von Apple beglaubigt. Führen Sie den `xattr`-Befehl unter [Download](#download) einmal aus: Er entfernt die Markierung, die macOS heruntergeladenen Dateien gibt.
 
-**Warum ist es so schnell?**
+**Warum ändert F1 stattdessen die Helligkeit?**
 
-Die Teile, die schnell sein müssen (Aufnahme, Komposition, Zeichnen und Aufnahmeansicht), sind in x86-64-Assembler geschrieben, der Rest in C, ohne C-Laufzeitbibliothek. Ein Screenshot wird direkt von der Grafikkarte gelesen und Windows zur Komposition auf der GPU übergeben; das ist viel schneller als die üblichen Aufnahmewege unter Windows.
+Die Kürzel F1–F12 brauchen die Bedienungshilfen-Berechtigung (unter macOS 27 „Device Control and Data Access“). Erlauben Sie sie über das Menüleistensymbol unter Permissions….
 
-**Wie schneidet es im Vergleich ab?**
+**Muss ich die Berechtigungen nach einem Update neu erteilen?**
 
-| Programm | Download | Speicher im Leerlauf | Vom Tastenkürzel bis bereit |
-| --- | --- | --- | --- |
-| **sniplite** | 0,4 MB | 11 MB | 12 ms |
-| Snipaste 2.11.3 | 19 MB | 50 MB | 121 ms |
-| PixPin 3.6.6 | 66 MB | 31 MB | 142 ms |
-| Greenshot 1.3.328 | 4 MB | 16 MB | 252 ms |
-| Flameshot 15.0.0 | 18 MB | 6 MB | nicht gemessen |
-| ShareX 22.4.0 | 139 MB | 58 MB | nicht gemessen |
+Meist ja: sniplite ist ad hoc signiert, daher sieht macOS jede Version als neue App. sniplite entfernt die alten Einträge selbst und öffnet seine Berechtigungsseite; ziehen Sie es wieder in die Liste.
 
-<sub>Das ist ein informeller Test, nur zur Orientierung.</sub>
+**Wie lese ich den Text einer Aufnahme?**
 
-**Wie bekomme ich den Text aus einem Screenshot?**
-
-Einen Bereich auswählen und auf die Text-Schaltfläche klicken (Ctrl+O): Der Text erscheint in einem Feld neben der Auswahl und lässt sich markieren, bearbeiten und kopieren. Eine Tabelle behält ihre Spalten und landet in einer Tabellenkalkulation Zelle für Zelle, auf Wunsch auch als Markdown. Ctrl+Shift+C kopiert den Text sofort. Dafür braucht es das Texterkennungsmodul (12 MB; PaddleOCR-Modelle PP-OCRv6 mit ONNX Runtime, vollständig auf dem eigenen Computer): auf der Seite OCR der Einstellungen installieren, im Installer ankreuzen oder die portable Version mit OCR nehmen. Solange es fehlt, werden die Text-Schaltflächen nicht angezeigt. F4 und Shift+F4 starten eine Aufnahme, die den Text sofort erkennt oder kopiert.
-
-**Wie mache ich eine Scrollaufnahme?**
-
-Den Bereich auswählen, auf die Schaltfläche für die Scrollaufnahme klicken (Ctrl+L) und die Seite selbst scrollen. sniplite setzt zusammen, was vorbeiläuft, und ein Streifen neben dem Bereich zeigt das Ergebnis. Enter kopiert, Esc bricht ab; speichern, anheften oder den Text erkennen geht ebenfalls.
+Schalten Sie Text recognition unter Settings › General ein. Nutzen Sie dann die Textknöpfe der Werkzeugleiste, ⌘O oder F4 / ⇧F4. Das läuft mit Apples Vision auf diesem Mac; nichts wird hochgeladen.
 
 **Wie viel Speicher braucht es?**
 
-Meist etwa 50 MB, fast alles davon belegt der Grafiktreiber, direkt nach einer Aufnahme kurz etwas mehr. Wer weniger möchte, wählt in den Einstellungen auf der Seite Aufnahme den Modus Sparsam: etwa 2 MB, dafür langsamere Aufnahmen.
+Etwa 15–25 MB im Leerlauf. Eine Aufnahme hält das Bild des Bildschirms nur, solange sie offen ist, und gibt es dann frei.
 
-**Was bleibt auf meinem Rechner zurück?**
+**Wo sind Einstellungen und Protokoll?**
 
-Es braucht keine Administratorrechte und fasst die Registrierung nicht an. Wer eine Einstellung ändert, bekommt eine Einstellungsdatei; wer sie löscht, hat wieder die Standardwerte.
-
-**Wie ändere ich die Sprache?**
-
-sniplite richtet sich nach der Sprache von Windows. Für eine andere öffnen Sie die Einstellungen über das Tray-Symbol und wählen sie unter Sprache.
-
-**Wie aktualisiere ich es?**
-
-Einmal am Tag fragt sniplite bei GitHub nach einer neueren Version. Gibt es eine, erscheint unten rechts ein Hinweis, und ein Klick aktualisiert. Geprüft wird nur die Versionsnummer, hochgeladen wird nichts; in den Einstellungen lässt sich das abschalten.
+Die Einstellungen sind die Voreinstellungen der App (`defaults read io.github.mrtangluyao.sniplite`); ein kurzes Protokoll zu Kürzeln, Berechtigungen und Erkennungszeiten liegt in `~/Library/Logs/sniplite.log`.
 
 **Wie deinstalliere ich es?**
 
-Klicken Sie im Startmenü im Ordner sniplite auf „sniplite deinstallieren“. Programm, Einstellungen und Verknüpfungen werden entfernt.
+Beenden Sie es über die Menüleiste und löschen Sie `sniplite.app` aus Programme. Um auch die Einstellungen zu löschen, führen Sie `defaults delete io.github.mrtangluyao.sniplite` aus; steht es noch unter Datenschutz & Sicherheit in den Systemeinstellungen, entfernen Sie es dort ebenfalls.
 
-**Gibt es eine Befehlszeile?**
+**Gibt es eine Windows-Version?**
 
-Ja. `sniplite help` zeigt alle Befehle.
+Ja, das Original: [MrTangLuyao/sniplite](https://github.com/MrTangLuyao/sniplite/releases/latest).
 
 ## Einstellungen
 
