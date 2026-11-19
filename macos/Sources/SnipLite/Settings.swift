@@ -335,7 +335,9 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
     // MARK: the pages
 
-    private var keyRows: [HotAction: NSView] = [:]
+    private var keyRows: [HotAction: NSStackView] = [:]
+    private var keyLinks: [HotAction: LinkButton] = [:]
+    private weak var tabsController: NSTabViewController?
     private var folderRow, noticeRow, placeRow: NSView?
     private let keyNote = NSTextField(wrappingLabelWithString: "")
     private let generalNote = NSTextField(wrappingLabelWithString: "")
@@ -358,6 +360,13 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
             }
             let r = row(keyIcons[a], a.title, nil, f)
             keyRows[a] = r
+            // a shortcut whose feature is off says so, with the way to its switch
+            if a == .quickCapture || a == .ocr || a == .ocrCopy, let text = r.arrangedSubviews.dropFirst().first as? NSStackView {
+                let page = a == .quickCapture ? 2 : 1
+                let link = LinkButton(L.t("offState"), L.t("goTurnOn")) { [weak self] in self?.tabsController?.selectedTabViewItemIndex = page }
+                text.addArrangedSubview(link)
+                keyLinks[a] = link
+            }
             rows.append(r)
         }
         for l in [keyNote, generalNote] {
@@ -432,6 +441,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
                                                   ("camera.viewfinder", L.t("quickTab"), quick),
                                                   ("lock.shield", L.t("permissions"), perms)]
         let tabs = SettingsTabs()
+        tabsController = tabs
         tabs.tabStyle = .toolbar
         tabs.transitionOptions = [.allowUserInteraction]   // no crossfade: two pages on top of each other look messy
         for (symbol, name, page) in pageList {
@@ -503,8 +513,16 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
     private func quickChanged() {
         let q = Prefs.shared.quickEnabled
-        keyRows[.quickCapture]?.alphaValue = q ? 1 : 0.4
-        for a in [HotAction.ocr, .ocrCopy] { keyRows[a]?.alphaValue = Prefs.shared.ocrEnabled ? 1 : 0.4 }
+        for (a, on) in [(HotAction.quickCapture, q), (.ocr, Prefs.shared.ocrEnabled), (.ocrCopy, Prefs.shared.ocrEnabled)] {
+            guard let r = keyRows[a] else { continue }
+            // the row is quieter, all but its link
+            for v in r.arrangedSubviews {
+                if let text = v as? NSStackView { text.arrangedSubviews.forEach { if !($0 is LinkButton) { $0.alphaValue = on ? 1 : 0.4 } } }
+                else { v.alphaValue = on ? 1 : 0.4 }
+            }
+            keyLinks[a]?.isHidden = on
+        }
+        refit()
         setActive(folderRow, q)
         setActive(noticeRow, q)
         setActive(placeRow, q && Prefs.shared.quickNotice)
@@ -634,4 +652,26 @@ private final class IconTile: NSView {
         let path = NSBezierPath(roundedRect: bounds, xRadius: 6, yRadius: 6)
         NSGradient(starting: color.blended(withFraction: 0.22, of: .white) ?? color, ending: color)?.draw(in: path, angle: -90)
     }
+}
+
+/// A small link in a row: "Off  Turn on ›".
+final class LinkButton: NSButton {
+    private let run: () -> Void
+    /// `state` in grey, then `title` in the link color; the whole line is one click target.
+    init(_ state: String, _ title: String, _ action: @escaping () -> Void) {
+        run = action
+        super.init(frame: .zero)
+        isBordered = false
+        setButtonType(.momentaryChange)
+        let t = NSMutableAttributedString(string: state + "  ", attributes: [.font: NSFont.systemFont(ofSize: 11),
+                                                                              .foregroundColor: NSColor.secondaryLabelColor])
+        t.append(NSAttributedString(string: title, attributes: [.font: NSFont.systemFont(ofSize: 11, weight: .medium),
+                                                                .foregroundColor: NSColor.linkColor]))
+        attributedTitle = t
+        target = self
+        self.action = #selector(fire)
+    }
+    required init?(coder: NSCoder) { fatalError() }
+    @objc private func fire() { run() }
+    override func resetCursorRects() { addCursorRect(bounds, cursor: .pointingHand) }
 }
