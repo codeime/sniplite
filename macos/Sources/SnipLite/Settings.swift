@@ -202,9 +202,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
     init() {
         let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 500, height: 600),
-                         styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
-        w.titlebarAppearsTransparent = true
-        w.isMovableByWindowBackground = true
+                         styleMask: [.titled, .closable], backing: .buffered, defer: false)
         w.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]   // opens on the current desktop
         w.title = L.t("settings").replacingOccurrences(of: "…", with: "")
         w.isReleasedWhenClosed = false
@@ -237,6 +235,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         text.alignment = .leading
         text.spacing = 2
         text.setContentCompressionResistancePriority(.init(1), for: .horizontal)
+        text.setHuggingPriority(.defaultHigh, for: .vertical)     // as tall as its lines, so it stays centered
         let spacer = NSView()
         spacer.setContentHuggingPriority(.init(1), for: .horizontal)
         var views: [NSView] = [text, spacer, control]
@@ -467,9 +466,6 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
             tabs.addTabViewItem(item)
         }
         refit()
-        window?.styleMask.remove(.fullSizeContentView)
-        window?.titlebarAppearsTransparent = false
-        window?.isMovableByWindowBackground = false
         window?.toolbarStyle = .preference
         window?.contentViewController = tabs
         window?.title = pageList[0].1
@@ -520,7 +516,11 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
                 if let text = v as? NSStackView { text.arrangedSubviews.forEach { if !($0 is LinkButton) { $0.alphaValue = on ? 1 : 0.4 } } }
                 else { v.alphaValue = on ? 1 : 0.4 }
             }
-            keyLinks[a]?.isHidden = on
+            // out of the row when on (not just hidden), so the name sits in the middle again
+            if let link = keyLinks[a], let text = r.arrangedSubviews.dropFirst().first as? NSStackView {
+                if on, link.superview != nil { text.removeArrangedSubview(link); link.removeFromSuperview() }
+                if !on, link.superview == nil { text.addArrangedSubview(link) }
+            }
         }
         refit()
         setActive(folderRow, q)
