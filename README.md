@@ -30,7 +30,7 @@
 - **Draw**: rectangles, ellipses, lines, arrows, pen, marker, text, numbers and mosaic, each with its own size and opacity; anything drawn can be selected and changed again
 - **Pins**: pin a capture, or what you copied, above every window; zoom it, fade it, draw on it again
 - **Text recognition**: read the text of a capture, tables included, with Apple's Vision on this Mac (optional, off by default)
-- **Light**: about 2.5 MB, native on Apple Silicon and Intel, about 15–25 MB of memory while idle
+- **Light**: about 2 MB, native on Apple Silicon and Intel, about 15–25 MB of memory while idle
 - **Clean**: open source, no ads, nothing collected, nothing uploaded
 - **Languages**: English, 简体中文, 繁體中文, following the system unless you pick one
 

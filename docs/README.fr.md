@@ -30,7 +30,7 @@
 - **Dessin** : rectangles, ellipses, lignes, flèches, crayon, surligneur, texte, numéros et mosaïque, chacun avec sa taille et son opacité ; tout ce qui est dessiné peut être sélectionné et modifié ensuite
 - **Épingles** : épinglez une capture, ou ce que vous avez copié, au-dessus de toutes les fenêtres ; zoomez, changez l'opacité, dessinez de nouveau dessus
 - **Reconnaissance de texte** : lit le texte d'une capture, tableaux compris, avec Vision d'Apple sur ce Mac (facultative, désactivée par défaut)
-- **Léger** : environ 2,5 Mo, natif sur Apple Silicon et Intel, environ 15 à 25 Mo de mémoire au repos
+- **Léger** : environ 2 Mo, natif sur Apple Silicon et Intel, environ 15 à 25 Mo de mémoire au repos
 - **Propre** : libre, sans publicité, rien n'est collecté ni envoyé
 - **Langues** : English, 简体中文, 繁體中文, selon le système
 

@@ -30,7 +30,7 @@
 - **Zeichnen**: Rechtecke, Ellipsen, Linien, Pfeile, Stift, Marker, Text, Nummern und Mosaik, jedes mit eigener Größe und Deckkraft; alles Gezeichnete lässt sich später auswählen und ändern
 - **Pins**: eine Aufnahme oder Kopiertes über allen Fenstern anheften; zoomen, Deckkraft ändern, wieder darauf zeichnen
 - **Texterkennung**: liest den Text einer Aufnahme, Tabellen eingeschlossen, mit Apples Vision auf diesem Mac (optional, standardmäßig aus)
-- **Leicht**: etwa 2,5 MB, nativ auf Apple Silicon und Intel, etwa 15–25 MB Speicher im Leerlauf
+- **Leicht**: etwa 2 MB, nativ auf Apple Silicon und Intel, etwa 15–25 MB Speicher im Leerlauf
 - **Sauber**: Open Source, keine Werbung, nichts wird gesammelt oder hochgeladen
 - **Sprachen**: English, 简体中文, 繁體中文, je nach System
 

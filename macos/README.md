@@ -4,7 +4,7 @@
 
 # sniplite for macOS
 
-**The native macOS version of sniplite: capture, draw, pin and read text, in about 2.5 MB**
+**The native macOS version of sniplite: capture, draw, pin and read text, in about 2 MB**
 
 [English](README.md) • [简体中文](README.zh-CN.md)
 
@@ -16,7 +16,7 @@
 
 </div>
 
-A native port of sniplite to macOS, written in Swift and AppKit, with the features and shortcuts of the Windows version. It uses nothing but the system: ScreenCaptureKit to capture (window shadows and edges included, as on screen; before macOS 15.2, the window list), the Accessibility API to find windows and their parts, Vision to read text. The app is about 2.5 MB (its icon included), runs natively on Apple Silicon and Intel, and needs macOS 14 Sonoma or later.
+A native port of sniplite to macOS, written in Swift and AppKit, with the features and shortcuts of the Windows version. It uses nothing but the system: ScreenCaptureKit to capture (window shadows and edges included, as on screen; before macOS 15.2, the window list), the Accessibility API to find windows and their parts, Vision to read text. The app is about 2 MB (its icon included), runs natively on Apple Silicon and Intel, and needs macOS 14 Sonoma or later.
 
 The Windows version (`../src`) is unchanged; this folder is a separate program.
 
@@ -96,6 +96,8 @@ cd macos
 ./build.sh --zip    # also build/sniplite_<version>_macos.zip
 ./test.sh           # unit tests (Swift Testing)
 ```
+
+**Icon.** `Resources/AppIcon.icns` is made from `Resources/AppIcon.png` by `./make-icon.sh` (needs Python with Pillow): each size is stored once, as a compressed PNG, which keeps it about half the size of what `iconutil` writes. Run it again after changing the icon.
 
 **Signing.** By default the app is signed ad hoc. macOS then sees every build as a new app: its permissions must be granted again after each rebuild (sniplite removes the stale entries itself, so the list never shows one that no longer applies). To keep them across rebuilds, sign with a fixed identity:
 

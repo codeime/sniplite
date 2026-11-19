@@ -24,16 +24,22 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 lipo -create "${bins[@]}" -output "$APP/Contents/MacOS/sniplite"
 strip -x "$APP/Contents/MacOS/sniplite"
 
-# icon: from the 1024 master, at every size macOS wants (16 to 512, each also @2x). The artwork
-# fills the standard icon shape, so macOS draws it with no plate or light edge around it.
-ICONSET=build/sniplite.iconset
-rm -rf "$ICONSET"; mkdir -p "$ICONSET"
-for s in 16 32 128 256 512; do
-  sips -z $s $s Resources/AppIcon.png --out "$ICONSET/icon_${s}x${s}.png" >/dev/null
-  sips -z $((s * 2)) $((s * 2)) Resources/AppIcon.png --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
-done
-iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/sniplite.icns"
-rm -rf "$ICONSET"
+# icon: Resources/AppIcon.icns, made from the 1024 master by make-icon.sh (every size macOS wants,
+# each PNG compressed losslessly: about half of what sips and iconutil give). The artwork fills
+# the standard icon shape, so macOS draws it with no plate or light edge around it. Without that
+# file it is made here, larger, with sips and iconutil.
+if [ -f Resources/AppIcon.icns ]; then
+  cp Resources/AppIcon.icns "$APP/Contents/Resources/sniplite.icns"
+else
+  ICONSET=build/sniplite.iconset
+  rm -rf "$ICONSET"; mkdir -p "$ICONSET"
+  for s in 16 32 128 256 512; do
+    sips -z $s $s Resources/AppIcon.png --out "$ICONSET/icon_${s}x${s}.png" >/dev/null
+    sips -z $((s * 2)) $((s * 2)) Resources/AppIcon.png --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
+  done
+  iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/sniplite.icns"
+  rm -rf "$ICONSET"
+fi
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

@@ -4,7 +4,7 @@
 
 # sniplite for macOS
 
-**sniplite 的 macOS 原生版：截图、标注、贴图、识别文字，约 2.5 MB**
+**sniplite 的 macOS 原生版：截图、标注、贴图、识别文字，约 2 MB**
 
 [English](README.md) • [简体中文](README.zh-CN.md)
 
@@ -16,7 +16,7 @@
 
 </div>
 
-sniplite 在 macOS 上的原生移植，用 Swift 和 AppKit 编写，功能和快捷键与 Windows 版一致。只用系统自带的能力：截图用 ScreenCaptureKit（和屏幕上一样带窗口阴影和边框；macOS 15.2 以前用系统窗口列表截屏），识别窗口和窗口内元素用辅助功能接口，识别文字用 Vision。应用约 2.5 MB（含图标），原生支持 Apple 芯片和 Intel，需要 macOS 14 Sonoma 或更高版本。
+sniplite 在 macOS 上的原生移植，用 Swift 和 AppKit 编写，功能和快捷键与 Windows 版一致。只用系统自带的能力：截图用 ScreenCaptureKit（和屏幕上一样带窗口阴影和边框；macOS 15.2 以前用系统窗口列表截屏），识别窗口和窗口内元素用辅助功能接口，识别文字用 Vision。应用约 2 MB（含图标），原生支持 Apple 芯片和 Intel，需要 macOS 14 Sonoma 或更高版本。
 
 Windows 版（`../src`）没有任何改动；这个文件夹是一个独立的程序。
 
@@ -96,6 +96,8 @@ cd macos
 ./build.sh --zip    # 同时生成 build/sniplite_<版本>_macos.zip
 ./test.sh           # 单元测试（Swift Testing）
 ```
+
+**图标。** `Resources/AppIcon.icns` 由 `./make-icon.sh` 从 `Resources/AppIcon.png` 生成（需要装有 Pillow 的 Python）：每个尺寸只存一份压缩过的 PNG，体积约为 `iconutil` 生成的一半。修改图标后重新运行一次即可。
 
 **签名。** 默认是临时签名，macOS 会把每次编译的结果当成一个新应用：每次重新编译后都要重新授权（sniplite 会自动清掉失效的旧授权项，列表里不会出现"看着开着、其实不生效"的条目）。想在重新编译后保留权限，需要用固定的身份签名：
 

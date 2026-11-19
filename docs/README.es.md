@@ -30,7 +30,7 @@
 - **Dibujo**: rectángulos, elipses, líneas, flechas, lápiz, marcador, texto, números y mosaico, cada uno con su tamaño y opacidad; todo lo dibujado se puede seleccionar y cambiar después
 - **Fijar**: fija una captura, o lo que copiaste, sobre todas las ventanas; amplíala, cambia su opacidad, vuelve a dibujar en ella
 - **Reconocimiento de texto**: lee el texto de una captura, tablas incluidas, con Vision de Apple en este Mac (opcional, desactivado por defecto)
-- **Ligera**: unos 2,5 MB, nativa en Apple Silicon e Intel, unos 15–25 MB de memoria en reposo
+- **Ligera**: unos 2 MB, nativa en Apple Silicon e Intel, unos 15–25 MB de memoria en reposo
 - **Limpia**: código abierto, sin anuncios, no recoge ni envía nada
 - **Idiomas**: English, 简体中文, 繁體中文, según el sistema
 
