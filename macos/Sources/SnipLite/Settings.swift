@@ -41,6 +41,20 @@ final class Prefs {
         get { d.object(forKey: "autoCheckUpdates") as? Bool ?? true }
         set { d.set(newValue, forKey: "autoCheckUpdates") }
     }
+    /// How often: "daily", "weekly" or "monthly" (no longer, so fixes still arrive).
+    var updateInterval: String {
+        get { d.string(forKey: "updateInterval") ?? "daily" }
+        set { d.set(newValue, forKey: "updateInterval") }
+    }
+    /// The time between automatic checks, a little short of the period so a check a few hours
+    /// early still counts.
+    var updateIntervalSeconds: TimeInterval {
+        switch updateInterval {
+        case "weekly": return 6.5 * 86400
+        case "monthly": return 29 * 86400
+        default: return 20 * 3600
+        }
+    }
     var lastUpdateCheck: Date {
         get { d.object(forKey: "lastUpdateCheck") as? Date ?? .distantPast }
         set { d.set(newValue, forKey: "lastUpdateCheck") }
@@ -534,11 +548,17 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         controls.alignment = .centerY
         let updateRow = row(("arrow.down.circle.fill", .systemBlue), L.t("softwareUpdate"), nil, controls)
         (updateRow.arrangedSubviews.dropFirst().first as? NSStackView)?.addArrangedSubview(updateDetail)
+        let interval = row(("calendar", .systemOrange), L.t("checkEvery"), nil,
+                           popup([("daily", L.t("everyDay")), ("weekly", L.t("everyWeek")), ("monthly", L.t("everyMonth"))],
+                                 Prefs.shared.updateInterval, #selector(pickInterval(_:))))
+        intervalRow = interval
         let updates = section(nil, [
             updateRow,
             row(("clock.arrow.circlepath", .systemGreen), L.t("autoCheck"), L.t("autoCheckDetail"),
                 toggle(Prefs.shared.autoCheckUpdates, #selector(toggleAutoCheck(_:)))),
+            interval,
         ], note(String(format: L.t("currentVersion"), Updater.current)))
+        if !Prefs.shared.autoCheckUpdates { interval.alphaValue = 0.4; (interval.arrangedSubviews.last as? NSControl)?.isEnabled = false }
         Updater.shared.onChange[ObjectIdentifier(self)] = { [weak self] st in self?.showUpdate(st) }
         showUpdate(Updater.shared.state)
         updatesPage = updates
@@ -614,7 +634,16 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         Updater.shared.check()
     }
 
-    @objc private func toggleAutoCheck(_ b: NSSwitch) { Prefs.shared.autoCheckUpdates = b.state == .on }
+    private var intervalRow: NSView?
+
+    @objc private func toggleAutoCheck(_ b: NSSwitch) {
+        Prefs.shared.autoCheckUpdates = b.state == .on
+        setActive(intervalRow, b.state == .on)          // the frequency matters only while it is on
+    }
+
+    @objc private func pickInterval(_ p: NSPopUpButton) {
+        Prefs.shared.updateInterval = p.selectedItem?.representedObject as? String ?? "daily"
+    }
 
     private func stack(_ views: [NSView]) -> NSView {
         let st = NSStackView(views: views)

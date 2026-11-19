@@ -45,7 +45,8 @@ final class Updater {
 
     // MARK: checking
 
-    /// At start-up and every few hours: once a day at most, when automatic checks are on.
+    /// At start-up and every few hours: when automatic checks are on and their period
+    /// (a day, a week or a month) has gone by since the last one.
     func startAutomaticChecks() {
         Timer.scheduledTimer(withTimeInterval: 3 * 3600, repeats: true) { _ in Task { @MainActor in Updater.shared.checkIfDue() } }
         DispatchQueue.main.asyncAfter(deadline: .now() + 15) { self.checkIfDue() }
@@ -53,7 +54,7 @@ final class Updater {
 
     private func checkIfDue() {
         guard Prefs.shared.autoCheckUpdates,
-              Date().timeIntervalSince(Prefs.shared.lastUpdateCheck) > 20 * 3600 else { return }
+              Date().timeIntervalSince(Prefs.shared.lastUpdateCheck) > Prefs.shared.updateIntervalSeconds else { return }
         check(quiet: true)
     }
 
