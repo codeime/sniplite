@@ -64,7 +64,7 @@ final class Prefs {
         get { d.object(forKey: "quickEnabled") as? Bool ?? false }
         set { d.set(newValue, forKey: "quickEnabled") }
     }
-    /// After a quick capture: a banner (with the path), or only the menu bar icon flashing.
+    /// After a quick capture the menu bar icon flashes; this adds a banner with the path.
     var quickNotice: Bool {
         get { d.object(forKey: "quickNotice") as? Bool ?? false }
         set { d.set(newValue, forKey: "quickNotice") }

@@ -1098,6 +1098,7 @@ final class OverlayView: NSView, NSTextViewDelegate {
         }
         toolbar.setPaletteAbove(above)
         toolbar.frame.origin = CGPoint(x: snap(x), y: snap(y))
+        needsDisplay = true                  // the size label moves out of its way
     }
 
     private func edges(at p: CGPoint) -> Int {
@@ -1402,6 +1403,10 @@ final class OverlayView: NSView, NSTextViewDelegate {
         var box = CGRect(x: r.minX, y: r.minY - sz.height - 10, width: sz.width + Badge.padX * 2, height: sz.height + Badge.padY * 2)
         if box.minY < 2 { box.origin.y = r.minY + 4; box.origin.x = r.minX + 4 }
         box.origin.x = min(box.minX, bounds.width - box.width - 2)
+        // the toolbar above the selection would hide it: inside the selection's corner instead
+        if !toolbar.isHidden && toolbar.frame.insetBy(dx: -4, dy: -4).intersects(box) {
+            box.origin = CGPoint(x: r.minX + 4, y: r.minY + 4)
+        }
         return CGRect(x: snap(box.minX), y: snap(box.minY), width: ceil(box.width), height: ceil(box.height))
     }
 

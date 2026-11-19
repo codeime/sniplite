@@ -98,7 +98,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         d.set(true, forKey: "movedFromOldID")
     }
 
-    /// A quick capture was saved (when its banner is off): the menu bar icon focuses and flashes,
+    /// A quick capture was saved: the menu bar icon focuses and flashes,
     /// frame by frame (MenuBarIcon.snapFrame), then rests again.
     private static var snapTimer: Timer?
     static func snip() {

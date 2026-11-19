@@ -440,10 +440,22 @@ final class Toolbar: NSView {
 
     private func showOpacity(_ o: CGFloat) { opacityValue.stringValue = "\(Int((o * 100).rounded()))%" }
 
+    /// The two rows in their order (the palette on top when the toolbar is above the selection),
+    /// and the toolbar exactly as big as both: a row outside it would show but take no clicks.
     private func fitSize() {
-        setFrameSize(NSSize(width: max(mainRow.frame.width, paletteRow.frame.width),
-                            height: tool == nil ? mainRow.frame.height : paletteRow.frame.maxY))
+        let gap: CGFloat = 6
+        if paletteAbove && !paletteRow.isHidden {
+            paletteRow.frame.origin.y = 0
+            mainRow.frame.origin.y = paletteRow.frame.height + gap
+        } else {
+            mainRow.frame.origin.y = 0
+            paletteRow.frame.origin.y = mainRow.frame.height + gap
+        }
+        let rows = paletteRow.isHidden ? [mainRow] : [mainRow, paletteRow]
+        setFrameSize(NSSize(width: rows.map(\.frame.maxX).max() ?? 0, height: rows.map(\.frame.maxY).max() ?? 0))
     }
+
+    private var paletteAbove = false
 
     required init?(coder: NSCoder) { fatalError() }
 
@@ -462,13 +474,8 @@ final class Toolbar: NSView {
 
     /// When the toolbar sits above the selection the palette goes on top of the buttons.
     func setPaletteAbove(_ above: Bool) {
-        if above {
-            paletteRow.frame.origin.y = 0
-            mainRow.frame.origin.y = paletteRow.isHidden ? 0 : unit + 10
-        } else {
-            mainRow.frame.origin.y = 0
-            paletteRow.frame.origin.y = unit + 10
-        }
+        paletteAbove = above
+        fitSize()
     }
 
     func setColor(_ i: Int) { colorIndex = i; refreshPalette() }
