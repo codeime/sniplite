@@ -494,27 +494,18 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     private var notesLink: LinkButton?
 
     private func buildAbout() -> NSView {
-        // the app: icon, name, version
-        let icon = NSImageView(image: NSApp.applicationIconImage)
-        icon.imageScaling = .scaleProportionallyUpOrDown
-        icon.translatesAutoresizingMaskIntoConstraints = false
-        icon.widthAnchor.constraint(equalToConstant: 52).isActive = true
-        icon.heightAnchor.constraint(equalToConstant: 52).isActive = true
+        // the app: its name and version
         let name = NSTextField(labelWithString: "sniplite")
         name.font = .systemFont(ofSize: 17, weight: .bold)
         let version = NSTextField(labelWithString: "sniplite for Mac · " + String(format: L.t("versionFmt"), Updater.current))
         version.font = .systemFont(ofSize: 12)
         version.textColor = .secondaryLabelColor
         version.isSelectable = true
-        // in one line: the icon, then the name over the version
-        let names = NSStackView(views: [name, version])
-        names.orientation = .vertical
-        names.alignment = .leading
-        names.spacing = 2
-        let head = NSStackView(views: [icon, names])
-        head.alignment = .centerY
-        head.spacing = 12
-        head.edgeInsets = NSEdgeInsets(top: 0, left: 6, bottom: 0, right: 0)
+        let head = NSStackView(views: [name, version])
+        head.orientation = .vertical
+        head.alignment = .leading
+        head.spacing = 2
+        head.edgeInsets = NSEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
 
         // updates
         updateDetail.font = .systemFont(ofSize: 11)
@@ -542,12 +533,15 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         // links
         func open(_ url: String) -> () -> Void { { if let u = URL(string: url) { NSWorkspace.shared.open(u) } } }
         let repo = "https://github.com/\(Updater.repo)"
-        // the links in one row; the license in the note under it
-        let linkRow = NSStackView(views: [LinkButton("", L.t("homepage") + " ›", open(repo)),
-                                          LinkButton("", L.t("feedback") + " ›", open(repo + "/issues")),
-                                          LinkButton("", L.t("originalWin") + " ›", open("https://github.com/MrTangLuyao/sniplite"))])
-        linkRow.spacing = 14
-        let links = section(nil, [row(("link", .systemBlue), L.t("secLinks"), nil, linkRow)], note(L.t("aboutFoot")))
+        let license = NSTextField(labelWithString: "MIT")
+        license.font = .systemFont(ofSize: 12)
+        license.textColor = .secondaryLabelColor
+        let links = section(L.t("secLinks"), [
+            row(("house.fill", .systemBlue), L.t("homepage"), nil, LinkButton("", "\(Updater.repo) ›", open(repo))),
+            row(("exclamationmark.bubble.fill", .systemOrange), L.t("feedback"), nil, LinkButton("", "Issues ›", open(repo + "/issues"))),
+            row(("pc", .systemTeal), L.t("originalWin"), nil, LinkButton("", "MrTangLuyao/sniplite ›", open("https://github.com/MrTangLuyao/sniplite"))),
+            row(("doc.text.fill", .systemGray), L.t("license"), nil, license),
+        ], note(L.t("aboutFoot")))
         return stack([head, updates, links])
     }
 
