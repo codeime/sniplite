@@ -63,8 +63,9 @@ enum CornerNotice {
         panel = nil
         // a banner in a corner or at the top; a square card in the middle
         let place = Prefs.shared.noticePosition
-        let card = place == "center"
-        let width: CGFloat = card ? 240 : 344, height: CGFloat = card ? 150 : 72
+        let card = false                         // one look everywhere: a banner, compact in the middle
+        let compact = place == "center"
+        let width: CGFloat = compact ? 300 : 344, height: CGFloat = compact ? 60 : 72
         let vis = screen.visibleFrame
         let origin: CGPoint
         switch place {
@@ -128,7 +129,7 @@ enum CornerNotice {
             let icon = NSImageView(image: NSWorkspace.shared.icon(forFile: Bundle.main.bundlePath))
             icon.imageScaling = .scaleProportionallyUpOrDown
             icon.translatesAutoresizingMaskIntoConstraints = false
-            let side: CGFloat = card ? 48 : 38
+            let side: CGFloat = card ? 48 : (frame.height < 66 ? 30 : 38)
             icon.widthAnchor.constraint(equalToConstant: side).isActive = true
             icon.heightAnchor.constraint(equalToConstant: side).isActive = true
             let app = NSTextField(labelWithString: "sniplite")
