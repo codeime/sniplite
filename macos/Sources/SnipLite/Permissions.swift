@@ -407,7 +407,9 @@ final class PermissionsWindow: NSWindowController, NSWindowDelegate {
 
     @objc private func open(_ b: NSButton) {
         let p = Permission.allCases[b.tag]
-        PermissionGuide.start(p) { [weak self] in
+        // the panel flies out of this button to its place beside System Settings
+        let from = b.window.map { $0.convertPoint(toScreen: b.convert(CGPoint(x: b.bounds.midX, y: b.bounds.midY), to: nil)) }
+        PermissionGuide.start(p, from: from) { [weak self] in
             // System Settings has just closed: back to this page for the next permission
             self?.refresh()
             NSApp.activate(ignoringOtherApps: true)
@@ -460,12 +462,18 @@ final class PermissionGuide {
     private var lastSeen = Date()
     /// Where the panel is going (it may still be gliding there).
     private var target: CGRect?
+    /// Where it sets out from, and whether it has made that first trip.
+    private let origin: CGPoint?
+    private var arrived = false
+    private let view: DragPanelView
     private let titlesAtStart = Permission.visibleWindowTitles()
 
-    static func start(_ p: Permission, onGranted: @escaping () -> Void) {
+    /// `from`: where the panel sets out (the button that was clicked, in screen coordinates);
+    /// without it, the middle of the screen.
+    static func start(_ p: Permission, from: CGPoint? = nil, onGranted: @escaping () -> Void) {
         stop(closeSettings: false)
         if !p.granted { p.resetStaleEntry() }
-        let g = PermissionGuide(p, onGranted: onGranted)
+        let g = PermissionGuide(p, from: from, onGranted: onGranted)
         current = g
         // an open System Settings does not always follow the link to another page: quit it first
         let running = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.systempreferences")
@@ -492,8 +500,10 @@ final class PermissionGuide {
         }
     }
 
-    private init(_ p: Permission, onGranted: @escaping () -> Void) {
+    private init(_ p: Permission, from: CGPoint?, onGranted: @escaping () -> Void) {
         permission = p
+        origin = from
+        view = DragPanelView(permission: p)
         self.onGranted = onGranted
         panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: PermissionGuide.size.width, height: PermissionGuide.size.height),
                         styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -503,7 +513,14 @@ final class PermissionGuide {
         panel.hasShadow = true
         panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        panel.contentView = DragPanelView(permission: p)
+        // the panel's view in a clear holder, so it can grow on its way in
+        let holder = NSView(frame: NSRect(origin: .zero, size: PermissionGuide.size))
+        holder.wantsLayer = true
+        view.frame = holder.bounds
+        view.autoresizingMask = [.width, .height]
+        view.wantsLayer = true
+        holder.addSubview(view)
+        panel.contentView = holder
     }
 
     private func tick() {
@@ -566,11 +583,14 @@ final class PermissionGuide {
                       width: size.width, height: size.height)
         // the arrow points at the list: up from below (or over the bottom), left from the right side
         let direction: DragPanelView.Direction = i == 1 ? .left : (i == 2 ? .right : .up)
-        (panel.contentView as? DragPanelView)?.direction = direction
+        view.direction = direction
         r.origin.x = min(max(vis.minX + 8, r.minX), vis.maxX - r.width - 8)
         r.origin.y = min(max(vis.minY + 4, r.minY), vis.maxY - r.height - 4)
-        if !panel.isVisible || panel.alphaValue == 0 {
-            // in: it fades in while gliding a little toward System Settings
+        if !arrived {
+            arrived = true
+            flyIn(to: r, vis: vis)
+        } else if !panel.isVisible || panel.alphaValue == 0 {
+            // back again: it fades in while gliding a little toward System Settings
             var from = r
             switch direction {
             case .up: from.origin.y -= 14
@@ -592,6 +612,43 @@ final class PermissionGuide {
             target = r
             panel.setFrame(r, display: true)                      // following System Settings as it moves
         }
+    }
+
+    /// The first appearance: from the button (or the middle of the screen) the panel travels to its
+    /// place, growing from small and fading in, on one soft ease-out.
+    private func flyIn(to r: CGRect, vis: CGRect) {
+        let start = origin ?? CGPoint(x: vis.midX, y: vis.midY)
+        let from = CGRect(x: start.x - r.width / 2, y: start.y - r.height / 2, width: r.width, height: r.height)
+        let curve = CAMediaTimingFunction(controlPoints: 0.16, 1, 0.3, 1)
+        let duration = 0.6
+        panel.hasShadow = false                       // a shadow would keep the full size while the content grows
+        panel.setFrame(from, display: false)
+        panel.alphaValue = 0
+        panel.orderFrontRegardless()
+        target = r
+        if let layer = view.layer {
+            // grow about the middle, wherever the layer's own anchor point is
+            let c = CGPoint(x: (0.5 - layer.anchorPoint.x) * layer.bounds.width,
+                            y: (0.5 - layer.anchorPoint.y) * layer.bounds.height)
+            var small = CATransform3DMakeTranslation(c.x, c.y, 0)
+            small = CATransform3DScale(small, 0.4, 0.4, 1)
+            small = CATransform3DTranslate(small, -c.x, -c.y, 0)
+            let grow = CABasicAnimation(keyPath: "transform")
+            grow.fromValue = small
+            grow.toValue = CATransform3DIdentity
+            grow.duration = duration
+            grow.timingFunction = curve
+            layer.add(grow, forKey: "grow")
+        }
+        NSAnimationContext.runAnimationGroup({ ctx in
+            ctx.duration = duration
+            ctx.timingFunction = curve
+            panel.animator().alphaValue = 1
+            panel.animator().setFrame(r, display: true)
+        }, completionHandler: { [panel] in
+            panel.hasShadow = true
+            panel.invalidateShadow()
+        })
     }
 
     /// The main window of System Settings in Cocoa screen coordinates.
