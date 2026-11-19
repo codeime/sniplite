@@ -128,9 +128,16 @@ Yes. Run `sniplite help` to see it.
 
 ## Build it yourself
 
-Install [w64devkit](https://github.com/skeeto/w64devkit) (or another MinGW-w64), add its `bin` folder to PATH and run `build.bat`; the programs appear in the `build` folder. The source is in `src`: the fast parts are assembly files (`.S`), assembled by gcc with the GNU assembler, the rest is C (`.c`). No C runtime is linked, only the system libraries that come with Windows.
+Only the Xcode Command Line Tools are needed (`xcode-select --install`); Xcode itself is not.
 
-The macOS version is built with `macos/build.sh` and needs only the Xcode Command Line Tools; see [`macos`](macos/README.md).
+```bash
+cd macos
+./build.sh          # -> build/sniplite.app (Apple Silicon + Intel)
+./build.sh --zip    # also build/sniplite_<version>_macos.zip
+./test.sh           # unit tests
+```
+
+The source is in `macos/Sources`, written in Swift with AppKit; signing and a map of the code are in [`macos`](macos/README.md). Pushing a tag `macos-v<version>` builds the app with GitHub Actions and publishes it on Releases. The Windows source in `src` comes from the original repository and is not built here.
 
 ## License
 
@@ -138,8 +145,6 @@ The macOS version is built with `macos/build.sh` and needs only the Xcode Comman
 
 ## Third-party open source
 
-sniplite itself uses nothing but the system libraries of Windows. The optional text recognition module is the work of others, passed on unchanged with their licenses (they are in the module's `ocr` folder and on the [module's release page](https://github.com/MrTangLuyao/sniplite/releases/tag/ocr-1)):
+sniplite for Mac uses nothing but what comes with macOS: ScreenCaptureKit to capture, the Accessibility API to find windows and their parts, and Vision to read text. No third-party code or models are included.
 
-- [ONNX Runtime](https://github.com/microsoft/onnxruntime) 1.26.0, Copyright (c) Microsoft Corporation, MIT License
-- The PP-OCRv6 models of [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR), Copyright (c) PaddlePaddle Authors, Apache License 2.0
-- Their ONNX form comes from [RapidOCR](https://github.com/RapidAI/RapidOCR), Apache License 2.0
+The drag-to-authorize panel follows the approach of [PermissionFlow](https://github.com/jaywcjlove/PermissionFlow) by jaywcjlove (MIT License), rewritten in AppKit.

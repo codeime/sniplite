@@ -128,9 +128,16 @@
 
 ## 自己編譯
 
-裝好 [w64devkit](https://github.com/skeeto/w64devkit)（或其他 MinGW-w64），把它的 `bin` 資料夾加進 PATH，然後執行 `build.bat`，程式會產生在 `build` 資料夾裡。原始碼在 `src` 裡：要快的部分是組合語言檔案（`.S`），由 gcc 呼叫 GNU 組譯器組譯，其餘是 C 檔案（`.c`）。不連結 C 執行階段程式庫，只用到 Windows 內建的系統程式庫。
+只需要 Xcode 命令列工具（`xcode-select --install`），不需要安裝 Xcode。
 
-macOS 版用 `macos/build.sh` 編譯，只需要 Xcode 命令列工具，詳見 [`macos`](../macos/README.md)。
+```bash
+cd macos
+./build.sh          # 產生 build/sniplite.app（Apple 晶片 + Intel）
+./build.sh --zip    # 同時產生 build/sniplite_<版本>_macos.zip
+./test.sh           # 單元測試
+```
+
+原始碼在 `macos/Sources`，以 Swift 和 AppKit 撰寫；簽署方式和程式結構見 [`macos`](../macos/README.zh-CN.md)。推送 `macos-v<版本>` 標籤後，GitHub Actions 會自動編譯並發佈到 Releases。`src` 裡的 Windows 版原始碼來自原倉庫，這裡不編譯。
 
 ## 授權
 
@@ -138,8 +145,6 @@ macOS 版用 `macos/build.sh` 編譯，只需要 Xcode 命令列工具，詳見 
 
 ## 第三方開源元件
 
-sniplite 本身只用到 Windows 內建的系統程式庫。選用的文字辨識模組是他人的成果，原樣提供，並附帶它們的授權條款（在模組的 `ocr` 資料夾裡，也在[模組的發布頁](https://github.com/MrTangLuyao/sniplite/releases/tag/ocr-1)）：
+sniplite for Mac 只用 macOS 內建的能力：截圖用 ScreenCaptureKit，辨識視窗和視窗裡的元素用輔助使用介面，辨識文字用 Vision。不包含任何第三方程式碼或模型。
 
-- [ONNX Runtime](https://github.com/microsoft/onnxruntime) 1.26.0，Copyright (c) Microsoft Corporation，MIT 授權
-- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) 的 PP-OCRv6 模型，Copyright (c) PaddlePaddle Authors，Apache 2.0 授權
-- 模型的 ONNX 格式來自 [RapidOCR](https://github.com/RapidAI/RapidOCR)，Apache 2.0 授權
+拖曳授權面板參考了 jaywcjlove 的 [PermissionFlow](https://github.com/jaywcjlove/PermissionFlow)（MIT 授權）的做法，以 AppKit 重寫。

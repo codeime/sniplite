@@ -128,9 +128,16 @@
 
 ## 직접 빌드하기
 
-[w64devkit](https://github.com/skeeto/w64devkit)(또는 다른 MinGW-w64)을 설치하고 `bin` 폴더를 PATH에 추가한 뒤 `build.bat`을 실행하면 `build` 폴더에 프로그램이 만들어집니다. 소스는 `src`에 있습니다. 빨라야 하는 부분은 어셈블리 파일(`.S`)이며 gcc가 GNU 어셈블러로 어셈블하고, 나머지는 C 파일(`.c`)입니다. C 런타임은 링크하지 않고 Windows에 기본으로 들어 있는 시스템 라이브러리만 씁니다.
+Xcode 명령줄 도구만 있으면 됩니다(`xcode-select --install`). Xcode 자체는 필요 없습니다.
 
-macOS 버전은 `macos/build.sh`로 빌드하며 Xcode 명령줄 도구만 있으면 됩니다. 자세한 내용은 [`macos`](../macos/README.md)를 보세요.
+```bash
+cd macos
+./build.sh          # build/sniplite.app 생성 (Apple 실리콘 + Intel)
+./build.sh --zip    # build/sniplite_<버전>_macos.zip도 생성
+./test.sh           # 단위 테스트
+```
+
+소스는 `macos/Sources`에 있으며 Swift와 AppKit으로 작성되었습니다. 서명 방법과 코드 구성은 [`macos`](../macos/README.md)를 참고하세요. `macos-v<버전>` 태그를 푸시하면 GitHub Actions가 빌드해 Releases에 게시합니다. `src`의 Windows 버전 소스는 원래 저장소의 것으로, 여기서는 빌드하지 않습니다.
 
 ## 라이선스
 
@@ -138,8 +145,6 @@ macOS 버전은 `macos/build.sh`로 빌드하며 Xcode 명령줄 도구만 있�
 
 ## 서드파티 오픈 소스
 
-sniplite 자체는 Windows에 기본으로 들어 있는 시스템 라이브러리만 씁니다. 선택 사항인 텍스트 인식 모듈은 다른 분들의 작업물이며, 수정 없이 라이선스와 함께 제공합니다(라이선스는 모듈의 `ocr` 폴더와 [모듈 릴리스 페이지](https://github.com/MrTangLuyao/sniplite/releases/tag/ocr-1)에 있습니다).
+sniplite for Mac은 macOS에 들어 있는 기능만 씁니다. 캡처는 ScreenCaptureKit, 창과 그 안의 요소 찾기는 손쉬운 사용 API, 글자 인식은 Vision을 사용합니다. 서드파티 코드나 모델은 포함되어 있지 않습니다.
 
-- [ONNX Runtime](https://github.com/microsoft/onnxruntime) 1.26.0, Copyright (c) Microsoft Corporation, MIT 라이선스
-- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)의 PP-OCRv6 모델, Copyright (c) PaddlePaddle Authors, Apache License 2.0
-- 모델의 ONNX 형식은 [RapidOCR](https://github.com/RapidAI/RapidOCR)에서 제공, Apache License 2.0
+드래그로 허용하는 패널은 jaywcjlove의 [PermissionFlow](https://github.com/jaywcjlove/PermissionFlow)(MIT 라이선스) 방식을 참고해 AppKit으로 다시 작성했습니다.

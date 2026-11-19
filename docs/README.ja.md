@@ -128,9 +128,16 @@
 
 ## 自分でビルドする
 
-[w64devkit](https://github.com/skeeto/w64devkit)（またはほかの MinGW-w64）をインストールし、その `bin` フォルダーを PATH に追加して `build.bat` を実行すると、`build` フォルダーにプログラムができます。ソースは `src` にあります。速さが必要な部分はアセンブリファイル（`.S`）で、gcc が GNU アセンブラーでアセンブルし、それ以外は C ファイル（`.c`）です。C ランタイムはリンクせず、Windows 標準のシステムライブラリだけを使います。
+必要なのは Xcode コマンドラインツール（`xcode-select --install`）だけで、Xcode 本体は要りません。
 
-macOS 版は `macos/build.sh` でビルドでき、Xcode コマンドラインツールだけで足ります。詳しくは [`macos`](../macos/README.md) を参照してください。
+```bash
+cd macos
+./build.sh          # build/sniplite.app を作成（Apple シリコン + Intel）
+./build.sh --zip    # build/sniplite_<バージョン>_macos.zip も作成
+./test.sh           # ユニットテスト
+```
+
+ソースは `macos/Sources` にあり、Swift と AppKit で書かれています。署名とコードの構成は [`macos`](../macos/README.md) を参照してください。`macos-v<バージョン>` タグをプッシュすると、GitHub Actions がビルドして Releases に公開します。`src` にある Windows 版のソースは元のリポジトリのもので、ここではビルドしません。
 
 ## ライセンス
 
@@ -138,8 +145,6 @@ macOS 版は `macos/build.sh` でビルドでき、Xcode コマンドライン�
 
 ## サードパーティのオープンソース
 
-sniplite 本体は Windows 標準のシステムライブラリだけを使います。オプションの文字認識モジュールはほかの方々の成果物で、変更を加えず、ライセンスとともに配布しています（ライセンスはモジュールの `ocr` フォルダーと[モジュールのリリースページ](https://github.com/MrTangLuyao/sniplite/releases/tag/ocr-1)にあります）。
+sniplite for Mac は macOS に入っている機能だけを使います。キャプチャは ScreenCaptureKit、ウインドウとその部品の検出はアクセシビリティ API、文字認識は Vision です。サードパーティのコードやモデルは含まれていません。
 
-- [ONNX Runtime](https://github.com/microsoft/onnxruntime) 1.26.0、Copyright (c) Microsoft Corporation、MIT ライセンス
-- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) の PP-OCRv6 モデル、Copyright (c) PaddlePaddle Authors、Apache License 2.0
-- モデルの ONNX 形式は [RapidOCR](https://github.com/RapidAI/RapidOCR) によるもの、Apache License 2.0
+ドラッグで許可するパネルは、jaywcjlove さんの [PermissionFlow](https://github.com/jaywcjlove/PermissionFlow)（MIT ライセンス）のやり方を参考に、AppKit で書き直したものです。

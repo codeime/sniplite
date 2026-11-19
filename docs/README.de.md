@@ -128,9 +128,16 @@ Ja. `sniplite help` zeigt alle Befehle.
 
 ## Selbst bauen
 
-[w64devkit](https://github.com/skeeto/w64devkit) (oder ein anderes MinGW-w64) installieren, dessen Ordner `bin` in den PATH aufnehmen und `build.bat` ausführen; die Programme entstehen im Ordner `build`. Der Quelltext liegt in `src`: Die schnellen Teile sind Assemblerdateien (`.S`), die gcc mit dem GNU-Assembler übersetzt, der Rest ist C (`.c`). Es wird keine C-Laufzeitbibliothek gelinkt, nur die Systembibliotheken, die Windows mitbringt.
+Nötig sind nur die Xcode-Befehlszeilenwerkzeuge (`xcode-select --install`), nicht Xcode selbst.
 
-Die macOS-Version wird mit `macos/build.sh` gebaut und braucht nur die Xcode Command Line Tools; siehe [`macos`](../macos/README.md).
+```bash
+cd macos
+./build.sh          # -> build/sniplite.app (Apple Silicon + Intel)
+./build.sh --zip    # zusätzlich build/sniplite_<Version>_macos.zip
+./test.sh           # Unit-Tests
+```
+
+Der Quellcode liegt in `macos/Sources`, geschrieben in Swift mit AppKit; Signieren und ein Überblick über den Code stehen in [`macos`](../macos/README.md). Ein Tag `macos-v<Version>` lässt GitHub Actions die App bauen und unter Releases veröffentlichen. Der Quellcode der Windows-Version in `src` stammt aus dem ursprünglichen Repository und wird hier nicht gebaut.
 
 ## Lizenz
 
@@ -138,8 +145,6 @@ Die macOS-Version wird mit `macos/build.sh` gebaut und braucht nur die Xcode Com
 
 ## Open Source von Dritten
 
-sniplite selbst nutzt nur die Systembibliotheken von Windows. Das optionale Texterkennungsmodul ist die Arbeit anderer und wird unverändert mit deren Lizenzen weitergegeben (im Ordner `ocr` des Moduls und auf der [Seite des Moduls](https://github.com/MrTangLuyao/sniplite/releases/tag/ocr-1)):
+sniplite für Mac nutzt nur, was macOS mitbringt: ScreenCaptureKit zum Aufnehmen, die Bedienungshilfen-API, um Fenster und ihre Teile zu finden, und Vision, um Text zu lesen. Code oder Modelle von Dritten sind nicht enthalten.
 
-- [ONNX Runtime](https://github.com/microsoft/onnxruntime) 1.26.0, Copyright (c) Microsoft Corporation, MIT-Lizenz
-- Die PP-OCRv6-Modelle von [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR), Copyright (c) PaddlePaddle Authors, Apache-Lizenz 2.0
-- Ihre ONNX-Fassung stammt von [RapidOCR](https://github.com/RapidAI/RapidOCR), Apache-Lizenz 2.0
+Das Feld zum Ziehen für die Berechtigung folgt dem Ansatz von [PermissionFlow](https://github.com/jaywcjlove/PermissionFlow) von jaywcjlove (MIT-Lizenz), neu geschrieben mit AppKit.
