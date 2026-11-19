@@ -25,6 +25,7 @@ enum L {
     }
 
     static let en: [String: String] = [
+        "quickEnable": "Quick capture (⇧F1)",
         "noticePosition": "Notice position", "posTopRight": "Top right", "posBottomRight": "Bottom right", "posTopCenter": "Top center", "posCenter": "Center",
         "quickNotice": "Show a notice after a quick capture", "quickNoticeDetail": "Off: the menu bar scissors snip instead.",
         "quickCapture": "Quick capture to a file", "quickSaved": "Screenshot saved", "showInFinder": "Click to show it in Finder", "quickFolder": "Quick capture saves to", "quickFolderDetail": "⇧F1: the screen under the mouse, straight to a file.", "chooseFolder": "Choose", "askLeave": "Ask before leaving a capture with drawings", "leaveTitle": "Leave this capture?", "leaveBody": "What was drawn will be lost.", "leaveDiscard": "Leave", "leaveKeep": "Keep editing", "dontAsk": "Don't ask again", "toolbarTheme": "Capture toolbar", "themeSystem": "Same as macOS", "themeLight": "Light", "themeDark": "Dark",
@@ -60,6 +61,7 @@ enum L {
     ]
 
     static let zhHans: [String: String] = [
+        "quickEnable": "快速截图（⇧F1）",
         "noticePosition": "提示位置", "posTopRight": "右上", "posBottomRight": "右下", "posTopCenter": "中上", "posCenter": "居中",
         "quickNotice": "快速截图后显示提示", "quickNoticeDetail": "关闭时，菜单栏的剪刀图标会动一下表示已保存。",
         "quickCapture": "快速截图（存为文件）", "quickSaved": "截图已保存", "showInFinder": "点击在访达中显示", "quickFolder": "快速截图保存到", "quickFolderDetail": "⇧F1：把鼠标所在的屏幕直接存成文件。", "chooseFolder": "选择", "askLeave": "关闭有标注的截图前询问", "leaveTitle": "放弃这次截图？", "leaveBody": "画的内容会丢失。", "leaveDiscard": "放弃", "leaveKeep": "继续编辑", "dontAsk": "不再询问", "toolbarTheme": "截图工具栏", "themeSystem": "跟随系统", "themeLight": "浅色", "themeDark": "深色",
@@ -95,6 +97,7 @@ enum L {
     ]
 
     static let zhHant: [String: String] = [
+        "quickEnable": "快速截圖（⇧F1）",
         "noticePosition": "提示位置", "posTopRight": "右上", "posBottomRight": "右下", "posTopCenter": "中上", "posCenter": "置中",
         "quickNotice": "快速截圖後顯示提示", "quickNoticeDetail": "關閉時，選單列的剪刀圖示會動一下表示已儲存。",
         "quickCapture": "快速截圖（存成檔案）", "quickSaved": "截圖已儲存", "showInFinder": "點擊在 Finder 中顯示", "quickFolder": "快速截圖儲存到", "quickFolderDetail": "⇧F1：把滑鼠所在的螢幕直接存成檔案。", "chooseFolder": "選擇", "askLeave": "關閉有標註的截圖前詢問", "leaveTitle": "放棄這次截圖？", "leaveBody": "畫的內容會遺失。", "leaveDiscard": "放棄", "leaveKeep": "繼續編輯", "dontAsk": "不再詢問", "toolbarTheme": "截圖工具列", "themeSystem": "跟隨系統", "themeLight": "淺色", "themeDark": "深色",

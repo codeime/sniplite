@@ -36,6 +36,11 @@ final class Prefs {
         }
         set { d.set(newValue.path, forKey: "quickFolder") }
     }
+    /// ⇧F1 quick capture (and its menu item): off until turned on.
+    var quickEnabled: Bool {
+        get { d.object(forKey: "quickEnabled") as? Bool ?? false }
+        set { d.set(newValue, forKey: "quickEnabled") }
+    }
     /// After a quick capture: a banner (with the path), or only the menu bar scissors snipping.
     var quickNotice: Bool {
         get { d.object(forKey: "quickNotice") as? Bool ?? false }
@@ -333,7 +338,8 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
             row(L.t("launchAtLogin"), nil, toggle(SMAppService.mainApp.status == .enabled, #selector(toggleLogin(_:)))),
             row(L.t("ocrTitle2"), L.t("ocrDetail"), toggle(Prefs.shared.ocrEnabled, #selector(toggleOCR(_:)))),
             row(L.t("pinTop"), nil, toggle(Prefs.shared.pinOnTop, #selector(togglePinTop(_:)))),
-            row(L.t("quickFolder"), L.t("quickFolderDetail"), folderButton),
+            row(L.t("quickEnable"), L.t("quickFolderDetail"), toggle(Prefs.shared.quickEnabled, #selector(toggleQuick(_:)))),
+            row(L.t("quickFolder"), nil, folderButton),
             row(L.t("quickNotice"), L.t("quickNoticeDetail"), toggle(Prefs.shared.quickNotice, #selector(toggleQuickNotice(_:)))),
             row(L.t("noticePosition"), nil, noticePlace),
             row(L.t("askLeave"), nil, toggle(Prefs.shared.askBeforeLeaving, #selector(toggleAskLeave(_:)))),
@@ -448,6 +454,11 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         guard panel.runModal() == .OK, let url = panel.url else { return }
         Prefs.shared.quickFolder = url
         folderButton.title = folderTitle()
+    }
+
+    @objc private func toggleQuick(_ b: NSSwitch) {
+        Prefs.shared.quickEnabled = b.state == .on
+        HotKeyCenter.shared.registerAll()
     }
 
     @objc private func toggleQuickNotice(_ b: NSSwitch) { Prefs.shared.quickNotice = b.state == .on }

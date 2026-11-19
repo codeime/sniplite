@@ -41,7 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if let (la, t) = last, la == a, Date().timeIntervalSince(t) < 0.35 { return }
         last = (a, Date())
         Log.write("run \(a.rawValue)")
-        if a.isOCR && !Prefs.shared.ocrEnabled { return }
+        if !HotAction.active.contains(a) { return }   // switched off (text recognition, quick capture)
         switch a {
         case .capture: CaptureSession.start(.normal)
         case .quickCapture: QuickCapture.run()

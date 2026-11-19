@@ -60,7 +60,9 @@ enum HotAction: String, CaseIterable, Codable {
 
     var isOCR: Bool { self == .ocr || self == .ocrCopy }
     /// The actions in use: the text ones only while text recognition is on.
-    static var active: [HotAction] { allCases.filter { !$0.isOCR || Prefs.shared.ocrEnabled } }
+    static var active: [HotAction] {
+        allCases.filter { (!$0.isOCR || Prefs.shared.ocrEnabled) && ($0 != .quickCapture || Prefs.shared.quickEnabled) }
+    }
 
     var title: String {
         switch self {
