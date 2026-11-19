@@ -18,7 +18,7 @@ enum QuickCapture {
                         NSWorkspace.shared.activateFileViewerSelecting([url])
                     }
                 } else {
-                    AppDelegate.snip()                    // the menu bar scissors say it, quietly
+                    AppDelegate.snip()                    // the menu bar icon says it, quietly
                 }
             } catch CaptureError.noPermission {
                 AppDelegate.askForPermission()

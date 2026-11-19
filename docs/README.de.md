@@ -3,7 +3,7 @@
 
 <div align="center">
 
-<img src="../pics/icon.png" width="96" alt="sniplite-Symbol">
+<img src="../pics/macos/icon.png" width="96" alt="sniplite-Symbol">
 
 # sniplite
 
@@ -30,7 +30,7 @@
 - **Zeichnen**: Rechtecke, Ellipsen, Linien, Pfeile, Stift, Marker, Text, Nummern und Mosaik, jedes mit eigener Größe und Deckkraft; alles Gezeichnete lässt sich später auswählen und ändern
 - **Pins**: eine Aufnahme oder Kopiertes über allen Fenstern anheften; zoomen, Deckkraft ändern, wieder darauf zeichnen
 - **Texterkennung**: liest den Text einer Aufnahme, Tabellen eingeschlossen, mit Apples Vision auf diesem Mac (optional, standardmäßig aus)
-- **Leicht**: etwa 1,3 MB, nativ auf Apple Silicon und Intel, etwa 15–25 MB Speicher im Leerlauf
+- **Leicht**: etwa 2,5 MB, nativ auf Apple Silicon und Intel, etwa 15–25 MB Speicher im Leerlauf
 - **Sauber**: Open Source, keine Werbung, nichts wird gesammelt oder hochgeladen
 - **Sprachen**: English, 简体中文, 繁體中文, je nach System
 
@@ -45,7 +45,7 @@ xattr -dr com.apple.quarantine "/Applications/sniplite.app"
 ```
 
 > [!TIP]
-> sniplite sitzt in der Menüleiste (eine Schere) und hat kein Symbol im Dock. Beim ersten Start zeigt es, was zu erlauben ist: Bildschirmaufnahme zum Aufnehmen und Bedienungshilfen für die Tasten F1–F12 und um die Teile von Fenstern zu finden.
+> sniplite sitzt in der Menüleiste (vier Ecken und ein Blitz) und hat kein Symbol im Dock. Beim ersten Start zeigt es, was zu erlauben ist: Bildschirmaufnahme zum Aufnehmen und Bedienungshilfen für die Tasten F1–F12 und um die Teile von Fenstern zu finden.
 
 ## Standard-Tastenkürzel
 

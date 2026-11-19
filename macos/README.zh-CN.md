@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="../pics/icon.png" width="96" alt="sniplite 图标">
+<img src="../pics/macos/icon.png" width="96" alt="sniplite 图标">
 
 # sniplite for macOS
 
-**sniplite 的 macOS 原生版：截图、标注、贴图、识别文字，不到 1 MB**
+**sniplite 的 macOS 原生版：截图、标注、贴图、识别文字，约 2.5 MB**
 
 [English](README.md) • [简体中文](README.zh-CN.md)
 
@@ -16,7 +16,7 @@
 
 </div>
 
-sniplite 在 macOS 上的原生移植，用 Swift 和 AppKit 编写，功能和快捷键与 Windows 版一致。只用系统自带的能力：截图用 ScreenCaptureKit（和屏幕上一样带窗口阴影和边框；macOS 15.2 以前用系统窗口列表截屏），识别窗口和窗口内元素用辅助功能接口，识别文字用 Vision。应用不到 1 MB，原生支持 Apple 芯片和 Intel，需要 macOS 14 Sonoma 或更高版本。
+sniplite 在 macOS 上的原生移植，用 Swift 和 AppKit 编写，功能和快捷键与 Windows 版一致。只用系统自带的能力：截图用 ScreenCaptureKit（和屏幕上一样带窗口阴影和边框；macOS 15.2 以前用系统窗口列表截屏），识别窗口和窗口内元素用辅助功能接口，识别文字用 Vision。应用约 2.5 MB（含图标），原生支持 Apple 芯片和 Intel，需要 macOS 14 Sonoma 或更高版本。
 
 Windows 版（`../src`）没有任何改动；这个文件夹是一个独立的程序。
 
@@ -36,7 +36,7 @@ Windows 版（`../src`）没有任何改动；这个文件夹是一个独立的�
 
 ## 安装
 
-从 [Releases](https://github.com/codeime/sniplite/releases/latest) 下载 `sniplite_<版本>_macos.zip`，解压后把 `sniplite.app` 移到"应用程序"。也可以自己编译（见下文），然后把 `build/sniplite.app` 复制到"应用程序"文件夹并打开。菜单栏会出现剪刀图标，程序坞里没有图标。
+从 [Releases](https://github.com/codeime/sniplite/releases/latest) 下载 `sniplite_<版本>_macos.zip`，解压后把 `sniplite.app` 移到"应用程序"。也可以自己编译（见下文），然后把 `build/sniplite.app` 复制到"应用程序"文件夹并打开。菜单栏会出现图标（四个角框加一道闪电），程序坞里没有图标。
 
 sniplite 没有用 Apple 开发者证书签名，也没有公证，所以从网上下载的版本会被 macOS 拦下（提示"无法打开"或"已损坏"）。复制到"应用程序"文件夹后，运行一次下面的命令去掉隔离标记：
 

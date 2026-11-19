@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="../pics/icon.png" width="96" alt="sniplite icon">
+<img src="../pics/macos/icon.png" width="96" alt="sniplite icon">
 
 # sniplite for macOS
 
-**The native macOS version of sniplite: capture, draw, pin and read text, in under 1 MB**
+**The native macOS version of sniplite: capture, draw, pin and read text, in about 2.5 MB**
 
 [English](README.md) • [简体中文](README.zh-CN.md)
 
@@ -16,7 +16,7 @@
 
 </div>
 
-A native port of sniplite to macOS, written in Swift and AppKit, with the features and shortcuts of the Windows version. It uses nothing but the system: ScreenCaptureKit to capture (window shadows and edges included, as on screen; before macOS 15.2, the window list), the Accessibility API to find windows and their parts, Vision to read text. The app is under 1 MB, runs natively on Apple Silicon and Intel, and needs macOS 14 Sonoma or later.
+A native port of sniplite to macOS, written in Swift and AppKit, with the features and shortcuts of the Windows version. It uses nothing but the system: ScreenCaptureKit to capture (window shadows and edges included, as on screen; before macOS 15.2, the window list), the Accessibility API to find windows and their parts, Vision to read text. The app is about 2.5 MB (its icon included), runs natively on Apple Silicon and Intel, and needs macOS 14 Sonoma or later.
 
 The Windows version (`../src`) is unchanged; this folder is a separate program.
 
@@ -36,7 +36,7 @@ This repository maintains only the macOS version. For Windows, download sniplite
 
 ## Install
 
-Download `sniplite_<version>_macos.zip` from [Releases](https://github.com/codeime/sniplite/releases/latest), unzip it and move `sniplite.app` to Applications. Or build it (below), then copy `build/sniplite.app` to `/Applications` and open it. The scissors icon appears in the menu bar; there is no Dock icon.
+Download `sniplite_<version>_macos.zip` from [Releases](https://github.com/codeime/sniplite/releases/latest), unzip it and move `sniplite.app` to Applications. Or build it (below), then copy `build/sniplite.app` to `/Applications` and open it. The icon (four corner marks with a bolt) appears in the menu bar; there is no Dock icon.
 
 sniplite is not signed with an Apple Developer ID or notarized, so macOS blocks a downloaded copy ("cannot be opened" / "is damaged"). After copying it to `/Applications`, remove the quarantine flag once:
 

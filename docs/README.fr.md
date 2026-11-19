@@ -3,7 +3,7 @@
 
 <div align="center">
 
-<img src="../pics/icon.png" width="96" alt="icône de sniplite">
+<img src="../pics/macos/icon.png" width="96" alt="icône de sniplite">
 
 # sniplite
 
@@ -30,7 +30,7 @@
 - **Dessin** : rectangles, ellipses, lignes, flèches, crayon, surligneur, texte, numéros et mosaïque, chacun avec sa taille et son opacité ; tout ce qui est dessiné peut être sélectionné et modifié ensuite
 - **Épingles** : épinglez une capture, ou ce que vous avez copié, au-dessus de toutes les fenêtres ; zoomez, changez l'opacité, dessinez de nouveau dessus
 - **Reconnaissance de texte** : lit le texte d'une capture, tableaux compris, avec Vision d'Apple sur ce Mac (facultative, désactivée par défaut)
-- **Léger** : environ 1,3 Mo, natif sur Apple Silicon et Intel, environ 15 à 25 Mo de mémoire au repos
+- **Léger** : environ 2,5 Mo, natif sur Apple Silicon et Intel, environ 15 à 25 Mo de mémoire au repos
 - **Propre** : libre, sans publicité, rien n'est collecté ni envoyé
 - **Langues** : English, 简体中文, 繁體中文, selon le système
 
@@ -45,7 +45,7 @@ xattr -dr com.apple.quarantine "/Applications/sniplite.app"
 ```
 
 > [!TIP]
-> sniplite se trouve dans la barre des menus (une paire de ciseaux), sans icône dans le Dock. Au premier lancement, il indique quoi autoriser : l'Enregistrement de l'écran pour capturer, et l'Accessibilité pour les touches F1 à F12 et pour trouver les éléments des fenêtres.
+> sniplite se trouve dans la barre des menus (quatre coins et un éclair), sans icône dans le Dock. Au premier lancement, il indique quoi autoriser : l'Enregistrement de l'écran pour capturer, et l'Accessibilité pour les touches F1 à F12 et pour trouver les éléments des fenêtres.
 
 ## Raccourcis par défaut
 

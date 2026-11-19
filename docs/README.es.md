@@ -3,7 +3,7 @@
 
 <div align="center">
 
-<img src="../pics/icon.png" width="96" alt="icono de sniplite">
+<img src="../pics/macos/icon.png" width="96" alt="icono de sniplite">
 
 # sniplite
 
@@ -30,7 +30,7 @@
 - **Dibujo**: rectángulos, elipses, líneas, flechas, lápiz, marcador, texto, números y mosaico, cada uno con su tamaño y opacidad; todo lo dibujado se puede seleccionar y cambiar después
 - **Fijar**: fija una captura, o lo que copiaste, sobre todas las ventanas; amplíala, cambia su opacidad, vuelve a dibujar en ella
 - **Reconocimiento de texto**: lee el texto de una captura, tablas incluidas, con Vision de Apple en este Mac (opcional, desactivado por defecto)
-- **Ligera**: unos 1,3 MB, nativa en Apple Silicon e Intel, unos 15–25 MB de memoria en reposo
+- **Ligera**: unos 2,5 MB, nativa en Apple Silicon e Intel, unos 15–25 MB de memoria en reposo
 - **Limpia**: código abierto, sin anuncios, no recoge ni envía nada
 - **Idiomas**: English, 简体中文, 繁體中文, según el sistema
 
@@ -45,7 +45,7 @@ xattr -dr com.apple.quarantine "/Applications/sniplite.app"
 ```
 
 > [!TIP]
-> sniplite está en la barra de menús (unas tijeras) y no tiene icono en el Dock. La primera vez muestra qué permitir: Grabación de pantalla para capturar, y Accesibilidad para las teclas F1–F12 y para encontrar las partes de las ventanas.
+> sniplite está en la barra de menús (cuatro esquinas y un rayo) y no tiene icono en el Dock. La primera vez muestra qué permitir: Grabación de pantalla para capturar, y Accesibilidad para las teclas F1–F12 y para encontrar las partes de las ventanas.
 
 ## Atajos predeterminados
 

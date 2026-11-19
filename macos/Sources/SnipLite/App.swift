@@ -7,9 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         AppDelegate.moveFromOldID()
         status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let b = status.button {
-            let img = NSImage(systemSymbolName: "scissors", accessibilityDescription: "sniplite")
-            img?.isTemplate = true
-            b.image = img
+            b.image = MenuBarIcon.image()
             b.toolTip = "sniplite"
         }
         let menu = NSMenu()
@@ -100,21 +98,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         d.set(true, forKey: "movedFromOldID")
     }
 
-    /// The menu bar scissors snip twice: a quick capture was saved (when its banner is off).
+    /// A quick capture was saved (when its banner is off): the menu bar icon focuses and flashes,
+    /// frame by frame (MenuBarIcon.snapFrame), then rests again.
+    private static var snapTimer: Timer?
     static func snip() {
         guard let b = (NSApp.delegate as? AppDelegate)?.status.button else { return }
-        b.wantsLayer = true
-        guard let layer = b.layer else { return }
-        // turn about the icon's middle
-        let f = layer.frame
-        layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        layer.frame = f
-        let a = CAKeyframeAnimation(keyPath: "transform.rotation.z")
-        a.values = [0, 0.32, -0.12, 0.32, -0.12, 0]
-        a.keyTimes = [0, 0.18, 0.36, 0.54, 0.72, 1]
-        a.duration = 0.55
-        a.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-        layer.add(a, forKey: "snip")
+        snapTimer?.invalidate()
+        var i = 0
+        snapTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60, repeats: true) { t in
+            if i >= MenuBarIcon.snapFrameCount {
+                t.invalidate(); snapTimer = nil
+                b.image = MenuBarIcon.image()
+                return
+            }
+            b.image = MenuBarIcon.snapFrame(i)
+            i += 1
+        }
     }
 
     /// Starts a new sniplite and quits this one (a new Screen Recording permission needs it).

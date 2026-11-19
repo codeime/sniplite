@@ -64,7 +64,7 @@ final class Prefs {
         get { d.object(forKey: "quickEnabled") as? Bool ?? false }
         set { d.set(newValue, forKey: "quickEnabled") }
     }
-    /// After a quick capture: a banner (with the path), or only the menu bar scissors snipping.
+    /// After a quick capture: a banner (with the path), or only the menu bar icon flashing.
     var quickNotice: Bool {
         get { d.object(forKey: "quickNotice") as? Bool ?? false }
         set { d.set(newValue, forKey: "quickNotice") }
@@ -371,7 +371,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     private func build() {
         // shortcuts
         let keyIcons: [HotAction: (String, NSColor)] = [
-            .capture: ("scissors", .systemBlue), .quickCapture: ("camera.fill", .systemIndigo),
+            .capture: ("viewfinder", .systemBlue), .quickCapture: ("camera.fill", .systemIndigo),
             .pinClipboard: ("pin.fill", .systemOrange), .togglePins: ("eye.slash.fill", .systemTeal),
             .ocr: ("text.viewfinder", .systemGreen), .ocrCopy: ("doc.on.doc.fill", .systemMint)]
         var rows: [NSView] = []
