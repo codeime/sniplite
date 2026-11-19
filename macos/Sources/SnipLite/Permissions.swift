@@ -454,6 +454,12 @@ final class PermissionGuide {
     private var timer: Timer?
     private var sawSettings = false
     private let started = Date()
+    /// System Settings' window as last seen, since when it has stayed there, and when it was last seen.
+    private var settingsFrame: CGRect?
+    private var settledSince = Date()
+    private var lastSeen = Date()
+    /// Where the panel is going (it may still be gliding there).
+    private var target: CGRect?
     private let titlesAtStart = Permission.visibleWindowTitles()
 
     static func start(_ p: Permission, onGranted: @escaping () -> Void) {
@@ -512,12 +518,31 @@ final class PermissionGuide {
             return
         }
         guard let f = settingsWindowFrame() else {
-            // System Settings closed (or not up yet): give it a few seconds to open
-            if sawSettings || Date().timeIntervalSince(started) > 8 { PermissionGuide.stop(closeSettings: false) }
+            settingsFrame = nil
+            let running = !NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.systempreferences").isEmpty
+            if sawSettings {
+                // its window can drop out of the list for a moment (a page loading): step aside, and
+                // stop only when System Settings has quit or its window stays away
+                if !running || Date().timeIntervalSince(lastSeen) > 2 { PermissionGuide.stop(closeSettings: false); return }
+                if Date().timeIntervalSince(lastSeen) > 0.3 { hide() }
+            } else if Date().timeIntervalSince(started) > 8 {
+                PermissionGuide.stop(closeSettings: false)      // it never opened
+            }
             return
         }
+        lastSeen = Date()
+        if f != settingsFrame { settingsFrame = f; settledSince = Date() }
+        // the panel comes after System Settings: once its window has finished opening and stays put
+        if !panel.isVisible && Date().timeIntervalSince(settledSince) < 0.35 { return }
         sawSettings = true
         place(below: f)
+    }
+
+    private func hide() {
+        guard panel.isVisible else { return }
+        target = nil
+        NSAnimationContext.runAnimationGroup({ $0.duration = 0.15; panel.animator().alphaValue = 0 },
+                                             completionHandler: { [panel] in if panel.alphaValue == 0 { panel.orderOut(nil) } })
     }
 
     static let size = CGSize(width: 420, height: 176)
@@ -540,15 +565,32 @@ final class PermissionGuide {
             ?? CGRect(x: f.minX + sidebar + (f.width - sidebar - size.width) / 2, y: f.minY + 18,
                       width: size.width, height: size.height)
         // the arrow points at the list: up from below (or over the bottom), left from the right side
-        (panel.contentView as? DragPanelView)?.direction = i == 1 ? .left : (i == 2 ? .right : .up)
+        let direction: DragPanelView.Direction = i == 1 ? .left : (i == 2 ? .right : .up)
+        (panel.contentView as? DragPanelView)?.direction = direction
         r.origin.x = min(max(vis.minX + 8, r.minX), vis.maxX - r.width - 8)
         r.origin.y = min(max(vis.minY + 4, r.minY), vis.maxY - r.height - 4)
-        if panel.frame != r { panel.setFrame(r, display: true) }
-        if !panel.isVisible {
-            panel.invalidateShadow()
+        if !panel.isVisible || panel.alphaValue == 0 {
+            // in: it fades in while gliding a little toward System Settings
+            var from = r
+            switch direction {
+            case .up: from.origin.y -= 14
+            case .left: from.origin.x += 14
+            case .right: from.origin.x -= 14
+            }
+            panel.setFrame(from, display: false)
             panel.alphaValue = 0
+            panel.invalidateShadow()
             panel.orderFrontRegardless()
-            NSAnimationContext.runAnimationGroup { $0.duration = 0.2; panel.animator().alphaValue = 1 }
+            target = r
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = 0.32
+                ctx.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.9, 0.3, 1)   // eases out, softly
+                panel.animator().alphaValue = 1
+                panel.animator().setFrame(r, display: true)
+            }
+        } else if r != target {
+            target = r
+            panel.setFrame(r, display: true)                      // following System Settings as it moves
         }
     }
 
