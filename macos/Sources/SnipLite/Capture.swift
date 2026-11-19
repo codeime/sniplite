@@ -23,8 +23,8 @@ struct SnapWindow {
 
 enum CaptureError: Error { case noPermission, failed(String) }
 
-/// Captures every display through ScreenCaptureKit (with the shadows and edges macOS draws around
-/// windows, from macOS 15.2) and lists the windows for snapping.
+/// Captures every display, with the shadows and edges macOS draws around windows, and lists the
+/// windows for snapping.
 enum Capture {
     private static var cachedDisplays: [SCDisplay]?
 
@@ -71,8 +71,7 @@ enum Capture {
     /// macOS 15.2 and later: ScreenCaptureKit's capture of a screen area. Unlike its capture of a
     /// display (`captureImage(contentFilter:configuration:)`, which leaves them out whatever its
     /// options), it keeps what macOS draws around windows, their shadows and edge lines, so a
-    /// window looks as it does on screen; and it is quicker, about 20–40 ms a display. Before
-    /// 15.2, or if it fails, the display capture is used (without those shadows).
+    /// window looks as it does on screen; and it is quicker, about 20 ms a display.
     private static func areaCapture(_ screens: [NSScreen]) async -> [(NSScreen, CGImage?)]? {
         guard #available(macOS 15.2, *) else { return nil }
         let rects = screens.map { CGDisplayBounds(displayID($0)) }
@@ -86,7 +85,26 @@ enum Capture {
         }
         var out: [(NSScreen, CGImage?)] = []
         for (s, img) in zip(screens, images) {
-            guard let img, img.width >= Int(s.frame.width * s.backingScaleFactor) - 2 else { return nil }
+            guard let img, img.width >= Int(s.frame.width * s.backingScaleFactor) - 2, !img.isBlank else { return nil }
+            out.append((s, img))
+        }
+        return out
+    }
+
+    /// The fallback, before macOS 15.2 or if the area capture fails: the older window-list capture,
+    /// which keeps the shadows too. It is no longer in the SDK, so it is looked up when the app runs;
+    /// if it is gone or gives a blank picture, the display capture takes over (without the shadows).
+    private typealias WindowListImage = @convention(c) (CGRect, UInt32, UInt32, UInt32) -> Unmanaged<CGImage>?
+    private static let windowListImage: WindowListImage? =
+        dlsym(dlopen(nil, RTLD_NOW), "CGWindowListCreateImage").map { unsafeBitCast($0, to: WindowListImage.self) }
+
+    private static func windowListCapture(_ screens: [NSScreen]) -> [(NSScreen, CGImage?)]? {
+        guard let make = windowListImage else { return nil }
+        var out: [(NSScreen, CGImage?)] = []
+        for s in screens {
+            // on-screen windows (1), all of them (no window id), at full resolution (default options)
+            guard let img = make(CGDisplayBounds(displayID(s)), 1, 0, 0)?.takeRetainedValue(),
+                  img.width >= Int(s.frame.width * s.backingScaleFactor) - 2, !img.isBlank else { return nil }
             out.append((s, img))
         }
         return out
@@ -98,7 +116,7 @@ enum Capture {
         let screens = one.map { [$0] } ?? NSScreen.screens
         let wins = windowRects()
         var pairs: [(NSScreen, CGImage?)] = []
-        if hasPermission, let quick = await areaCapture(screens) {
+        if hasPermission, let quick = await areaCapture(screens) ?? windowListCapture(screens) {
             pairs = quick
         } else {
             var list = try await displays()
@@ -186,6 +204,18 @@ enum Capture {
 
 /// Helpers for CGImage.
 extension CGImage {
+    /// One flat color all over (what a capture gives when it is refused or not supported).
+    var isBlank: Bool {
+        var px = [UInt8](repeating: 0, count: 8 * 8 * 4)
+        guard let cs = CGColorSpace(name: CGColorSpace.sRGB),
+              let ctx = CGContext(data: &px, width: 8, height: 8, bitsPerComponent: 8, bytesPerRow: 32, space: cs,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
+        ctx.interpolationQuality = .low
+        ctx.draw(self, in: CGRect(x: 0, y: 0, width: 8, height: 8))
+        let first = Array(px[0..<4])
+        return stride(from: 0, to: px.count, by: 4).allSatisfy { Array(px[$0..<$0 + 4]) == first }
+    }
+
     /// The color of one pixel (sRGB), or nil outside.
     func color(atPixel x: Int, _ y: Int) -> NSColor? {
         guard x >= 0, y >= 0, x < width, y < height,

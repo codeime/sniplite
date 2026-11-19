@@ -16,7 +16,7 @@
 
 </div>
 
-sniplite 在 macOS 上的原生移植，用 Swift 和 AppKit 编写，功能和快捷键与 Windows 版一致。只用系统自带的能力：截图用 ScreenCaptureKit（macOS 15.2 起和屏幕上一样带窗口阴影和边框），识别窗口和窗口内元素用辅助功能接口，识别文字用 Vision。应用不到 1 MB，原生支持 Apple 芯片和 Intel，需要 macOS 14 Sonoma 或更高版本。
+sniplite 在 macOS 上的原生移植，用 Swift 和 AppKit 编写，功能和快捷键与 Windows 版一致。只用系统自带的能力：截图用 ScreenCaptureKit（和屏幕上一样带窗口阴影和边框；macOS 15.2 以前用系统窗口列表截屏），识别窗口和窗口内元素用辅助功能接口，识别文字用 Vision。应用不到 1 MB，原生支持 Apple 芯片和 Intel，需要 macOS 14 Sonoma 或更高版本。
 
 Windows 版（`../src`）没有任何改动；这个文件夹是一个独立的程序。
 
@@ -115,7 +115,7 @@ Windows 版的长截图、命令行和检查更新。
 | `App.swift`、`main.swift` | 菜单栏图标和菜单、启动 |
 | `HotKeys.swift` | 全局快捷键（Carbon `RegisterEventHotKey`） |
 | `TopRowKeys.swift` | Mac 键盘上的 F1–F12 快捷键（事件监听） |
-| `Capture.swift` | 截取所有显示器（ScreenCaptureKit）和可吸附的窗口 |
+| `Capture.swift` | 截取所有显示器（ScreenCaptureKit，macOS 15.2 以前用窗口列表截屏）和可吸附的窗口 |
 | `Elements.swift` | 鼠标下的窗口元素（辅助功能接口） |
 | `Overlay.swift` | 截图界面：选择、编辑、放大镜、生成结果 |
 | `Annotation.swift`、`Toolbar.swift` | 标注工具和工具栏 |

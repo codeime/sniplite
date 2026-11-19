@@ -16,7 +16,7 @@
 
 </div>
 
-A native port of sniplite to macOS, written in Swift and AppKit, with the features and shortcuts of the Windows version. It uses nothing but the system: ScreenCaptureKit to capture (window shadows and edges included, as on screen, from macOS 15.2), the Accessibility API to find windows and their parts, Vision to read text. The app is under 1 MB, runs natively on Apple Silicon and Intel, and needs macOS 14 Sonoma or later.
+A native port of sniplite to macOS, written in Swift and AppKit, with the features and shortcuts of the Windows version. It uses nothing but the system: ScreenCaptureKit to capture (window shadows and edges included, as on screen; before macOS 15.2, the window list), the Accessibility API to find windows and their parts, Vision to read text. The app is under 1 MB, runs natively on Apple Silicon and Intel, and needs macOS 14 Sonoma or later.
 
 The Windows version (`../src`) is unchanged; this folder is a separate program.
 
@@ -115,7 +115,7 @@ Long screenshots, the command line and the update check of the Windows version.
 | `App.swift`, `main.swift` | the menu bar icon and menu, start-up |
 | `HotKeys.swift` | global shortcuts (Carbon `RegisterEventHotKey`) |
 | `TopRowKeys.swift` | the F1–F12 shortcuts on Mac keyboards (an event tap) |
-| `Capture.swift` | screenshots of every display (ScreenCaptureKit) and the windows to snap to |
+| `Capture.swift` | screenshots of every display (ScreenCaptureKit, or the window list before macOS 15.2) and the windows to snap to |
 | `Elements.swift` | the parts of a window under the mouse (Accessibility API) |
 | `Overlay.swift` | the capture overlay: choosing, editing, magnifier, rendering the result |
 | `Annotation.swift`, `Toolbar.swift` | the drawing tools and the toolbar |
