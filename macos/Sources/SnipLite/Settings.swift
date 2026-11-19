@@ -36,6 +36,11 @@ final class Prefs {
         }
         set { d.set(newValue.path, forKey: "quickFolder") }
     }
+    /// After a quick capture: a banner (with the path), or only the menu bar scissors snipping.
+    var quickNotice: Bool {
+        get { d.object(forKey: "quickNotice") as? Bool ?? false }
+        set { d.set(newValue, forKey: "quickNotice") }
+    }
     /// Ask before leaving a capture that has drawings (Esc, ✕, right-click back).
     var askBeforeLeaving: Bool {
         get { d.object(forKey: "askBeforeLeaving") as? Bool ?? true }
@@ -317,6 +322,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
             row(L.t("ocrTitle2"), L.t("ocrDetail"), toggle(Prefs.shared.ocrEnabled, #selector(toggleOCR(_:)))),
             row(L.t("pinTop"), nil, toggle(Prefs.shared.pinOnTop, #selector(togglePinTop(_:)))),
             row(L.t("quickFolder"), L.t("quickFolderDetail"), folderButton),
+            row(L.t("quickNotice"), L.t("quickNoticeDetail"), toggle(Prefs.shared.quickNotice, #selector(toggleQuickNotice(_:)))),
             row(L.t("askLeave"), nil, toggle(Prefs.shared.askBeforeLeaving, #selector(toggleAskLeave(_:)))),
             row(L.t("toolbarTheme"), nil, theme),
             row(L.t("language"), nil, lang),
@@ -430,6 +436,8 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         Prefs.shared.quickFolder = url
         folderButton.title = folderTitle()
     }
+
+    @objc private func toggleQuickNotice(_ b: NSSwitch) { Prefs.shared.quickNotice = b.state == .on }
 
     @objc private func toggleAskLeave(_ b: NSSwitch) { Prefs.shared.askBeforeLeaving = b.state == .on }
 

@@ -13,8 +13,12 @@ enum QuickCapture {
                 guard let shot = try await Capture.captureAll(only: screen).first else { return }
                 let url = try save(shot)
                 Log.write("quick capture: \(url.path)")
-                CornerNotice.show(title: L.t("quickSaved"), detail: url.path, on: screen) {
-                    NSWorkspace.shared.activateFileViewerSelecting([url])
+                if Prefs.shared.quickNotice {
+                    CornerNotice.show(title: L.t("quickSaved"), detail: url.path, on: screen) {
+                        NSWorkspace.shared.activateFileViewerSelecting([url])
+                    }
+                } else {
+                    AppDelegate.snip()                    // the menu bar scissors say it, quietly
                 }
             } catch CaptureError.noPermission {
                 AppDelegate.askForPermission()
@@ -143,7 +147,15 @@ enum CornerNotice {
         required init?(coder: NSCoder) { fatalError() }
         override func mouseEntered(with event: NSEvent) { hovered = true }
         override func mouseExited(with event: NSEvent) { hovered = false }
-        override func mouseUp(with event: NSEvent) { onClick() }
+        /// The whole banner is one button: its icon and texts never take the click for themselves.
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            frame.contains(point) ? self : nil
+        }
+        override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+        override func mouseDown(with event: NSEvent) {}
+        override func mouseUp(with event: NSEvent) {
+            if bounds.contains(convert(event.locationInWindow, from: nil)) { onClick() }   // let go outside: no
+        }
         override func resetCursorRects() { addCursorRect(bounds, cursor: .pointingHand) }
     }
 }
