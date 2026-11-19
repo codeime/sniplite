@@ -338,13 +338,15 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
             row(L.t("launchAtLogin"), nil, toggle(SMAppService.mainApp.status == .enabled, #selector(toggleLogin(_:)))),
             row(L.t("ocrTitle2"), L.t("ocrDetail"), toggle(Prefs.shared.ocrEnabled, #selector(toggleOCR(_:)))),
             row(L.t("pinTop"), nil, toggle(Prefs.shared.pinOnTop, #selector(togglePinTop(_:)))),
+            row(L.t("askLeave"), nil, toggle(Prefs.shared.askBeforeLeaving, #selector(toggleAskLeave(_:)))),
+            row(L.t("toolbarTheme"), nil, theme),
+            row(L.t("language"), nil, lang),
+        ])
+        let quick = group([
             row(L.t("quickEnable"), L.t("quickFolderDetail"), toggle(Prefs.shared.quickEnabled, #selector(toggleQuick(_:)))),
             row(L.t("quickFolder"), nil, folderButton),
             row(L.t("quickNotice"), L.t("quickNoticeDetail"), toggle(Prefs.shared.quickNotice, #selector(toggleQuickNotice(_:)))),
             row(L.t("noticePosition"), nil, noticePlace),
-            row(L.t("askLeave"), nil, toggle(Prefs.shared.askBeforeLeaving, #selector(toggleAskLeave(_:)))),
-            row(L.t("toolbarTheme"), nil, theme),
-            row(L.t("language"), nil, lang),
         ])
 
         // permissions: their state and the button to the permissions page
@@ -366,31 +368,53 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         let foot = NSStackView(views: [status])
         foot.edgeInsets = NSEdgeInsets(top: 0, left: 6, bottom: 0, right: 6)
 
-        let items: [NSView] = [header(L.t("hotkeys")), group(keyRows),
-                               header(L.t("general")), general,
-                               header(L.t("permissions")), perms, foot]
-        let stack = NSStackView(views: items)
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        stack.spacing = 6
-        for (i, v) in items.enumerated() where i > 0 && i % 2 == 0 && i < items.count - 1 {
-            stack.setCustomSpacing(18, after: items[i - 1])
-            _ = v
+        // pages behind tabs at the top: one at a time, the window as tall as it
+        pages = [group(keyRows), general, quick, perms]
+        let tabs = SettingsTabs(items: [("keyboard", L.t("hotkeys")), ("gearshape", L.t("general")),
+                                        ("camera.viewfinder", L.t("quickTab")), ("lock.shield", L.t("permissions"))]) { [weak self] i in
+            self?.showPage(i)
         }
-        stack.setCustomSpacing(14, after: perms)
-        stack.edgeInsets = NSEdgeInsets(top: 40, left: 22, bottom: 20, right: 22)
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        for v in items { v.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -44).isActive = true }
-        bg.addSubview(stack)
+        tabs.translatesAutoresizingMaskIntoConstraints = false
+        pageHost.orientation = .vertical
+        pageHost.alignment = .leading
+        pageHost.spacing = 12
+        pageHost.translatesAutoresizingMaskIntoConstraints = false
+        bg.addSubview(tabs)
+        bg.addSubview(pageHost)
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: bg.leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: bg.trailingAnchor),
-            stack.topAnchor.constraint(equalTo: bg.topAnchor),
-            stack.bottomAnchor.constraint(equalTo: bg.bottomAnchor),
-            stack.widthAnchor.constraint(equalToConstant: width),
+            tabs.topAnchor.constraint(equalTo: bg.topAnchor, constant: 36),
+            tabs.centerXAnchor.constraint(equalTo: bg.centerXAnchor),
+            pageHost.topAnchor.constraint(equalTo: tabs.bottomAnchor, constant: 18),
+            pageHost.leadingAnchor.constraint(equalTo: bg.leadingAnchor, constant: 22),
+            pageHost.trailingAnchor.constraint(equalTo: bg.trailingAnchor, constant: -22),
+            pageHost.bottomAnchor.constraint(equalTo: bg.bottomAnchor, constant: -20),
+            bg.widthAnchor.constraint(equalToConstant: width),
         ])
+        footer = foot
         window?.contentView = bg
         refreshPermissions()
+        showPage(0)
+    }
+
+    private var pages: [NSView] = []
+    private let pageHost = NSStackView()
+    private var footer: NSView?
+
+    private func showPage(_ i: Int) {
+        pageHost.arrangedSubviews.forEach { pageHost.removeArrangedSubview($0); $0.removeFromSuperview() }
+        for v in [pages[i]] + (footer.map { [$0] } ?? []) {
+            pageHost.addArrangedSubview(v)
+            v.widthAnchor.constraint(equalTo: pageHost.widthAnchor).isActive = true
+        }
+        // the window fits the page, its top edge staying
+        guard let w = window, let cv = w.contentView else { return }
+        cv.layoutSubtreeIfNeeded()
+        let h = ceil(cv.fittingSize.height)
+        var f = w.frame
+        let target = w.frameRect(forContentRect: NSRect(x: 0, y: 0, width: w.contentRect(forFrameRect: f).width, height: h))
+        f.origin.y += f.height - target.height
+        f.size.height = target.height
+        w.setFrame(f, display: true, animate: w.isVisible)
     }
 
     private func refreshPermissions() {
@@ -477,5 +501,69 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         window?.makeFirstResponder(nil)
+    }
+}
+
+/// Tabs at the top of Settings: a soft capsule, the chosen tab a raised white piece with an
+/// icon and a name.
+final class SettingsTabs: NSView {
+    private var buttons: [NSButton] = []
+    private let onPick: (Int) -> Void
+    private var chosen = 0
+
+    init(items: [(String, String)], onPick: @escaping (Int) -> Void) {
+        self.onPick = onPick
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.cornerRadius = 10
+        let row = NSStackView()
+        row.spacing = 2
+        row.edgeInsets = NSEdgeInsets(top: 3, left: 3, bottom: 3, right: 3)
+        row.translatesAutoresizingMaskIntoConstraints = false
+        for (i, (symbol, name)) in items.enumerated() {
+            let b = NSButton(title: name, image: NSImage(systemSymbolName: symbol, accessibilityDescription: name)!,
+                             target: self, action: #selector(pick(_:)))
+            b.tag = i
+            b.isBordered = false
+            b.imagePosition = .imageLeading
+            b.imageHugsTitle = true
+            b.font = .systemFont(ofSize: 12, weight: .medium)
+            b.symbolConfiguration = .init(pointSize: 12, weight: .medium)
+            b.wantsLayer = true
+            b.layer?.cornerRadius = 7
+            b.translatesAutoresizingMaskIntoConstraints = false
+            b.heightAnchor.constraint(equalToConstant: 28).isActive = true
+            b.widthAnchor.constraint(greaterThanOrEqualToConstant: 88).isActive = true
+            buttons.append(b)
+            row.addArrangedSubview(b)
+        }
+        addSubview(row)
+        NSLayoutConstraint.activate([
+            row.leadingAnchor.constraint(equalTo: leadingAnchor), row.trailingAnchor.constraint(equalTo: trailingAnchor),
+            row.topAnchor.constraint(equalTo: topAnchor), row.bottomAnchor.constraint(equalTo: bottomAnchor),
+        ])
+        refresh()
+    }
+    required init?(coder: NSCoder) { fatalError() }
+
+    @objc private func pick(_ b: NSButton) {
+        chosen = b.tag
+        refresh()
+        onPick(chosen)
+    }
+
+    override func viewDidChangeEffectiveAppearance() { super.viewDidChangeEffectiveAppearance(); refresh() }
+
+    private func refresh() {
+        let dark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        layer?.backgroundColor = (dark ? NSColor.white.withAlphaComponent(0.08) : NSColor.black.withAlphaComponent(0.06)).cgColor
+        for (i, b) in buttons.enumerated() {
+            let on = i == chosen
+            b.layer?.backgroundColor = on ? (dark ? NSColor(white: 0.32, alpha: 1) : NSColor.white).cgColor : NSColor.clear.cgColor
+            b.layer?.shadowOpacity = on ? (dark ? 0.4 : 0.14) : 0
+            b.layer?.shadowRadius = 2
+            b.layer?.shadowOffset = CGSize(width: 0, height: -1)
+            b.contentTintColor = on ? .labelColor : .secondaryLabelColor
+        }
     }
 }

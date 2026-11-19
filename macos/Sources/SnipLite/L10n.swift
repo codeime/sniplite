@@ -25,6 +25,7 @@ enum L {
     }
 
     static let en: [String: String] = [
+        "quickTab": "Quick capture",
         "quickEnable": "Quick capture (⇧F1)",
         "noticePosition": "Notice position", "posTopRight": "Top right", "posBottomRight": "Bottom right", "posTopCenter": "Top center", "posCenter": "Center",
         "quickNotice": "Show a notice after a quick capture", "quickNoticeDetail": "Off: the menu bar scissors snip instead.",
@@ -61,6 +62,7 @@ enum L {
     ]
 
     static let zhHans: [String: String] = [
+        "quickTab": "快速截图",
         "quickEnable": "快速截图（⇧F1）",
         "noticePosition": "提示位置", "posTopRight": "右上", "posBottomRight": "右下", "posTopCenter": "中上", "posCenter": "居中",
         "quickNotice": "快速截图后显示提示", "quickNoticeDetail": "关闭时，菜单栏的剪刀图标会动一下表示已保存。",
@@ -97,6 +99,7 @@ enum L {
     ]
 
     static let zhHant: [String: String] = [
+        "quickTab": "快速截圖",
         "quickEnable": "快速截圖（⇧F1）",
         "noticePosition": "提示位置", "posTopRight": "右上", "posBottomRight": "右下", "posTopCenter": "中上", "posCenter": "置中",
         "quickNotice": "快速截圖後顯示提示", "quickNoticeDetail": "關閉時，選單列的剪刀圖示會動一下表示已儲存。",
