@@ -275,7 +275,9 @@ final class Toolbar: NSView {
             (.pin, "pin", L.t("pin")), (.save, "square.and.arrow.down", L.t("save")),
             (.close, "xmark", L.t("close")), (.ok, "square.on.square", L.t("ok")),   // copy: the main action
         ]
-        for (i, group) in (Prefs.shared.ocrEnabled ? [cmds, cmds2, cmds3] : [cmds, cmds3]).enumerated() {
+        // typed out: older compilers cannot infer this through the ternary and enumerated()
+        let groups: [[(Command, String, String)]] = Prefs.shared.ocrEnabled ? [cmds, cmds2, cmds3] : [cmds, cmds3]
+        for (i, group) in groups.enumerated() {
             if i > 0 { gap() }
             for (c, sym, tip) in group {
                 let b = ToolButton(.symbol(sym), tip: tip, size: unit)
