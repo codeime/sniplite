@@ -620,6 +620,12 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         window?.makeFirstResponder(nil)
+        // all of it goes (about 25 MB of pages and controls): the next opening builds it again, in a few ms
+        DispatchQueue.main.async {
+            self.window?.contentViewController = nil
+            if SettingsWindow.shared === self { SettingsWindow.shared = nil }
+            CaptureSession.releaseMemory()
+        }
     }
 }
 
