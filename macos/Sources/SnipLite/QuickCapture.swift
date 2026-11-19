@@ -60,18 +60,34 @@ enum CornerNotice {
 
     static func show(title: String, detail: String, on screen: NSScreen, action: @escaping () -> Void) {
         panel?.orderOut(nil)
-        let width: CGFloat = 344, height: CGFloat = 72
+        panel = nil
+        // a banner in a corner or at the top; a square card in the middle
+        let place = Prefs.shared.noticePosition
+        let card = place == "center"
+        let width: CGFloat = card ? 240 : 344, height: CGFloat = card ? 150 : 72
         let vis = screen.visibleFrame
-        let p = NSPanel(contentRect: NSRect(x: vis.maxX - width - 12, y: vis.maxY - height - 12, width: width, height: height),
+        let origin: CGPoint
+        switch place {
+        case "bottomRight": origin = CGPoint(x: vis.maxX - width - 12, y: vis.minY + 12)
+        case "topCenter": origin = CGPoint(x: vis.midX - width / 2, y: vis.maxY - height - 12)
+        case "center": origin = CGPoint(x: vis.midX - width / 2, y: vis.midY - height / 2)
+        default: origin = CGPoint(x: vis.maxX - width - 12, y: vis.maxY - height - 12)
+        }
+        let p = NSPanel(contentRect: NSRect(origin: origin, size: NSSize(width: width, height: height)),
                         styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         p.level = .statusBar
         p.isOpaque = false
         p.backgroundColor = .clear
         p.hasShadow = true
         p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        p.contentView = NoticeView(frame: NSRect(x: 0, y: 0, width: width, height: height), title: title, detail: detail) {
+        p.isReleasedWhenClosed = false
+        // weak: the panel holds the view, the view this closure; a strong reference would keep
+        // every notice alive
+        p.contentView = NoticeView(frame: NSRect(x: 0, y: 0, width: width, height: height), title: title,
+                                   detail: detail, card: card) { [weak p] in
             action()
-            p.orderOut(nil)
+            p?.orderOut(nil)
+            if panel === p { panel = nil }
         }
         p.alphaValue = 0
         p.orderFrontRegardless()
@@ -95,13 +111,13 @@ enum CornerNotice {
     private final class NoticeView: NSVisualEffectView {
         let onClick: () -> Void
         private(set) var hovered = false
-        init(frame: NSRect, title: String, detail: String, onClick: @escaping () -> Void) {
+        init(frame: NSRect, title: String, detail: String, card: Bool, onClick: @escaping () -> Void) {
             self.onClick = onClick
             super.init(frame: frame)
             material = .popover
             blendingMode = .behindWindow
             state = .active
-            let r: CGFloat = 16                      // rounded like a banner; the shadow follows the mask
+            let r: CGFloat = card ? 20 : 16          // rounded like a banner; the shadow follows the mask
             let mask = NSImage(size: NSSize(width: r * 2 + 1, height: r * 2 + 1), flipped: false) { rect in
                 NSColor.black.setFill(); NSBezierPath(roundedRect: rect, xRadius: r, yRadius: r).fill(); return true
             }
@@ -112,8 +128,9 @@ enum CornerNotice {
             let icon = NSImageView(image: NSWorkspace.shared.icon(forFile: Bundle.main.bundlePath))
             icon.imageScaling = .scaleProportionallyUpOrDown
             icon.translatesAutoresizingMaskIntoConstraints = false
-            icon.widthAnchor.constraint(equalToConstant: 38).isActive = true
-            icon.heightAnchor.constraint(equalToConstant: 38).isActive = true
+            let side: CGFloat = card ? 48 : 38
+            icon.widthAnchor.constraint(equalToConstant: side).isActive = true
+            icon.heightAnchor.constraint(equalToConstant: side).isActive = true
             let app = NSTextField(labelWithString: "sniplite")
             app.font = .systemFont(ofSize: 11, weight: .semibold)
             app.textColor = .secondaryLabelColor
@@ -127,19 +144,37 @@ enum CornerNotice {
             d.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
             let text = NSStackView(views: [app, t, d])
             text.orientation = .vertical
-            text.alignment = .leading
+            text.alignment = card ? .centerX : .leading
             text.spacing = 1
             text.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-            let row = NSStackView(views: [icon, text])
-            row.spacing = 10
-            row.alignment = .centerY
-            row.edgeInsets = NSEdgeInsets(top: 0, left: 14, bottom: 0, right: 16)
-            row.translatesAutoresizingMaskIntoConstraints = false
-            addSubview(row)
-            NSLayoutConstraint.activate([
-                row.leadingAnchor.constraint(equalTo: leadingAnchor), row.trailingAnchor.constraint(equalTo: trailingAnchor),
-                row.centerYAnchor.constraint(equalTo: centerYAnchor),
-            ])
+            if card {
+                // in the middle: the icon above, everything centered, like a macOS HUD
+                for f in [app, t, d] { f.alignment = .center }
+                t.font = .systemFont(ofSize: 15, weight: .semibold)
+                let col = NSStackView(views: [icon, text])
+                col.orientation = .vertical
+                col.alignment = .centerX
+                col.spacing = 10
+                col.edgeInsets = NSEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+                col.translatesAutoresizingMaskIntoConstraints = false
+                addSubview(col)
+                NSLayoutConstraint.activate([
+                    col.leadingAnchor.constraint(equalTo: leadingAnchor), col.trailingAnchor.constraint(equalTo: trailingAnchor),
+                    col.centerYAnchor.constraint(equalTo: centerYAnchor),
+                    text.widthAnchor.constraint(lessThanOrEqualTo: col.widthAnchor, constant: -32),
+                ])
+            } else {
+                let row = NSStackView(views: [icon, text])
+                row.spacing = 10
+                row.alignment = .centerY
+                row.edgeInsets = NSEdgeInsets(top: 0, left: 14, bottom: 0, right: 16)
+                row.translatesAutoresizingMaskIntoConstraints = false
+                addSubview(row)
+                NSLayoutConstraint.activate([
+                    row.leadingAnchor.constraint(equalTo: leadingAnchor), row.trailingAnchor.constraint(equalTo: trailingAnchor),
+                    row.centerYAnchor.constraint(equalTo: centerYAnchor),
+                ])
+            }
             toolTip = L.t("showInFinder")
             addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
                                            owner: self, userInfo: nil))

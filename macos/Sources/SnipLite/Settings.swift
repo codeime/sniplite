@@ -41,6 +41,11 @@ final class Prefs {
         get { d.object(forKey: "quickNotice") as? Bool ?? false }
         set { d.set(newValue, forKey: "quickNotice") }
     }
+    /// Where that banner shows: "topRight", "bottomRight", "topCenter" or "center".
+    var noticePosition: String {
+        get { d.string(forKey: "noticePosition") ?? "topRight" }
+        set { d.set(newValue, forKey: "noticePosition") }
+    }
     /// Ask before leaving a capture that has drawings (Esc, ✕, right-click back).
     var askBeforeLeaving: Bool {
         get { d.object(forKey: "askBeforeLeaving") as? Bool ?? true }
@@ -317,12 +322,20 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
             if Prefs.shared.toolbarTheme == code { theme.select(theme.lastItem) }
         }
         theme.target = self; theme.action = #selector(pickTheme(_:))
+        let noticePlace = NSPopUpButton()
+        noticePlace.controlSize = .small
+        for (code, key) in [("topRight", "posTopRight"), ("bottomRight", "posBottomRight"), ("topCenter", "posTopCenter"), ("center", "posCenter")] {
+            noticePlace.addItem(withTitle: L.t(key)); noticePlace.lastItem?.representedObject = code
+            if Prefs.shared.noticePosition == code { noticePlace.select(noticePlace.lastItem) }
+        }
+        noticePlace.target = self; noticePlace.action = #selector(pickNoticePlace(_:))
         let general = group([
             row(L.t("launchAtLogin"), nil, toggle(SMAppService.mainApp.status == .enabled, #selector(toggleLogin(_:)))),
             row(L.t("ocrTitle2"), L.t("ocrDetail"), toggle(Prefs.shared.ocrEnabled, #selector(toggleOCR(_:)))),
             row(L.t("pinTop"), nil, toggle(Prefs.shared.pinOnTop, #selector(togglePinTop(_:)))),
             row(L.t("quickFolder"), L.t("quickFolderDetail"), folderButton),
             row(L.t("quickNotice"), L.t("quickNoticeDetail"), toggle(Prefs.shared.quickNotice, #selector(toggleQuickNotice(_:)))),
+            row(L.t("noticePosition"), nil, noticePlace),
             row(L.t("askLeave"), nil, toggle(Prefs.shared.askBeforeLeaving, #selector(toggleAskLeave(_:)))),
             row(L.t("toolbarTheme"), nil, theme),
             row(L.t("language"), nil, lang),
@@ -438,6 +451,10 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     }
 
     @objc private func toggleQuickNotice(_ b: NSSwitch) { Prefs.shared.quickNotice = b.state == .on }
+
+    @objc private func pickNoticePlace(_ p: NSPopUpButton) {
+        Prefs.shared.noticePosition = p.selectedItem?.representedObject as? String ?? "topRight"
+    }
 
     @objc private func toggleAskLeave(_ b: NSSwitch) { Prefs.shared.askBeforeLeaving = b.state == .on }
 
