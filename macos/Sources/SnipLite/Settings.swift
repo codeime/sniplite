@@ -494,18 +494,26 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     private var notesLink: LinkButton?
 
     private func buildAbout() -> NSView {
-        // the app: its name and version
+        // the app: its icon, then its name over its version
+        let icon = NSImageView(image: NSApp.applicationIconImage)
+        icon.imageScaling = .scaleProportionallyUpOrDown
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        icon.widthAnchor.constraint(equalToConstant: 44).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 44).isActive = true
         let name = NSTextField(labelWithString: "sniplite")
         name.font = .systemFont(ofSize: 17, weight: .bold)
         let version = NSTextField(labelWithString: "sniplite for Mac · " + String(format: L.t("versionFmt"), Updater.current))
         version.font = .systemFont(ofSize: 12)
         version.textColor = .secondaryLabelColor
         version.isSelectable = true
-        let head = NSStackView(views: [name, version])
-        head.orientation = .vertical
-        head.alignment = .leading
-        head.spacing = 2
-        head.edgeInsets = NSEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
+        let names = NSStackView(views: [name, version])
+        names.orientation = .vertical
+        names.alignment = .leading
+        names.spacing = 2
+        let head = NSStackView(views: [icon, names])
+        head.alignment = .centerY
+        head.spacing = 10
+        head.edgeInsets = NSEdgeInsets(top: 0, left: 6, bottom: 0, right: 0)
 
         // updates
         updateDetail.font = .systemFont(ofSize: 11)
@@ -552,7 +560,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         switch st {
         case .idle:
             updateDetail.stringValue = Prefs.shared.lastUpdateCheck == .distantPast ? L.t("updNever")
-                : String(format: L.t("updLastChecked"), DateFormatter.localizedString(from: Prefs.shared.lastUpdateCheck, dateStyle: .medium, timeStyle: .short))
+                : String(format: L.t("updLastChecked"), Self.dateText(Prefs.shared.lastUpdateCheck))
             updateButton.title = L.t("checkUpdates")
         case .checking:
             updateDetail.stringValue = L.t("updChecking")
@@ -579,6 +587,15 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         updateDetail.toolTip = updateDetail.stringValue
         // the update is the thing to do: the button in the accent color
         if case .available = st { updateButton.keyEquivalent = "\r" } else { updateButton.keyEquivalent = "" }
+    }
+
+    /// A date in sniplite's own language (not the system's region format).
+    private static func dateText(_ d: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: L.current == .en ? "en" : L.current.rawValue)
+        f.dateStyle = .medium
+        f.timeStyle = .short
+        return f.string(from: d)
     }
 
     @objc private func updateClicked() {

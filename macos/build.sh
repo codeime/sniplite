@@ -5,7 +5,9 @@
 # SIGN_ID="Developer ID Application: ..." ./build.sh signs with your certificate instead of ad hoc.
 set -euo pipefail
 cd "$(dirname "$0")"
-VERSION=${VERSION:-1.0.0}   # the release workflow passes the tag's version
+# the release workflow passes the tag's version; a local build takes the latest release tag
+VERSION=${VERSION:-$(git describe --tags --match 'macos-v*' --abbrev=0 2>/dev/null | sed 's/^macos-v//')}
+VERSION=${VERSION:-1.0.0}
 APP=build/sniplite.app
 ARCHS=${ARCHS:-"arm64 x86_64"}
 
