@@ -63,7 +63,7 @@ enum CornerNotice {
         panel?.orderOut(nil)
         panel = nil
         let place = Prefs.shared.noticePosition
-        let height: CGFloat = 78
+        let height: CGFloat = 66
         // as wide as what it holds (no blank before the chevron), within reason
         let view = NoticeView(frame: NSRect(x: 0, y: 0, width: 420, height: height), title: title,
                               file: file, thumb: thumbnail(image)) { }
@@ -180,7 +180,7 @@ enum CornerNotice {
             pic.layer?.borderWidth = 0.5
             pic.layer?.borderColor = NSColor.separatorColor.cgColor
             pic.translatesAutoresizingMaskIntoConstraints = false
-            let picW: CGFloat = thumb == nil ? 44 : 72, picH: CGFloat = thumb == nil ? 44 : 46
+            let picW: CGFloat = thumb == nil ? 40 : 64, picH: CGFloat = thumb == nil ? 40 : 40
             pic.widthAnchor.constraint(equalToConstant: picW).isActive = true
             pic.heightAnchor.constraint(equalToConstant: picH).isActive = true
             let holder = NSView()                    // a soft shadow under the thumbnail
@@ -197,34 +197,31 @@ enum CornerNotice {
                 pic.topAnchor.constraint(equalTo: holder.topAnchor), pic.bottomAnchor.constraint(equalTo: holder.bottomAnchor),
             ])
 
-            // the texts: the app (small, with its icon), the title, the folder and file
+            // the texts: one line with the app's icon, the title and when; then the folder and file
             let appIcon = NSImageView(image: NSWorkspace.shared.icon(forFile: Bundle.main.bundlePath))
             appIcon.imageScaling = .scaleProportionallyUpOrDown
             appIcon.translatesAutoresizingMaskIntoConstraints = false
-            appIcon.widthAnchor.constraint(equalToConstant: 14).isActive = true
-            appIcon.heightAnchor.constraint(equalToConstant: 14).isActive = true
-            let app = NSTextField(labelWithString: "sniplite")
-            app.font = .systemFont(ofSize: 11, weight: .medium)
-            app.textColor = .secondaryLabelColor
-            let now = NSTextField(labelWithString: "· " + L.t("justNow"))
-            now.font = .systemFont(ofSize: 11)
-            now.textColor = .tertiaryLabelColor
-            let top = NSStackView(views: [appIcon, app, now])
-            top.spacing = 4
-            top.alignment = .centerY
+            appIcon.widthAnchor.constraint(equalToConstant: 16).isActive = true
+            appIcon.heightAnchor.constraint(equalToConstant: 16).isActive = true
             let t = NSTextField(labelWithString: title)
             t.font = .systemFont(ofSize: 13.5, weight: .semibold)
             t.textColor = .labelColor
+            let now = NSTextField(labelWithString: "· " + L.t("justNow"))
+            now.font = .systemFont(ofSize: 12)
+            now.textColor = .tertiaryLabelColor
+            let top = NSStackView(views: [appIcon, t, now])
+            top.spacing = 5
+            top.alignment = .centerY
             let d = NSTextField(labelWithString: CornerNotice.place(of: file))
             d.font = .systemFont(ofSize: 12)
             d.textColor = .secondaryLabelColor
             d.lineBreakMode = .byTruncatingMiddle
             d.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-            let text = NSStackView(views: [top, t, d])
+            let text = NSStackView(views: [top, d])
             text.orientation = .vertical
             text.alignment = .leading
             text.spacing = 2
-            text.setCustomSpacing(3, after: top)
+            text.setCustomSpacing(4, after: top)
             text.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
             let chevron = NSImageView(image: NSImage(systemSymbolName: "chevron.right", accessibilityDescription: nil)!)
