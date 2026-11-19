@@ -787,9 +787,12 @@ private final class DragPanelView: NSVisualEffectView {
         ])
         text.font = .systemFont(ofSize: 11.5, weight: .medium)
         text.textColor = .secondaryLabelColor
+        // as wide as its words: a label that may stretch takes all the spare room in the row
+        text.setContentHuggingPriority(.required, for: .horizontal)
         let st = NSStackView(views: [circle, text])
         st.spacing = 5
         st.alignment = .centerY
+        st.setHuggingPriority(.required, for: .horizontal)
         return st
     }
 
@@ -891,6 +894,8 @@ private final class DragPanelView: NSVisualEffectView {
                                         step(3, label(L.t("step3"), size: 11.5))])
         steps.spacing = 7
         steps.alignment = .centerY
+        steps.setHuggingPriority(.required, for: .horizontal)
+        for v in steps.arrangedSubviews { v.setContentHuggingPriority(.required, for: .horizontal) }
 
         // the row to drag, glowing
         row.wantsLayer = true
