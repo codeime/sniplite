@@ -27,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification,
                                                object: nil, queue: .main) { _ in Capture.invalidate(); Capture.prewarm() }
         Capture.prewarm()
+        Updater.shared.startAutomaticChecks()
 
         if CommandLine.arguments.contains("--capture") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { CaptureSession.start() }
@@ -56,6 +57,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// The menu is rebuilt each time it opens, so shortcut changes show at once.
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
+        if case .available(let v) = Updater.shared.state {
+            // a newer version was found: to the About page, where it installs
+            let u = ClosureMenuItem(title: String(format: L.t("updMenu"), v), key: "") { SettingsWindow.show(tab: 4) }
+            u.image = NSImage(systemSymbolName: "arrow.down.circle.fill", accessibilityDescription: nil)
+            menu.addItem(u)
+            menu.addItem(.separator())
+        }
         for a in HotAction.active {
             let i = ClosureMenuItem(title: a.title, key: "") { AppDelegate.last = nil; AppDelegate.run(a) }
             if let k = Prefs.shared.hotkey(a) {

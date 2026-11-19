@@ -106,7 +106,7 @@ Diagnostics go to `~/Library/Logs/sniplite.log` (hotkeys, permissions, recogniti
 
 ## Not yet
 
-Long screenshots, the command line and the update check of the Windows version.
+Long screenshots and the command line of the Windows version.
 
 ## Code
 
@@ -123,6 +123,7 @@ Long screenshots, the command line and the update check of the Windows version.
 | `OCR.swift` | text recognition (Vision, in a helper process) and the text panel |
 | `Permissions.swift` | the permissions page and the drag-to-authorize panel |
 | `Settings.swift` | settings and the shortcut recorder |
+| `Updater.swift` | checking GitHub for a new version and installing it |
 | `L10n.swift`, `Util.swift` | texts; clipboard, saving, notices, log |
 
 ## Credits

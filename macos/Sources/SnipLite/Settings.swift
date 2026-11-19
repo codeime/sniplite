@@ -36,6 +36,15 @@ final class Prefs {
         }
         set { d.set(newValue.path, forKey: "quickFolder") }
     }
+    /// Asks GitHub once a day whether there is a newer version (only its number comes back).
+    var autoCheckUpdates: Bool {
+        get { d.object(forKey: "autoCheckUpdates") as? Bool ?? true }
+        set { d.set(newValue, forKey: "autoCheckUpdates") }
+    }
+    var lastUpdateCheck: Date {
+        get { d.object(forKey: "lastUpdateCheck") as? Date ?? .distantPast }
+        set { d.set(newValue, forKey: "lastUpdateCheck") }
+    }
     /// ⇧F1 quick capture (and its menu item): off until turned on.
     var quickEnabled: Bool {
         get { d.object(forKey: "quickEnabled") as? Bool ?? false }
@@ -189,8 +198,10 @@ final class HotKeyField: NSButton {
 final class SettingsWindow: NSWindowController, NSWindowDelegate {
     static var shared: SettingsWindow?
 
-    static func show() {
+    /// `tab`: the page to open on (4: About).
+    static func show(tab: Int? = nil) {
         if shared == nil { shared = SettingsWindow() }
+        if let tab { shared?.tabsController?.selectedTabViewItemIndex = tab }
         NSApp.activate(ignoringOtherApps: true)
         shared?.window?.center()
         shared?.showWindow(nil)
@@ -435,10 +446,13 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         let perms = section(nil, permRows, note(L.t("permFoot")))
 
         // the pages in a macOS settings toolbar: icons above names, the window as tall as each page
+        let about = buildAbout()
+
         let pageList: [(String, String, NSView)] = [("keyboard", L.t("hotkeys"), shortcuts),
                                                   ("gearshape", L.t("general"), general),
                                                   ("camera.viewfinder", L.t("quickTab"), quick),
-                                                  ("lock.shield", L.t("permissions"), perms)]
+                                                  ("lock.shield", L.t("permissions"), perms),
+                                                  ("info.circle", L.t("aboutTab"), about)]
         let tabs = SettingsTabs()
         tabsController = tabs
         tabs.tabStyle = .toolbar
@@ -472,6 +486,116 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         quickChanged()
         refreshPermissions()
     }
+
+    // MARK: the About page
+
+    private let updateDetail = NSTextField(labelWithString: "")
+    private let updateButton = NSButton(title: "", target: nil, action: nil)
+    private var notesLink: LinkButton?
+
+    private func buildAbout() -> NSView {
+        // the app: icon, name, version
+        let icon = NSImageView(image: NSApp.applicationIconImage)
+        icon.imageScaling = .scaleProportionallyUpOrDown
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        icon.widthAnchor.constraint(equalToConstant: 52).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 52).isActive = true
+        let name = NSTextField(labelWithString: "sniplite")
+        name.font = .systemFont(ofSize: 17, weight: .bold)
+        let version = NSTextField(labelWithString: "sniplite for Mac · " + String(format: L.t("versionFmt"), Updater.current))
+        version.font = .systemFont(ofSize: 12)
+        version.textColor = .secondaryLabelColor
+        version.isSelectable = true
+        // in one line: the icon, then the name over the version
+        let names = NSStackView(views: [name, version])
+        names.orientation = .vertical
+        names.alignment = .leading
+        names.spacing = 2
+        let head = NSStackView(views: [icon, names])
+        head.alignment = .centerY
+        head.spacing = 12
+        head.edgeInsets = NSEdgeInsets(top: 0, left: 6, bottom: 0, right: 0)
+
+        // updates
+        updateDetail.font = .systemFont(ofSize: 11)
+        updateDetail.textColor = .secondaryLabelColor
+        updateDetail.lineBreakMode = .byTruncatingTail
+        updateButton.controlSize = .small
+        updateButton.bezelStyle = .push
+        updateButton.target = self
+        updateButton.action = #selector(updateClicked)
+        let notes = LinkButton("", L.t("releaseNotes")) { if let r = Updater.shared.latest { NSWorkspace.shared.open(r.page) } }
+        notesLink = notes
+        let controls = NSStackView(views: [notes, updateButton])
+        controls.spacing = 10
+        controls.alignment = .centerY
+        let updateRow = row(("arrow.down.circle.fill", .systemBlue), L.t("softwareUpdate"), nil, controls)
+        (updateRow.arrangedSubviews.dropFirst().first as? NSStackView)?.addArrangedSubview(updateDetail)
+        let updates = section(L.t("secUpdate"), [
+            updateRow,
+            row(("clock.arrow.circlepath", .systemGreen), L.t("autoCheck"), L.t("autoCheckDetail"),
+                toggle(Prefs.shared.autoCheckUpdates, #selector(toggleAutoCheck(_:)))),
+        ])
+        Updater.shared.onChange[ObjectIdentifier(self)] = { [weak self] st in self?.showUpdate(st) }
+        showUpdate(Updater.shared.state)
+
+        // links
+        func open(_ url: String) -> () -> Void { { if let u = URL(string: url) { NSWorkspace.shared.open(u) } } }
+        let repo = "https://github.com/\(Updater.repo)"
+        // the links in one row; the license in the note under it
+        let linkRow = NSStackView(views: [LinkButton("", L.t("homepage") + " ›", open(repo)),
+                                          LinkButton("", L.t("feedback") + " ›", open(repo + "/issues")),
+                                          LinkButton("", L.t("originalWin") + " ›", open("https://github.com/MrTangLuyao/sniplite"))])
+        linkRow.spacing = 14
+        let links = section(nil, [row(("link", .systemBlue), L.t("secLinks"), nil, linkRow)], note(L.t("aboutFoot")))
+        return stack([head, updates, links])
+    }
+
+    private func showUpdate(_ st: Updater.State) {
+        notesLink?.isHidden = true
+        updateButton.isEnabled = true
+        updateDetail.textColor = .secondaryLabelColor
+        switch st {
+        case .idle:
+            updateDetail.stringValue = Prefs.shared.lastUpdateCheck == .distantPast ? L.t("updNever")
+                : String(format: L.t("updLastChecked"), DateFormatter.localizedString(from: Prefs.shared.lastUpdateCheck, dateStyle: .medium, timeStyle: .short))
+            updateButton.title = L.t("checkUpdates")
+        case .checking:
+            updateDetail.stringValue = L.t("updChecking")
+            updateButton.title = L.t("checkUpdates"); updateButton.isEnabled = false
+        case .upToDate:
+            updateDetail.stringValue = L.t("updUpToDate")
+            updateButton.title = L.t("checkUpdates")
+        case .available(let v):
+            updateDetail.stringValue = String(format: L.t("updAvailable"), v)
+            updateDetail.textColor = .controlAccentColor
+            notesLink?.isHidden = false
+            updateButton.title = L.t("updInstall")
+        case .downloading(let f):
+            updateDetail.stringValue = String(format: L.t("updDownloading"), Int(f * 100))
+            updateButton.title = L.t("updInstall"); updateButton.isEnabled = false
+        case .installing:
+            updateDetail.stringValue = L.t("updInstalling")
+            updateButton.title = L.t("updInstall"); updateButton.isEnabled = false
+        case .failed(let m):
+            updateDetail.stringValue = m
+            updateDetail.textColor = .systemRed
+            updateButton.title = Updater.shared.latest.map { Updater.newer($0.version, than: Updater.current) } == true ? L.t("updInstall") : L.t("checkUpdates")
+        }
+        updateDetail.toolTip = updateDetail.stringValue
+        // the update is the thing to do: the button in the accent color
+        if case .available = st { updateButton.keyEquivalent = "\r" } else { updateButton.keyEquivalent = "" }
+    }
+
+    @objc private func updateClicked() {
+        if case .available = Updater.shared.state { Updater.shared.install(); return }
+        if case .failed = Updater.shared.state, let r = Updater.shared.latest, Updater.newer(r.version, than: Updater.current) {
+            Updater.shared.install(); return
+        }
+        Updater.shared.check()
+    }
+
+    @objc private func toggleAutoCheck(_ b: NSSwitch) { Prefs.shared.autoCheckUpdates = b.state == .on }
 
     private func stack(_ views: [NSView]) -> NSView {
         let st = NSStackView(views: views)
@@ -620,6 +744,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         window?.makeFirstResponder(nil)
+        Updater.shared.onChange[ObjectIdentifier(self)] = nil
         // all of it goes (about 25 MB of pages and controls): the next opening builds it again, in a few ms
         DispatchQueue.main.async {
             self.window?.contentViewController = nil
@@ -669,7 +794,7 @@ final class LinkButton: NSButton {
         super.init(frame: .zero)
         isBordered = false
         setButtonType(.momentaryChange)
-        let t = NSMutableAttributedString(string: state + "  ", attributes: [.font: NSFont.systemFont(ofSize: 11),
+        let t = NSMutableAttributedString(string: state.isEmpty ? "" : state + "  ", attributes: [.font: NSFont.systemFont(ofSize: 11),
                                                                               .foregroundColor: NSColor.secondaryLabelColor])
         t.append(NSAttributedString(string: title, attributes: [.font: NSFont.systemFont(ofSize: 11, weight: .medium),
                                                                 .foregroundColor: NSColor.linkColor]))

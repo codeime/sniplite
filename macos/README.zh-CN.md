@@ -106,7 +106,7 @@ cd macos
 
 ## 还没有做的
 
-Windows 版的长截图、命令行和检查更新。
+Windows 版的长截图和命令行。
 
 ## 代码
 
@@ -123,6 +123,7 @@ Windows 版的长截图、命令行和检查更新。
 | `OCR.swift` | 文字识别（Vision，辅助进程）和文字面板 |
 | `Permissions.swift` | 权限页和拖拽授权面板 |
 | `Settings.swift` | 设置和快捷键录制 |
+| `Updater.swift` | 在 GitHub 上检查新版本并安装 |
 | `L10n.swift`、`Util.swift` | 文案；剪贴板、保存、提示、日志 |
 
 ## 致谢
