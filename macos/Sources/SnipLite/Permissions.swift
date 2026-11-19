@@ -1,4 +1,5 @@
 import AppKit
+import ScreenCaptureKit
 
 /// The permissions sniplite asks for, granted by dragging sniplite into the list in System Settings.
 /// The approach (a floating panel under the System Settings window holding the app to drag) follows
@@ -466,6 +467,10 @@ final class PermissionGuide {
     private let origin: CGPoint?
     private var arrived = false
     private let view: DragPanelView
+    /// The width of System Settings' sidebar, read off its window once (nil: unknown).
+    private var sidebarWidth: CGFloat?
+    private var measuring = false
+    private var measured = false
     private let titlesAtStart = Permission.visibleWindowTitles()
 
     /// `from`: where the panel sets out (the button that was clicked, in screen coordinates);
@@ -551,6 +556,7 @@ final class PermissionGuide {
         if f != settingsFrame { settingsFrame = f; settledSince = Date() }
         // the panel comes after System Settings: once its window has finished opening and stays put
         if !panel.isVisible && Date().timeIntervalSince(settledSince) < 0.35 { return }
+        if !measured { measureSidebar(f); return }          // before the panel can cover it
         sawSettings = true
         place(below: f)
     }
@@ -567,7 +573,7 @@ final class PermissionGuide {
     /// Under the content side of the System Settings window; with no room there, beside it (right,
     /// then left) level with the bottom of its list; only then over its bottom edge.
     private func place(below f: CGRect) {
-        let sidebar: CGFloat = min(220, f.width * 0.33)
+        let sidebar = sidebarWidth ?? min(232, f.width * 0.35)
         let size = PermissionGuide.size
         let vis = (NSScreen.screens.first { $0.frame.intersects(f) } ?? NSScreen.main)?.visibleFrame ?? f
         let gap: CGFloat = 10
@@ -575,7 +581,8 @@ final class PermissionGuide {
             CGRect(x: f.minX + sidebar + (f.width - sidebar - size.width) / 2, y: f.minY - size.height - gap,
                    width: size.width, height: size.height),
             CGRect(x: f.maxX + gap, y: f.minY + 40, width: size.width, height: size.height),
-            CGRect(x: f.minX - gap - size.width, y: f.minY + 40, width: size.width, height: size.height),
+            // on the left, its right edge on the edge of the content: it lies over the sidebar, not the list
+            CGRect(x: f.minX + sidebar - size.width, y: f.minY + 40, width: size.width, height: size.height),
         ]
         let i = candidates.firstIndex { vis.contains($0) }
         var r = i.map { candidates[$0] }
@@ -612,6 +619,48 @@ final class PermissionGuide {
             target = r
             panel.setFrame(r, display: true)                      // following System Settings as it moves
         }
+    }
+
+    /// Reads the sidebar's width off one picture of System Settings' window: the thin line between
+    /// the sidebar and the content, a column a little darker than its neighbors all the way down.
+    /// Needs Screen Recording and macOS 15.2 (the area capture); without them, a usual width is used.
+    private func measureSidebar(_ f: CGRect) {
+        guard !measuring else { return }
+        guard #available(macOS 15.2, *), Permission.screenRecording.granted else { measured = true; return }
+        measuring = true
+        let primaryH = NSScreen.screens.first?.frame.height ?? 0
+        let area = CGRect(x: f.minX, y: primaryH - f.maxY, width: f.width, height: f.height)
+        Task { @MainActor [weak self] in
+            let img = try? await SCScreenshotManager.captureImage(in: area)
+            guard let self else { return }
+            if let img, let x = PermissionGuide.sidebarEdge(img) { self.sidebarWidth = x / (CGFloat(img.width) / area.width) }
+            Log.write("System Settings sidebar \(self.sidebarWidth.map { String(format: "%.1f pt", $0) } ?? "unknown")")
+            self.measuring = false
+            self.measured = true
+        }
+    }
+
+    /// The x (pixels) of the sidebar's dividing line: between 15% and 50% of the width, the column
+    /// darker than the ones 3 pixels to each side in most rows of the lower half.
+    static func sidebarEdge(_ img: CGImage) -> CGFloat? {
+        let w = img.width, h = img.height
+        guard w > 100, h > 100, let cs = CGColorSpace(name: CGColorSpace.sRGB),
+              let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4, space: cs,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        ctx.draw(img, in: CGRect(x: 0, y: 0, width: w, height: h))
+        guard let data = ctx.data else { return nil }
+        let px = data.bindMemory(to: UInt8.self, capacity: w * h * 4)
+        func lum(_ x: Int, _ y: Int) -> Int { let p = px + (y * w + x) * 4; return Int(p[0]) + Int(p[1]) + Int(p[2]) }
+        // the first row in memory is the top: the lower half, under the search field
+        let rows = Array(stride(from: h * 55 / 100, to: h * 95 / 100, by: 3))
+        var best = 0, bestCount = 0
+        for x in max(3, w * 15 / 100)..<min(w - 3, w / 2) {
+            var n = 0
+            for y in rows where lum(x, y) + 6 < lum(x - 3, y) && lum(x, y) + 6 < lum(x + 3, y) { n += 1 }
+            if n > bestCount { bestCount = n; best = x }
+        }
+        // a line, not text or icons: it must run through most of those rows
+        return bestCount >= rows.count * 6 / 10 ? CGFloat(best) + 0.5 : nil
     }
 
     /// The first appearance: from the button (or the middle of the screen) the panel travels to its
