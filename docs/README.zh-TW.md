@@ -92,11 +92,11 @@ F1–F12 快速鍵需要輔助使用權限（macOS 27 上叫「裝置控制和�
 
 **設定和日誌在哪裡？**
 
-設定存在 App 的偏好設定裡（`defaults read io.github.mrtangluyao.sniplite`）；快速鍵、權限和辨識耗時的簡要日誌在 `~/Library/Logs/sniplite.log`。
+設定存在 App 的偏好設定裡（`defaults read io.github.codeime.sniplite`）；快速鍵、權限和辨識耗時的簡要日誌在 `~/Library/Logs/sniplite.log`。
 
 **怎麼解除安裝？**
 
-從選單列結束，把 `sniplite.app` 從「應用程式」刪掉。要連設定一起刪，執行 `defaults delete io.github.mrtangluyao.sniplite`；如果系統設定的「隱私權與安全性」裡還有它，也一併刪掉。
+從選單列結束，把 `sniplite.app` 從「應用程式」刪掉。要連設定一起刪，執行 `defaults delete io.github.codeime.sniplite`；如果系統設定的「隱私權與安全性」裡還有它，也一併刪掉。
 
 **有 Windows 版嗎？**
 

@@ -92,11 +92,11 @@ F1–F12 快捷键需要辅助功能权限（macOS 27 上叫"设备控制和数�
 
 **设置和日志在哪里？**
 
-设置存在应用的偏好设置里（`defaults read io.github.mrtangluyao.sniplite`）；快捷键、权限和识别耗时的简要日志在 `~/Library/Logs/sniplite.log`。
+设置存在应用的偏好设置里（`defaults read io.github.codeime.sniplite`）；快捷键、权限和识别耗时的简要日志在 `~/Library/Logs/sniplite.log`。
 
 **怎么卸载？**
 
-从菜单栏退出，把 `sniplite.app` 从"应用程序"删掉。要连设置一起删，运行 `defaults delete io.github.mrtangluyao.sniplite`；如果系统设置的"隐私与安全性"里还有它，也一并删掉。
+从菜单栏退出，把 `sniplite.app` 从"应用程序"删掉。要连设置一起删，运行 `defaults delete io.github.codeime.sniplite`；如果系统设置的"隐私与安全性"里还有它，也一并删掉。
 
 **有 Windows 版吗？**
 

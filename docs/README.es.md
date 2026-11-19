@@ -92,11 +92,11 @@ Unos 15–25 MB en reposo. Una captura solo guarda la imagen de la pantalla mien
 
 **¿Dónde están sus ajustes y su registro?**
 
-Los ajustes están en las preferencias de la app (`defaults read io.github.mrtangluyao.sniplite`); un registro breve de atajos, permisos y tiempos de reconocimiento está en `~/Library/Logs/sniplite.log`.
+Los ajustes están en las preferencias de la app (`defaults read io.github.codeime.sniplite`); un registro breve de atajos, permisos y tiempos de reconocimiento está en `~/Library/Logs/sniplite.log`.
 
 **¿Cómo la desinstalo?**
 
-Ciérrala desde la barra de menús y borra `sniplite.app` de Aplicaciones. Para borrar también sus ajustes, ejecuta `defaults delete io.github.mrtangluyao.sniplite`; si sigue en Privacidad y seguridad de los Ajustes del Sistema, quítala también ahí.
+Ciérrala desde la barra de menús y borra `sniplite.app` de Aplicaciones. Para borrar también sus ajustes, ejecuta `defaults delete io.github.codeime.sniplite`; si sigue en Privacidad y seguridad de los Ajustes del Sistema, quítala también ahí.
 
 **¿Hay versión para Windows?**
 

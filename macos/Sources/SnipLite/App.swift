@@ -4,6 +4,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     fileprivate(set) var status: NSStatusItem!
 
     func applicationDidFinishLaunching(_ n: Notification) {
+        AppDelegate.moveFromOldID()
         status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let b = status.button {
             let img = NSImage(systemSymbolName: "scissors", accessibilityDescription: "sniplite")
@@ -91,6 +92,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     static func askForPermission() { PermissionsWindow.show() }
+
+    /// sniplite's app id was io.github.mrtangluyao.sniplite until 1.0.1. The first start under
+    /// the new one takes the settings over and removes the old id's permission entries, which
+    /// would otherwise stay in System Settings' lists, switched on but applying to nothing.
+    static let oldID = "io.github.mrtangluyao.sniplite"
+    private static func moveFromOldID() {
+        let d = UserDefaults.standard
+        guard Bundle.main.bundleIdentifier != oldID, !d.bool(forKey: "movedFromOldID") else { return }
+        if let old = d.persistentDomain(forName: oldID) {
+            for (k, v) in old where d.object(forKey: k) == nil { d.set(v, forKey: k) }
+            Log.write("settings taken over from \(oldID): \(old.count) values")
+        }
+        for p in Permission.allCases { p.resetEntry(for: oldID) }
+        d.set(true, forKey: "movedFromOldID")
+    }
 
     /// The menu bar scissors snip twice: a quick capture was saved (when its banner is off).
     static func snip() {

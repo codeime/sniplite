@@ -40,7 +40,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <dict>
   <key>CFBundleName</key><string>sniplite</string>
   <key>CFBundleDisplayName</key><string>sniplite</string>
-  <key>CFBundleIdentifier</key><string>io.github.mrtangluyao.sniplite</string>
+  <key>CFBundleIdentifier</key><string>io.github.codeime.sniplite</string>
   <key>CFBundleExecutable</key><string>sniplite</string>
   <key>CFBundleIconFile</key><string>sniplite</string>
   <key>CFBundlePackageType</key><string>APPL</string>

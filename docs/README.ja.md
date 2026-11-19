@@ -92,11 +92,11 @@ Settings › General で Text recognition をオンにし、ツールバーの�
 
 **設定とログはどこにありますか？**
 
-設定はアプリの環境設定にあります（`defaults read io.github.mrtangluyao.sniplite`）。ショートカット、許可、認識時間の簡単なログは `~/Library/Logs/sniplite.log` です。
+設定はアプリの環境設定にあります（`defaults read io.github.codeime.sniplite`）。ショートカット、許可、認識時間の簡単なログは `~/Library/Logs/sniplite.log` です。
 
 **アンインストールするには？**
 
-メニューバーから終了し、「アプリケーション」から `sniplite.app` を削除します。設定も消すには `defaults delete io.github.mrtangluyao.sniplite` を実行し、システム設定の「プライバシーとセキュリティ」に残っていればそこからも削除してください。
+メニューバーから終了し、「アプリケーション」から `sniplite.app` を削除します。設定も消すには `defaults delete io.github.codeime.sniplite` を実行し、システム設定の「プライバシーとセキュリティ」に残っていればそこからも削除してください。
 
 **Windows 版はありますか？**
 

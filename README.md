@@ -92,11 +92,11 @@ About 15–25 MB while idle. A capture holds the picture of the screen only whil
 
 **Where are its settings and log?**
 
-The settings are the app's preferences (`defaults read io.github.mrtangluyao.sniplite`); a short log of shortcuts, permissions and recognition times is in `~/Library/Logs/sniplite.log`.
+The settings are the app's preferences (`defaults read io.github.codeime.sniplite`); a short log of shortcuts, permissions and recognition times is in `~/Library/Logs/sniplite.log`.
 
 **How do I uninstall it?**
 
-Quit it from the menu bar and delete `sniplite.app` from Applications. To remove its settings too, run `defaults delete io.github.mrtangluyao.sniplite`; if it is still listed under Privacy & Security in System Settings, remove it there.
+Quit it from the menu bar and delete `sniplite.app` from Applications. To remove its settings too, run `defaults delete io.github.codeime.sniplite`; if it is still listed under Privacy & Security in System Settings, remove it there.
 
 **Is there a Windows version?**
 

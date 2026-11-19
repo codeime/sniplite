@@ -92,11 +92,11 @@ Etwa 15–25 MB im Leerlauf. Eine Aufnahme hält das Bild des Bildschirms nur, s
 
 **Wo sind Einstellungen und Protokoll?**
 
-Die Einstellungen sind die Voreinstellungen der App (`defaults read io.github.mrtangluyao.sniplite`); ein kurzes Protokoll zu Kürzeln, Berechtigungen und Erkennungszeiten liegt in `~/Library/Logs/sniplite.log`.
+Die Einstellungen sind die Voreinstellungen der App (`defaults read io.github.codeime.sniplite`); ein kurzes Protokoll zu Kürzeln, Berechtigungen und Erkennungszeiten liegt in `~/Library/Logs/sniplite.log`.
 
 **Wie deinstalliere ich es?**
 
-Beenden Sie es über die Menüleiste und löschen Sie `sniplite.app` aus Programme. Um auch die Einstellungen zu löschen, führen Sie `defaults delete io.github.mrtangluyao.sniplite` aus; steht es noch unter Datenschutz & Sicherheit in den Systemeinstellungen, entfernen Sie es dort ebenfalls.
+Beenden Sie es über die Menüleiste und löschen Sie `sniplite.app` aus Programme. Um auch die Einstellungen zu löschen, führen Sie `defaults delete io.github.codeime.sniplite` aus; steht es noch unter Datenschutz & Sicherheit in den Systemeinstellungen, entfernen Sie es dort ebenfalls.
 
 **Gibt es eine Windows-Version?**
 

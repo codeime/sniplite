@@ -92,11 +92,11 @@ Settings › General에서 Text recognition을 켠 뒤, 도구 막대의 글자 
 
 **설정과 로그는 어디에 있나요?**
 
-설정은 앱의 환경설정에 있습니다(`defaults read io.github.mrtangluyao.sniplite`). 단축키, 권한, 인식 시간에 대한 짧은 로그는 `~/Library/Logs/sniplite.log`에 있습니다.
+설정은 앱의 환경설정에 있습니다(`defaults read io.github.codeime.sniplite`). 단축키, 권한, 인식 시간에 대한 짧은 로그는 `~/Library/Logs/sniplite.log`에 있습니다.
 
 **어떻게 제거하나요?**
 
-메뉴 막대에서 종료하고 "응용 프로그램"에서 `sniplite.app`을 지우세요. 설정까지 지우려면 `defaults delete io.github.mrtangluyao.sniplite`를 실행하고, 시스템 설정의 "개인정보 보호 및 보안"에 남아 있으면 거기서도 지우세요.
+메뉴 막대에서 종료하고 "응용 프로그램"에서 `sniplite.app`을 지우세요. 설정까지 지우려면 `defaults delete io.github.codeime.sniplite`를 실행하고, 시스템 설정의 "개인정보 보호 및 보안"에 남아 있으면 거기서도 지우세요.
 
 **Windows 버전이 있나요?**
 

@@ -66,6 +66,11 @@ enum Permission: CaseIterable {
     /// a new one cannot be added beside it; without it the user just drags sniplite in again.
     func resetStaleEntry() {
         guard let id = Bundle.main.bundleIdentifier else { return }
+        resetEntry(for: id)
+    }
+
+    /// Removes this permission's entry for an app id (this one, or the id sniplite had before).
+    func resetEntry(for id: String) {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
         p.arguments = ["reset", tccService, id]
