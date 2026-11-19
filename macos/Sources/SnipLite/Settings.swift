@@ -198,9 +198,6 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         shared?.refreshPermissions()
     }
 
-    private let status = NSTextField(wrappingLabelWithString: "")
-    private let permState = NSTextField(labelWithString: "")
-    private let permIcon = NSImageView()
     private let width: CGFloat = 500
 
     init() {
@@ -219,17 +216,8 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
     // MARK: building blocks
 
-    private func header(_ s: String) -> NSView {
-        let l = NSTextField(labelWithString: s)
-        l.font = .systemFont(ofSize: 12, weight: .semibold)
-        l.textColor = .secondaryLabelColor
-        let v = NSStackView(views: [l])
-        v.edgeInsets = NSEdgeInsets(top: 0, left: 6, bottom: 0, right: 0)
-        return v
-    }
-
-    /// A row: title (and a smaller line under it), then the control at the end.
-    private func row(_ title: String, _ detail: String? = nil, _ control: NSView) -> NSView {
+    /// A row: a colored icon, the title (and a smaller line under it), then the control at the end.
+    private func row(_ icon: (String, NSColor)?, _ title: String, _ detail: String? = nil, _ control: NSView) -> NSStackView {
         let t = NSTextField(labelWithString: title)
         t.font = .systemFont(ofSize: 13)
         var texts: [NSView] = [t]
@@ -237,7 +225,11 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
             let d = NSTextField(wrappingLabelWithString: detail)
             d.font = .systemFont(ofSize: 11)
             d.textColor = .secondaryLabelColor
-            d.preferredMaxLayoutWidth = 300
+            d.preferredMaxLayoutWidth = 280
+            d.widthAnchor.constraint(lessThanOrEqualToConstant: 280).isActive = true
+            // a window's fitting size counts a wrapped label as one line: say how tall it is
+            let h = d.attributedStringValue.boundingRect(with: NSSize(width: 274, height: 1000), options: [.usesLineFragmentOrigin, .usesFontLeading]).height
+            d.heightAnchor.constraint(greaterThanOrEqualToConstant: ceil(h)).isActive = true
             texts.append(d)
         }
         let text = NSStackView(views: texts)
@@ -247,15 +239,18 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         text.setContentCompressionResistancePriority(.init(1), for: .horizontal)
         let spacer = NSView()
         spacer.setContentHuggingPriority(.init(1), for: .horizontal)
-        let r = NSStackView(views: [text, spacer, control])
+        var views: [NSView] = [text, spacer, control]
+        if let (symbol, color) = icon { views.insert(IconTile(symbol, color), at: 0) }
+        let r = NSStackView(views: views)
         r.alignment = .centerY
-        r.spacing = 12
-        r.edgeInsets = NSEdgeInsets(top: 9, left: 14, bottom: 9, right: 14)
-        r.heightAnchor.constraint(greaterThanOrEqualToConstant: 40).isActive = true
+        r.spacing = 10
+        r.edgeInsets = NSEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
+        r.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
+        r.heightAnchor.constraint(greaterThanOrEqualTo: text.heightAnchor, constant: 16).isActive = true   // never clip the text
         return r
     }
 
-    /// Rows in one card, with hairlines between them.
+    /// Rows in one card, with hairlines between them that start under the text, as in System Settings.
     private func group(_ rows: [NSView]) -> NSView {
         var views: [NSView] = []
         for (i, r) in rows.enumerated() {
@@ -263,7 +258,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
                 let line = NSBox()
                 line.boxType = .separator
                 let inset = NSStackView(views: [line])
-                inset.edgeInsets = NSEdgeInsets(top: 0, left: 14, bottom: 0, right: 0)
+                inset.edgeInsets = NSEdgeInsets(top: 0, left: 46, bottom: 0, right: 12)
                 views.append(inset)
             }
             views.append(r)
@@ -272,7 +267,42 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         st.orientation = .vertical
         st.spacing = 0
         for v in views { v.widthAnchor.constraint(equalTo: st.widthAnchor).isActive = true }
-        return card(st, inset: 0)
+        return card(st, inset: 0, soft: true)
+    }
+
+    /// A small grey line under a card.
+    private func note(_ s: String) -> NSTextField {
+        let l = NSTextField(wrappingLabelWithString: s)
+        l.font = .systemFont(ofSize: 11)
+        l.textColor = .secondaryLabelColor
+        l.preferredMaxLayoutWidth = width - 64
+        return l
+    }
+
+    /// A card with a heading above it and a note under it.
+    private func section(_ title: String?, _ rows: [NSView], _ foot: NSView? = nil) -> NSView {
+        var views: [NSView] = []
+        if let title {
+            let l = NSTextField(labelWithString: title)
+            l.font = .systemFont(ofSize: 12, weight: .semibold)
+            l.textColor = .secondaryLabelColor
+            let h = NSStackView(views: [l])
+            h.edgeInsets = NSEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
+            views.append(h)
+        }
+        let g = group(rows)
+        views.append(g)
+        if let foot {
+            let f = NSStackView(views: [foot])
+            f.edgeInsets = NSEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
+            views.append(f)
+        }
+        let st = NSStackView(views: views)
+        st.orientation = .vertical
+        st.alignment = .leading
+        st.spacing = 6
+        for v in views { v.widthAnchor.constraint(equalTo: st.widthAnchor).isActive = true }
+        return st
     }
 
     private func toggle(_ on: Bool, _ action: Selector) -> NSSwitch {
@@ -284,152 +314,221 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         return s
     }
 
-    // MARK: the page
+    private func popup(_ items: [(String, String)], _ current: String, _ action: Selector) -> NSPopUpButton {
+        let p = NSPopUpButton()
+        p.controlSize = .small
+        for (code, title) in items {
+            p.addItem(withTitle: title); p.lastItem?.representedObject = code
+            if current == code { p.select(p.lastItem) }
+        }
+        p.target = self; p.action = action
+        return p
+    }
+
+    /// Rows that only matter while another setting is on stay visible, quieter and out of reach.
+    private func setActive(_ v: NSView?, _ on: Bool) {
+        guard let v else { return }
+        NSAnimationContext.runAnimationGroup { $0.duration = 0.2; v.animator().alphaValue = on ? 1 : 0.4 }
+        func walk(_ v: NSView) { (v as? NSControl)?.isEnabled = on; v.subviews.forEach(walk) }
+        walk(v)
+    }
+
+    // MARK: the pages
+
+    private var keyRows: [HotAction: NSView] = [:]
+    private var folderRow, noticeRow, placeRow: NSView?
+    private let keyNote = NSTextField(wrappingLabelWithString: "")
+    private let generalNote = NSTextField(wrappingLabelWithString: "")
+    private var permRights: [Permission: NSStackView] = [:]
+    private var pages: [NSViewController] = []
 
     private func build() {
-        let bg = NSVisualEffectView()
-        bg.material = .underWindowBackground
-        bg.blendingMode = .behindWindow
-        bg.state = .active
-
         // shortcuts
-        var keyRows: [NSView] = []
+        let keyIcons: [HotAction: (String, NSColor)] = [
+            .capture: ("scissors", .systemBlue), .quickCapture: ("camera.fill", .systemIndigo),
+            .pinClipboard: ("pin.fill", .systemOrange), .togglePins: ("eye.slash.fill", .systemTeal),
+            .ocr: ("text.viewfinder", .systemGreen), .ocrCopy: ("doc.on.doc.fill", .systemMint)]
+        var rows: [NSView] = []
         for a in HotAction.allCases {
             let f = HotKeyField(Prefs.shared.hotkey(a))
             f.onChange = { [weak self] k in
                 Prefs.shared.setHotkey(a, k)
                 let failed = HotKeyCenter.shared.registerAll()
-                self?.status.stringValue = failed.contains(a) ? L.t("hkConflict") : ""
-                self?.status.textColor = failed.contains(a) ? .systemRed : .secondaryLabelColor
+                self?.say(failed.contains(a) ? L.t("hkConflict") : L.t("hkFoot"), in: self?.keyNote, error: failed.contains(a))
             }
-            keyRows.append(row(a.title, nil, f))
+            let r = row(keyIcons[a], a.title, nil, f)
+            keyRows[a] = r
+            rows.append(r)
         }
+        for l in [keyNote, generalNote] {
+            l.font = .systemFont(ofSize: 11)
+            l.textColor = .secondaryLabelColor
+            l.preferredMaxLayoutWidth = width - 64
+        }
+        keyNote.stringValue = L.t("hkFoot")
+        let shortcuts = section(nil, rows, keyNote)
 
         // general
-        let lang = NSPopUpButton()
-        lang.controlSize = .small
-        let names: [(L.Lang, String)] = [(.system, L.t("langSystem")), (.en, "English"),
-                                         (.zhHans, "简体中文"), (.zhHant, "繁體中文")]
-        for (code, name) in names {
-            lang.addItem(withTitle: name); lang.lastItem?.representedObject = code.rawValue
-            if Prefs.shared.language == code.rawValue { lang.select(lang.lastItem) }
-        }
-        lang.target = self; lang.action = #selector(pickLang(_:))
+        let general = stack([
+            section(L.t("secCapture"), [
+                row(("text.viewfinder", .systemGreen), L.t("ocrTitle2"), L.t("ocrDetail"), toggle(Prefs.shared.ocrEnabled, #selector(toggleOCR(_:)))),
+                row(("exclamationmark.bubble.fill", .systemYellow), L.t("askLeave"), nil, toggle(Prefs.shared.askBeforeLeaving, #selector(toggleAskLeave(_:)))),
+                row(("circle.lefthalf.filled", .systemGray), L.t("toolbarTheme"), nil,
+                    popup([("system", L.t("themeSystem")), ("light", L.t("themeLight")), ("dark", L.t("themeDark"))],
+                          Prefs.shared.toolbarTheme, #selector(pickTheme(_:)))),
+            ]),
+            section(L.t("secPins"), [
+                row(("pin.fill", .systemOrange), L.t("pinTop"), nil, toggle(Prefs.shared.pinOnTop, #selector(togglePinTop(_:)))),
+            ]),
+            section(L.t("secApp"), [
+                row(("power", .systemPink), L.t("launchAtLogin"), nil, toggle(SMAppService.mainApp.status == .enabled, #selector(toggleLogin(_:)))),
+                row(("globe", .systemBlue), L.t("language"), nil,
+                    popup([(L.Lang.system.rawValue, L.t("langSystem")), (L.Lang.en.rawValue, "English"),
+                           (L.Lang.zhHans.rawValue, "简体中文"), (L.Lang.zhHant.rawValue, "繁體中文")],
+                          Prefs.shared.language, #selector(pickLang(_:)))),
+            ], generalNote),
+        ])
+
+        // quick capture
         folderButton.controlSize = .small
         folderButton.bezelStyle = .push
         folderButton.target = self
         folderButton.action = #selector(chooseFolder)
         folderButton.title = folderTitle()
-        let theme = NSPopUpButton()
-        theme.controlSize = .small
-        for (code, key) in [("system", "themeSystem"), ("light", "themeLight"), ("dark", "themeDark")] {
-            theme.addItem(withTitle: L.t(key)); theme.lastItem?.representedObject = code
-            if Prefs.shared.toolbarTheme == code { theme.select(theme.lastItem) }
-        }
-        theme.target = self; theme.action = #selector(pickTheme(_:))
-        let noticePlace = NSPopUpButton()
-        noticePlace.controlSize = .small
-        for (code, key) in [("topRight", "posTopRight"), ("bottomRight", "posBottomRight"), ("topCenter", "posTopCenter"), ("center", "posCenter")] {
-            noticePlace.addItem(withTitle: L.t(key)); noticePlace.lastItem?.representedObject = code
-            if Prefs.shared.noticePosition == code { noticePlace.select(noticePlace.lastItem) }
-        }
-        noticePlace.target = self; noticePlace.action = #selector(pickNoticePlace(_:))
-        let general = group([
-            row(L.t("launchAtLogin"), nil, toggle(SMAppService.mainApp.status == .enabled, #selector(toggleLogin(_:)))),
-            row(L.t("ocrTitle2"), L.t("ocrDetail"), toggle(Prefs.shared.ocrEnabled, #selector(toggleOCR(_:)))),
-            row(L.t("pinTop"), nil, toggle(Prefs.shared.pinOnTop, #selector(togglePinTop(_:)))),
-            row(L.t("askLeave"), nil, toggle(Prefs.shared.askBeforeLeaving, #selector(toggleAskLeave(_:)))),
-            row(L.t("toolbarTheme"), nil, theme),
-            row(L.t("language"), nil, lang),
-        ])
-        let quick = group([
-            row(L.t("quickEnable"), L.t("quickFolderDetail"), toggle(Prefs.shared.quickEnabled, #selector(toggleQuick(_:)))),
-            row(L.t("quickFolder"), nil, folderButton),
-            row(L.t("quickNotice"), L.t("quickNoticeDetail"), toggle(Prefs.shared.quickNotice, #selector(toggleQuickNotice(_:)))),
-            row(L.t("noticePosition"), nil, noticePlace),
+        folderButton.lineBreakMode = .byTruncatingMiddle
+        folderButton.widthAnchor.constraint(lessThanOrEqualToConstant: 190).isActive = true
+        let fr = row(("folder.fill", .systemCyan), L.t("quickFolder"), nil, folderButton)
+        let nr = row(("bell.badge.fill", .systemRed), L.t("quickNotice"), L.t("quickNoticeDetail"),
+                     toggle(Prefs.shared.quickNotice, #selector(toggleQuickNotice(_:))))
+        let pr = row(("macwindow", .systemGray), L.t("noticePosition"), nil,
+                     popup([("topRight", L.t("posTopRight")), ("bottomRight", L.t("posBottomRight")),
+                            ("topCenter", L.t("posTopCenter")), ("center", L.t("posCenter"))],
+                           Prefs.shared.noticePosition, #selector(pickNoticePlace(_:))))
+        (folderRow, noticeRow, placeRow) = (fr, nr, pr)
+        let quick = stack([
+            section(nil, [
+                row(("camera.fill", .systemIndigo), L.t("quickEnable"), L.t("quickFolderDetail"),
+                    toggle(Prefs.shared.quickEnabled, #selector(toggleQuick(_:)))),
+                fr,
+            ]),
+            section(L.t("secNotice"), [nr, pr]),
         ])
 
-        // permissions: their state and the button to the permissions page
-        permIcon.symbolConfiguration = .init(pointSize: 13, weight: .semibold)
-        permState.font = .systemFont(ofSize: 12)
-        let manage = NSButton(title: L.t("manage"), target: self, action: #selector(openPermissions))
-        manage.controlSize = .small
-        manage.bezelStyle = .push
-        let permRight = NSStackView(views: [permIcon, permState, manage])
-        permRight.spacing = 6
-        permRight.alignment = .centerY
-        permRight.setCustomSpacing(12, after: permState)
-        let perms = group([row(L.t("permStatus"), nil, permRight)])
-
-        status.font = .systemFont(ofSize: 11)
-        status.textColor = .secondaryLabelColor
-        status.stringValue = ""
-        status.preferredMaxLayoutWidth = width - 60
-        let foot = NSStackView(views: [status])
-        foot.edgeInsets = NSEdgeInsets(top: 0, left: 6, bottom: 0, right: 6)
-
-        // pages behind tabs at the top: one at a time, the window as tall as it
-        pages = [group(keyRows), general, quick, perms]
-        let tabs = SettingsTabs(items: [("keyboard", L.t("hotkeys")), ("gearshape", L.t("general")),
-                                        ("camera.viewfinder", L.t("quickTab")), ("lock.shield", L.t("permissions"))]) { [weak self] i in
-            self?.showPage(i)
+        // permissions: each one, its state, and the way to allow it
+        var permRows: [NSView] = []
+        for p in Permission.allCases {
+            let right = NSStackView()
+            right.spacing = 5
+            right.alignment = .centerY
+            permRights[p] = right
+            permRows.append(row(p == .screenRecording ? ("record.circle", .systemPurple) : ("accessibility", .systemBlue),
+                                p.name, p.purpose, right))
         }
-        tabs.translatesAutoresizingMaskIntoConstraints = false
-        pageHost.orientation = .vertical
-        pageHost.alignment = .leading
-        pageHost.spacing = 12
-        pageHost.translatesAutoresizingMaskIntoConstraints = false
-        bg.addSubview(tabs)
-        bg.addSubview(pageHost)
-        NSLayoutConstraint.activate([
-            tabs.topAnchor.constraint(equalTo: bg.topAnchor, constant: 36),
-            tabs.centerXAnchor.constraint(equalTo: bg.centerXAnchor),
-            pageHost.topAnchor.constraint(equalTo: tabs.bottomAnchor, constant: 18),
-            pageHost.leadingAnchor.constraint(equalTo: bg.leadingAnchor, constant: 22),
-            pageHost.trailingAnchor.constraint(equalTo: bg.trailingAnchor, constant: -22),
-            pageHost.bottomAnchor.constraint(equalTo: bg.bottomAnchor, constant: -20),
-            bg.widthAnchor.constraint(equalToConstant: width),
-        ])
-        footer = foot
-        window?.contentView = bg
+        let perms = section(nil, permRows, note(L.t("permFoot")))
+
+        // the pages in a macOS settings toolbar: icons above names, the window as tall as each page
+        let pageList: [(String, String, NSView)] = [("keyboard", L.t("hotkeys"), shortcuts),
+                                                  ("gearshape", L.t("general"), general),
+                                                  ("camera.viewfinder", L.t("quickTab"), quick),
+                                                  ("lock.shield", L.t("permissions"), perms)]
+        let tabs = SettingsTabs()
+        tabs.tabStyle = .toolbar
+        tabs.transitionOptions = [.crossfade, .allowUserInteraction]
+        for (symbol, name, page) in pageList {
+            let host = NSView()
+            page.translatesAutoresizingMaskIntoConstraints = false
+            host.addSubview(page)
+            NSLayoutConstraint.activate([
+                page.leadingAnchor.constraint(equalTo: host.leadingAnchor, constant: 24),
+                page.trailingAnchor.constraint(equalTo: host.trailingAnchor, constant: -24),
+                page.topAnchor.constraint(equalTo: host.topAnchor, constant: 18),
+                page.bottomAnchor.constraint(equalTo: host.bottomAnchor, constant: -24),
+                host.widthAnchor.constraint(equalToConstant: width),
+            ])
+            let vc = NSViewController()
+            vc.view = host
+            vc.title = name
+            pages.append(vc)
+            let item = NSTabViewItem(viewController: vc)
+            item.label = name
+            item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: name)
+            tabs.addTabViewItem(item)
+        }
+        refit()
+        window?.styleMask.remove(.fullSizeContentView)
+        window?.titlebarAppearsTransparent = false
+        window?.isMovableByWindowBackground = false
+        window?.toolbarStyle = .preference
+        window?.contentViewController = tabs
+        window?.title = pageList[0].1
+        quickChanged()
         refreshPermissions()
-        showPage(0)
     }
 
-    private var pages: [NSView] = []
-    private let pageHost = NSStackView()
-    private var footer: NSView?
+    private func stack(_ views: [NSView]) -> NSView {
+        let st = NSStackView(views: views)
+        st.orientation = .vertical
+        st.alignment = .leading
+        st.spacing = 20
+        for v in views { v.widthAnchor.constraint(equalTo: st.widthAnchor).isActive = true }
+        return st
+    }
 
-    private func showPage(_ i: Int) {
-        pageHost.arrangedSubviews.forEach { pageHost.removeArrangedSubview($0); $0.removeFromSuperview() }
-        for v in [pages[i]] + (footer.map { [$0] } ?? []) {
-            pageHost.addArrangedSubview(v)
-            v.widthAnchor.constraint(equalTo: pageHost.widthAnchor).isActive = true
+    /// Each page as tall as what it holds; the window follows when its page grows.
+    private func refit() {
+        for vc in pages {
+            // measured at its real width: a card's content follows the card's frame
+            if vc.view.frame.width != width { vc.view.setFrameSize(NSSize(width: width, height: 600)) }
+            vc.view.layoutSubtreeIfNeeded()
+            vc.preferredContentSize = vc.view.fittingSize
+            // the page on show: grow or shrink the window from its top edge
+            if let w = window, vc.view.window === w {
+                let old = w.frame
+                let content = w.frameRect(forContentRect: NSRect(origin: .zero, size: vc.preferredContentSize))
+                guard abs(content.height - old.height) > 0.5 else { continue }
+                w.setFrame(NSRect(x: old.minX, y: old.maxY - content.height, width: old.width, height: content.height),
+                           display: true, animate: true)
+            }
         }
-        // the window fits the page, its top edge staying
-        guard let w = window, let cv = w.contentView else { return }
-        cv.layoutSubtreeIfNeeded()
-        let h = ceil(cv.fittingSize.height)
-        var f = w.frame
-        let target = w.frameRect(forContentRect: NSRect(x: 0, y: 0, width: w.contentRect(forFrameRect: f).width, height: h))
-        f.origin.y += f.height - target.height
-        f.size.height = target.height
-        w.setFrame(f, display: true, animate: w.isVisible)
+    }
+
+    private func say(_ s: String, in l: NSTextField?, error: Bool = false) {
+        guard let l else { return }
+        l.stringValue = s
+        l.textColor = error ? .systemRed : .secondaryLabelColor
+        refit()
+    }
+
+    private func quickChanged() {
+        let q = Prefs.shared.quickEnabled
+        keyRows[.quickCapture]?.alphaValue = q ? 1 : 0.4
+        for a in [HotAction.ocr, .ocrCopy] { keyRows[a]?.alphaValue = Prefs.shared.ocrEnabled ? 1 : 0.4 }
+        setActive(folderRow, q)
+        setActive(noticeRow, q)
+        setActive(placeRow, q && Prefs.shared.quickNotice)
     }
 
     private func refreshPermissions() {
-        let missing = Permission.allCases.filter { $0.required && !$0.granted }.count
-        if missing == 0 {
-            permIcon.image = NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil)
-            permIcon.contentTintColor = .systemGreen
-            permState.stringValue = L.t("permAllOK")
-            permState.textColor = .secondaryLabelColor
-        } else {
-            permIcon.image = NSImage(systemSymbolName: "exclamationmark.circle.fill", accessibilityDescription: nil)
-            permIcon.contentTintColor = .systemOrange
-            permState.stringValue = String(format: L.t("permMissing"), missing)
-            permState.textColor = .systemOrange
+        for (p, right) in permRights {
+            right.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            if p.granted {
+                let i = NSImageView(image: NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil) ?? NSImage())
+                i.symbolConfiguration = .init(pointSize: 13, weight: .semibold)
+                i.contentTintColor = .systemGreen
+                let t = NSTextField(labelWithString: L.t("granted"))
+                t.font = .systemFont(ofSize: 12)
+                t.textColor = .secondaryLabelColor
+                right.addArrangedSubview(i)
+                right.addArrangedSubview(t)
+            } else {
+                let b = NSButton(title: L.t("grant"), target: self, action: #selector(openPermissions))
+                b.controlSize = .small
+                b.bezelStyle = .push
+                b.keyEquivalent = "\r"
+                right.addArrangedSubview(b)
+            }
         }
+        refit()
     }
 
     // MARK: actions
@@ -438,8 +537,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         do {
             if b.state == .on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
         } catch {
-            status.stringValue = error.localizedDescription
-            status.textColor = .systemRed
+            say(error.localizedDescription, in: generalNote, error: true)
             b.state = SMAppService.mainApp.status == .enabled ? .on : .off
         }
     }
@@ -447,6 +545,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     @objc private func toggleOCR(_ b: NSSwitch) {
         Prefs.shared.ocrEnabled = b.state == .on
         HotKeyCenter.shared.registerAll()
+        quickChanged()
     }
 
     @objc private func togglePinTop(_ b: NSSwitch) {
@@ -456,8 +555,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
     @objc private func pickLang(_ p: NSPopUpButton) {
         Prefs.shared.language = p.selectedItem?.representedObject as? String ?? "system"
-        status.stringValue = L.t("langRestart")
-        status.textColor = .secondaryLabelColor
+        say(L.t("langRestart"), in: generalNote)
     }
 
     @objc private func openPermissions() { PermissionsWindow.show() }
@@ -483,9 +581,10 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     @objc private func toggleQuick(_ b: NSSwitch) {
         Prefs.shared.quickEnabled = b.state == .on
         HotKeyCenter.shared.registerAll()
+        quickChanged()
     }
 
-    @objc private func toggleQuickNotice(_ b: NSSwitch) { Prefs.shared.quickNotice = b.state == .on }
+    @objc private func toggleQuickNotice(_ b: NSSwitch) { Prefs.shared.quickNotice = b.state == .on; quickChanged() }
 
     @objc private func pickNoticePlace(_ p: NSPopUpButton) {
         Prefs.shared.noticePosition = p.selectedItem?.representedObject as? String ?? "topRight"
@@ -504,66 +603,33 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     }
 }
 
-/// Tabs at the top of Settings: a soft capsule, the chosen tab a raised white piece with an
-/// icon and a name.
-final class SettingsTabs: NSView {
-    private var buttons: [NSButton] = []
-    private let onPick: (Int) -> Void
-    private var chosen = 0
+/// The settings toolbar; the window is named after the page it shows.
+private final class SettingsTabs: NSTabViewController {
+    override func tabView(_ tabView: NSTabView, didSelect item: NSTabViewItem?) {
+        super.tabView(tabView, didSelect: item)
+        if let item { view.window?.title = item.label }
+    }
+}
 
-    init(items: [(String, String)], onPick: @escaping (Int) -> Void) {
-        self.onPick = onPick
-        super.init(frame: .zero)
-        wantsLayer = true
-        layer?.cornerRadius = 10
-        let row = NSStackView()
-        row.spacing = 2
-        row.edgeInsets = NSEdgeInsets(top: 3, left: 3, bottom: 3, right: 3)
-        row.translatesAutoresizingMaskIntoConstraints = false
-        for (i, (symbol, name)) in items.enumerated() {
-            let b = NSButton(title: name, image: NSImage(systemSymbolName: symbol, accessibilityDescription: name)!,
-                             target: self, action: #selector(pick(_:)))
-            b.tag = i
-            b.isBordered = false
-            b.imagePosition = .imageLeading
-            b.imageHugsTitle = true
-            b.font = .systemFont(ofSize: 12, weight: .medium)
-            b.symbolConfiguration = .init(pointSize: 12, weight: .medium)
-            b.wantsLayer = true
-            b.layer?.cornerRadius = 7
-            b.translatesAutoresizingMaskIntoConstraints = false
-            b.heightAnchor.constraint(equalToConstant: 28).isActive = true
-            b.widthAnchor.constraint(greaterThanOrEqualToConstant: 88).isActive = true
-            buttons.append(b)
-            row.addArrangedSubview(b)
-        }
-        addSubview(row)
+/// A rounded square of color with a white symbol, as beside each row of System Settings.
+private final class IconTile: NSView {
+    private let color: NSColor
+    init(_ symbol: String, _ color: NSColor) {
+        self.color = color
+        super.init(frame: NSRect(x: 0, y: 0, width: 24, height: 24))
+        let img = NSImageView(image: NSImage(systemSymbolName: symbol, accessibilityDescription: nil) ?? NSImage())
+        img.symbolConfiguration = .init(pointSize: 12, weight: .semibold)
+        img.contentTintColor = .white
+        img.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(img)
         NSLayoutConstraint.activate([
-            row.leadingAnchor.constraint(equalTo: leadingAnchor), row.trailingAnchor.constraint(equalTo: trailingAnchor),
-            row.topAnchor.constraint(equalTo: topAnchor), row.bottomAnchor.constraint(equalTo: bottomAnchor),
+            widthAnchor.constraint(equalToConstant: 24), heightAnchor.constraint(equalToConstant: 24),
+            img.centerXAnchor.constraint(equalTo: centerXAnchor), img.centerYAnchor.constraint(equalTo: centerYAnchor),
         ])
-        refresh()
     }
     required init?(coder: NSCoder) { fatalError() }
-
-    @objc private func pick(_ b: NSButton) {
-        chosen = b.tag
-        refresh()
-        onPick(chosen)
-    }
-
-    override func viewDidChangeEffectiveAppearance() { super.viewDidChangeEffectiveAppearance(); refresh() }
-
-    private func refresh() {
-        let dark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        layer?.backgroundColor = (dark ? NSColor.white.withAlphaComponent(0.08) : NSColor.black.withAlphaComponent(0.06)).cgColor
-        for (i, b) in buttons.enumerated() {
-            let on = i == chosen
-            b.layer?.backgroundColor = on ? (dark ? NSColor(white: 0.32, alpha: 1) : NSColor.white).cgColor : NSColor.clear.cgColor
-            b.layer?.shadowOpacity = on ? (dark ? 0.4 : 0.14) : 0
-            b.layer?.shadowRadius = 2
-            b.layer?.shadowOffset = CGSize(width: 0, height: -1)
-            b.contentTintColor = on ? .labelColor : .secondaryLabelColor
-        }
+    override func draw(_ dirtyRect: NSRect) {
+        let path = NSBezierPath(roundedRect: bounds, xRadius: 6, yRadius: 6)
+        NSGradient(starting: color.blended(withFraction: 0.22, of: .white) ?? color, ending: color)?.draw(in: path, angle: -90)
     }
 }

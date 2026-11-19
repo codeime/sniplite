@@ -86,15 +86,17 @@ extension Permission {
 }
 
 /// A rounded card whose colors follow light / dark mode.
-func card(_ content: NSView, inset: CGFloat = 16) -> NSBox {
+/// `soft`: a faint tint instead of white, for cards on a white window (Settings).
+func card(_ content: NSView, inset: CGFloat = 16, soft: Bool = false) -> NSBox {
     let b = NSBox()
     b.boxType = .custom
-    b.cornerRadius = 12
+    b.cornerRadius = soft ? 10 : 12
     b.borderWidth = 1
     b.borderColor = NSColor(name: nil) { $0.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        ? NSColor.white.withAlphaComponent(0.08) : NSColor.black.withAlphaComponent(0.07) }
+        ? NSColor.white.withAlphaComponent(soft ? 0.06 : 0.08) : NSColor.black.withAlphaComponent(soft ? 0.05 : 0.07) }
     b.fillColor = NSColor(name: nil) { $0.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        ? NSColor.white.withAlphaComponent(0.05) : NSColor.white.withAlphaComponent(0.85) }
+        ? NSColor.white.withAlphaComponent(soft ? 0.04 : 0.05)
+        : (soft ? NSColor.black.withAlphaComponent(0.025) : NSColor.white.withAlphaComponent(0.85)) }
     b.contentViewMargins = NSSize(width: inset, height: inset)
     content.translatesAutoresizingMaskIntoConstraints = false
     b.contentView?.addSubview(content)
