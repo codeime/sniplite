@@ -23,7 +23,7 @@ struct SnapWindow {
 
 enum CaptureError: Error { case noPermission, failed(String) }
 
-/// Captures every display through ScreenCaptureKit and lists the windows for snapping.
+/// Captures every display (the window list, else ScreenCaptureKit) and lists the windows for snapping.
 enum Capture {
     private static var cachedDisplays: [SCDisplay]?
 
@@ -63,49 +63,76 @@ enum Capture {
         (s.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value ?? 0
     }
 
+    /// The older window-list capture: unlike ScreenCaptureKit it keeps what macOS draws around
+    /// windows (their shadows and edge lines), so a captured window looks as it does on screen,
+    /// and it is quicker (about 20–30 ms a display against 60). It is no longer in the SDK, so it
+    /// is looked up when the app runs; if it is gone or gives a blank picture, ScreenCaptureKit
+    /// takes over.
+    private typealias WindowListImage = @convention(c) (CGRect, UInt32, UInt32, UInt32) -> Unmanaged<CGImage>?
+    private static let windowListImage: WindowListImage? =
+        dlsym(dlopen(nil, RTLD_NOW), "CGWindowListCreateImage").map { unsafeBitCast($0, to: WindowListImage.self) }
+
+    private static func windowListCapture(_ screens: [NSScreen]) -> [(NSScreen, CGImage?)]? {
+        guard let make = windowListImage else { return nil }
+        var out: [(NSScreen, CGImage?)] = []
+        for s in screens {
+            // on-screen windows (1), all of them (no window id), at full resolution (default options)
+            guard let img = make(CGDisplayBounds(displayID(s)), 1, 0, 0)?.takeRetainedValue(),
+                  img.width >= Int(s.frame.width * s.backingScaleFactor) - 2, !img.isBlank else { return nil }
+            out.append((s, img))
+        }
+        return out
+    }
+
     /// Captures all screens at once.
     @MainActor
     static func captureAll(only one: NSScreen? = nil) async throws -> [DisplayShot] {
         let screens = one.map { [$0] } ?? NSScreen.screens
         let wins = windowRects()
-        var list = try await displays()
-        // a display that was plugged in since the list was cached: ask again
-        if screens.contains(where: { s in !list.contains { $0.displayID == displayID(s) } }) {
-            cachedDisplays = nil
-            list = try await displays()
-        }
-        var jobs: [(NSScreen, SCDisplay)] = []
-        for s in screens {
-            if let d = list.first(where: { $0.displayID == displayID(s) }) { jobs.append((s, d)) }
-        }
-        let images: [CGImage?] = try await withThrowingTaskGroup(of: (Int, CGImage?).self) { group in
-            for (i, (s, d)) in jobs.enumerated() {
-                let scale = s.backingScaleFactor
-                let size = s.frame.size
-                group.addTask {
-                    let filter = SCContentFilter(display: d, excludingWindows: [])
-                    let cfg = SCStreamConfiguration()
-                    cfg.width = Int(size.width * scale)
-                    cfg.height = Int(size.height * scale)
-                    cfg.showsCursor = false
-                    cfg.captureResolution = .best
-                    cfg.scalesToFit = false
-                    cfg.colorSpaceName = CGColorSpace.sRGB
-                    // 8-bit color: otherwise the image can come as 16-bit floats, twice the memory
-                    // and slow to sample for the magnifier and the colors
-                    cfg.pixelFormat = kCVPixelFormatType_32BGRA
-                    let img = try? await SCScreenshotManager.captureImage(contentFilter: filter, configuration: cfg)
-                    return (i, img)
-                }
+        var pairs: [(NSScreen, CGImage?)] = []
+        if hasPermission, let legacy = windowListCapture(screens) {
+            pairs = legacy
+        } else {
+            var list = try await displays()
+            // a display that was plugged in since the list was cached: ask again
+            if screens.contains(where: { s in !list.contains { $0.displayID == displayID(s) } }) {
+                cachedDisplays = nil
+                list = try await displays()
             }
-            var out = [CGImage?](repeating: nil, count: jobs.count)
-            for try await (i, img) in group { out[i] = img }
-            return out
+            var jobs: [(NSScreen, SCDisplay)] = []
+            for s in screens {
+                if let d = list.first(where: { $0.displayID == displayID(s) }) { jobs.append((s, d)) }
+            }
+            let images: [CGImage?] = try await withThrowingTaskGroup(of: (Int, CGImage?).self) { group in
+                for (i, (s, d)) in jobs.enumerated() {
+                    let scale = s.backingScaleFactor
+                    let size = s.frame.size
+                    group.addTask {
+                        let filter = SCContentFilter(display: d, excludingWindows: [])
+                        let cfg = SCStreamConfiguration()
+                        cfg.width = Int(size.width * scale)
+                        cfg.height = Int(size.height * scale)
+                        cfg.showsCursor = false
+                        cfg.captureResolution = .best
+                        cfg.scalesToFit = false
+                        cfg.colorSpaceName = CGColorSpace.sRGB
+                        // 8-bit color: otherwise the image can come as 16-bit floats, twice the memory
+                        // and slow to sample for the magnifier and the colors
+                        cfg.pixelFormat = kCVPixelFormatType_32BGRA
+                        let img = try? await SCScreenshotManager.captureImage(contentFilter: filter, configuration: cfg)
+                        return (i, img)
+                    }
+                }
+                var out = [CGImage?](repeating: nil, count: jobs.count)
+                for try await (i, img) in group { out[i] = img }
+                return out
+            }
+            pairs = jobs.enumerated().map { ($0.element.0, images[$0.offset]) }
         }
         var shots: [DisplayShot] = []
         let primaryH = NSScreen.screens.first?.frame.height ?? 0
-        for (i, (s, _)) in jobs.enumerated() {
-            guard let img = images[i] else { continue }
+        for (s, img) in pairs {
+            guard let img else { continue }
             let f = s.frame
             // CG global (top-left of the primary display) -> this screen's flipped view coordinates
             let dy = primaryH - f.maxY
@@ -151,6 +178,18 @@ enum Capture {
 
 /// Helpers for CGImage.
 extension CGImage {
+    /// One flat color all over (what a capture gives when it is refused or not supported).
+    var isBlank: Bool {
+        var px = [UInt8](repeating: 0, count: 8 * 8 * 4)
+        guard let cs = CGColorSpace(name: CGColorSpace.sRGB),
+              let ctx = CGContext(data: &px, width: 8, height: 8, bitsPerComponent: 8, bytesPerRow: 32, space: cs,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
+        ctx.interpolationQuality = .low
+        ctx.draw(self, in: CGRect(x: 0, y: 0, width: 8, height: 8))
+        let first = Array(px[0..<4])
+        return stride(from: 0, to: px.count, by: 4).allSatisfy { Array(px[$0..<$0 + 4]) == first }
+    }
+
     /// The color of one pixel (sRGB), or nil outside.
     func color(atPixel x: Int, _ y: Int) -> NSColor? {
         guard x >= 0, y >= 0, x < width, y < height,
