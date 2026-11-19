@@ -23,7 +23,8 @@ struct SnapWindow {
 
 enum CaptureError: Error { case noPermission, failed(String) }
 
-/// Captures every display (the window list, else ScreenCaptureKit) and lists the windows for snapping.
+/// Captures every display, with the shadows and edges macOS draws around windows, and lists the
+/// windows for snapping.
 enum Capture {
     private static var cachedDisplays: [SCDisplay]?
 
@@ -35,6 +36,10 @@ enum Capture {
     static func prewarm() {
         guard hasPermission else { return }
         Task {
+            if #available(macOS 15.2, *) {
+                _ = try? await SCScreenshotManager.captureImage(in: CGRect(x: 0, y: 0, width: 16, height: 16))
+                return
+            }
             guard let d = try? await displays().first else { return }
             do {
                 let cfg = SCStreamConfiguration()
@@ -63,11 +68,32 @@ enum Capture {
         (s.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value ?? 0
     }
 
-    /// The older window-list capture: unlike ScreenCaptureKit it keeps what macOS draws around
-    /// windows (their shadows and edge lines), so a captured window looks as it does on screen,
-    /// and it is quicker (about 20–30 ms a display against 60). It is no longer in the SDK, so it
-    /// is looked up when the app runs; if it is gone or gives a blank picture, ScreenCaptureKit
-    /// takes over.
+    /// macOS 15.2 and later: ScreenCaptureKit's capture of a screen area. Unlike its capture of a
+    /// display (`captureImage(contentFilter:configuration:)`, which leaves them out whatever its
+    /// options), it keeps what macOS draws around windows, their shadows and edge lines, so a
+    /// window looks as it does on screen; and it is quicker, about 20 ms a display.
+    private static func areaCapture(_ screens: [NSScreen]) async -> [(NSScreen, CGImage?)]? {
+        guard #available(macOS 15.2, *) else { return nil }
+        let rects = screens.map { CGDisplayBounds(displayID($0)) }
+        let images: [CGImage?] = await withTaskGroup(of: (Int, CGImage?).self) { group in
+            for (i, r) in rects.enumerated() {
+                group.addTask { (i, try? await SCScreenshotManager.captureImage(in: r)) }
+            }
+            var out = [CGImage?](repeating: nil, count: rects.count)
+            for await (i, img) in group { out[i] = img }
+            return out
+        }
+        var out: [(NSScreen, CGImage?)] = []
+        for (s, img) in zip(screens, images) {
+            guard let img, img.width >= Int(s.frame.width * s.backingScaleFactor) - 2, !img.isBlank else { return nil }
+            out.append((s, img))
+        }
+        return out
+    }
+
+    /// Before macOS 15.2: the older window-list capture, which keeps them too. It is no longer in
+    /// the SDK, so it is looked up when the app runs; if it is gone or gives a blank picture, the
+    /// display capture takes over (without the shadows).
     private typealias WindowListImage = @convention(c) (CGRect, UInt32, UInt32, UInt32) -> Unmanaged<CGImage>?
     private static let windowListImage: WindowListImage? =
         dlsym(dlopen(nil, RTLD_NOW), "CGWindowListCreateImage").map { unsafeBitCast($0, to: WindowListImage.self) }
@@ -90,8 +116,8 @@ enum Capture {
         let screens = one.map { [$0] } ?? NSScreen.screens
         let wins = windowRects()
         var pairs: [(NSScreen, CGImage?)] = []
-        if hasPermission, let legacy = windowListCapture(screens) {
-            pairs = legacy
+        if hasPermission, let quick = await areaCapture(screens) ?? windowListCapture(screens) {
+            pairs = quick
         } else {
             var list = try await displays()
             // a display that was plugged in since the list was cached: ask again
