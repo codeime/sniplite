@@ -72,6 +72,13 @@ enum Capture {
     /// display (`captureImage(contentFilter:configuration:)`, which leaves them out whatever its
     /// options), it keeps what macOS draws around windows, their shadows and edge lines, so a
     /// window looks as it does on screen; and it is quicker, about 20 ms a display.
+    ///
+    /// Kept for later: macOS 26's `SCScreenshotManager.captureScreenshot(rect:configuration:)`
+    /// (and `(contentFilter:configuration:)`) with an `SCScreenshotConfiguration` gives the same
+    /// picture, shadows included, and is the only capture with a real switch for them
+    /// (`ignoreShadows`), plus HDR output and writing straight to a file. Measured on a 2880 x 1800
+    /// display it took about 65 ms against 40 for this one, so it is not used yet; it is the way to
+    /// add a "leave out window shadows" setting, or the replacement if this call is ever deprecated.
     private static func areaCapture(_ screens: [NSScreen]) async -> [(NSScreen, CGImage?)]? {
         guard #available(macOS 15.2, *) else { return nil }
         let rects = screens.map { CGDisplayBounds(displayID($0)) }
