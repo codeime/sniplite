@@ -26,9 +26,11 @@ Windows 版（`../src`）没有任何改动；这个文件夹是一个独立的�
 - **轻量**：空闲时内存约 15–25 MB。
 - **多语言**：English、简体中文、繁體中文，默认跟随系统，也可以在设置里选。
 
+本仓库只维护 macOS 版。Windows 版请到原仓库下载：[MrTangLuyao/sniplite](https://github.com/MrTangLuyao/sniplite/releases/latest)。
+
 ## 安装
 
-先编译（见下文），然后把 `build/sniplite.app` 复制到"应用程序"文件夹并打开。菜单栏会出现剪刀图标，程序坞里没有图标。
+从 [Releases](https://github.com/codeime/sniplite/releases/latest) 下载 `sniplite_<版本>_macos.zip`，解压后把 `sniplite.app` 移到"应用程序"。也可以自己编译（见下文），然后把 `build/sniplite.app` 复制到"应用程序"文件夹并打开。菜单栏会出现剪刀图标，程序坞里没有图标。
 
 sniplite 没有用 Apple 开发者证书签名，也没有公证，所以从网上下载的版本会被 macOS 拦下（提示"无法打开"或"已损坏"）。复制到"应用程序"文件夹后，运行一次下面的命令去掉隔离标记：
 
@@ -54,6 +56,7 @@ xattr -dr com.apple.quarantine "/Applications/sniplite.app"
 | 按键 | 作用 |
 | --- | --- |
 | **F1** | 截图 |
+| **⇧F1** | 快速截图：把鼠标所在的屏幕直接存成文件（文件夹在设置里选，默认桌面）；点提示可在访达中显示 |
 | **F3** | 把复制的图片或文字贴到屏幕上 |
 | **⇧F3** | 隐藏 / 显示所有贴图 |
 | **F4** | 截图并识别文字（开启文字识别时） |

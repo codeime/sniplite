@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> **sniplite for Mac.** Ce dépôt ne maintient que la version **macOS** (dans [`macos`](../macos/README.md), à télécharger depuis les [Releases](https://github.com/codeime/sniplite/releases/latest)). Pour **Windows**, téléchargez sniplite depuis le dépôt d’origine : [MrTangLuyao/sniplite](https://github.com/MrTangLuyao/sniplite/releases/latest).
+
 <div align="center">
 
 <img src="../pics/icon.png" width="96" alt="icône de sniplite">

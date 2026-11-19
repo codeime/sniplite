@@ -1,0 +1,44 @@
+# sniplite for Mac: a tag "macos-v<version>" (e.g. macos-v1.0.0) builds the app, runs the tests
+# and publishes sniplite_<version>_macos.zip as a GitHub release.
+name: macOS release
+
+on:
+  push:
+    tags: ["macos-v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version from the tag
+        run: echo "VERSION=${GITHUB_REF_NAME#macos-v}" >> "$GITHUB_ENV"
+
+      - name: Test
+        working-directory: macos
+        run: ./test.sh
+
+      - name: Build
+        working-directory: macos
+        run: ./build.sh --zip
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notes.md <<NOTES
+          sniplite for Mac ${VERSION}: macOS 14 or later, Apple Silicon and Intel.
+
+          1. Download \`sniplite_${VERSION}_macos.zip\`, unzip it, move \`sniplite.app\` to Applications.
+          2. It is not notarized, so remove the quarantine flag once:
+             \`xattr -dr com.apple.quarantine "/Applications/sniplite.app"\`
+          3. Open it and allow Screen Recording and Accessibility on its permissions page.
+
+          For Windows, download sniplite from the original repository: https://github.com/MrTangLuyao/sniplite/releases
+          NOTES
+          gh release create "$GITHUB_REF_NAME" "macos/build/sniplite_${VERSION}_macos.zip" \
+            --title "sniplite for Mac ${VERSION}" --notes-file notes.md

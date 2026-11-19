@@ -65,8 +65,8 @@ enum Capture {
 
     /// Captures all screens at once.
     @MainActor
-    static func captureAll() async throws -> [DisplayShot] {
-        let screens = NSScreen.screens
+    static func captureAll(only one: NSScreen? = nil) async throws -> [DisplayShot] {
+        let screens = one.map { [$0] } ?? NSScreen.screens
         let wins = windowRects()
         var list = try await displays()
         // a display that was plugged in since the list was cached: ask again

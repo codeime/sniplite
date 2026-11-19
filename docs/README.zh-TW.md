@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> **sniplite for Mac。** 本倉庫只維護 **macOS** 版（在 [`macos`](../macos/README.md) 資料夾，從 [Releases](https://github.com/codeime/sniplite/releases/latest) 下載）。**Windows** 版請到原倉庫下載：[MrTangLuyao/sniplite](https://github.com/MrTangLuyao/sniplite/releases/latest)。
+
 <div align="center">
 
 <img src="../pics/icon.png" width="96" alt="sniplite 圖示">

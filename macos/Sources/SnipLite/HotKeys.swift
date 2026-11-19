@@ -56,7 +56,7 @@ struct HotKey: Codable, Equatable {
 
 /// What a global shortcut does; the defaults are the ones of the Windows version.
 enum HotAction: String, CaseIterable, Codable {
-    case capture, pinClipboard, togglePins, ocr, ocrCopy
+    case capture, quickCapture, pinClipboard, togglePins, ocr, ocrCopy
 
     var isOCR: Bool { self == .ocr || self == .ocrCopy }
     /// The actions in use: the text ones only while text recognition is on.
@@ -65,6 +65,7 @@ enum HotAction: String, CaseIterable, Codable {
     var title: String {
         switch self {
         case .capture: return L.t("capture")
+        case .quickCapture: return L.t("quickCapture")
         case .pinClipboard: return L.t("pinClipboard")
         case .togglePins: return L.t("togglePins")
         case .ocr: return L.t("ocrCapture")
@@ -75,6 +76,7 @@ enum HotAction: String, CaseIterable, Codable {
     var defaultKey: HotKey {
         switch self {
         case .capture: return .f(1)
+        case .quickCapture: return .f(1, shift: true)
         case .pinClipboard: return .f(3)
         case .togglePins: return .f(3, shift: true)
         case .ocr: return .f(4)

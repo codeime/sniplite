@@ -560,6 +560,26 @@ final class OverlayView: NSView, NSTextViewDelegate {
         needsDisplay = true
     }
 
+    /// Leaving drops what was drawn: with drawings, ask first (unless switched off, here with
+    /// "Don't ask again" or in Settings). Nothing drawn: no question.
+    private func confirmLeave() -> Bool {
+        commitText()
+        guard !annotations.isEmpty, Prefs.shared.askBeforeLeaving else { return true }
+        let a = NSAlert()
+        a.messageText = L.t("leaveTitle")
+        a.informativeText = L.t("leaveBody")
+        a.addButton(withTitle: L.t("leaveDiscard"))
+        a.addButton(withTitle: L.t("leaveKeep"))
+        a.showsSuppressionButton = true
+        a.suppressionButton?.title = L.t("dontAsk")
+        a.layout()
+        a.window.level = NSWindow.Level(rawValue: (window?.level.rawValue ?? 0) + 1)   // above the capture
+        let leave = a.runModal() == .alertFirstButtonReturn
+        if leave, a.suppressionButton?.state == .on { Prefs.shared.askBeforeLeaving = false }
+        window?.makeKey()
+        return leave
+    }
+
     /// One level back, as Esc and right-click do: end typing, let go of the selected drawing,
     /// put the tool down. False when there is nothing left to undo that way.
     private func stepBack() -> Bool {
@@ -574,6 +594,7 @@ final class OverlayView: NSView, NSTextViewDelegate {
         case .edit:
             if stepBack() { return }
             // nothing selected, no tool: back to choosing an area; what was drawn is dropped
+            guard confirmLeave() else { return }
             commitText()
             annotations.removeAll(); undoStack.removeAll(); redoStack.removeAll(); current = nil; selected = nil
             phase = .select; toolbar.isHidden = true; toolbar.select(nil)
@@ -756,7 +777,8 @@ final class OverlayView: NSView, NSTextViewDelegate {
         switch Int(e.keyCode) {
         case 0x35: // Esc: one level back (selection, then tool), then cancel
             if stepBack() { return }
-            session?.finish(); return
+            if confirmLeave() { session?.finish() }
+            return
         case 0x33, 0x75: // Delete, Forward Delete: remove the selected annotation
             if let i = selected { saveUndo(); annotations.remove(at: i); selected = nil; needsDisplay = true }
             return
@@ -1214,7 +1236,7 @@ final class OverlayView: NSView, NSTextViewDelegate {
             if let next = redoStack.popLast() { undoStack.append(annotations); annotations = next; selected = nil }
             refreshUndo(); needsDisplay = true
         case .close:
-            session?.finish()
+            if confirmLeave() { session?.finish() }
         case .ocr where !Prefs.shared.ocrEnabled, .ocrCopy where !Prefs.shared.ocrEnabled:
             return
         default:

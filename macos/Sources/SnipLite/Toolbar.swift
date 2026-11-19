@@ -341,6 +341,12 @@ final class Toolbar: NSView {
         layoutPalette()
         setFrameSize(NSSize(width: mainRow.frame.width, height: mainRow.frame.height))
         setWidth(Prefs.shared.width(for: .rect))
+        // light, dark, or as macOS is (Settings)
+        switch Prefs.shared.toolbarTheme {
+        case "light": appearance = NSAppearance(named: .aqua)
+        case "dark": appearance = NSAppearance(named: .darkAqua)
+        default: break
+        }
         applyAppearance()
     }
 

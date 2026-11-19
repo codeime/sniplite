@@ -5,7 +5,7 @@
 # SIGN_ID="Developer ID Application: ..." ./build.sh signs with your certificate instead of ad hoc.
 set -euo pipefail
 cd "$(dirname "$0")"
-VERSION=1.3.3
+VERSION=${VERSION:-1.0.0}   # the release workflow passes the tag's version
 APP=build/sniplite.app
 ARCHS=${ARCHS:-"arm64 x86_64"}
 

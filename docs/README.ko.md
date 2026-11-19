@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> **sniplite for Mac.** 이 저장소는 **macOS** 버전만 관리합니다([`macos`](../macos/README.md), [Releases](https://github.com/codeime/sniplite/releases/latest)에서 다운로드). **Windows** 버전은 원래 저장소에서 다운로드하세요: [MrTangLuyao/sniplite](https://github.com/MrTangLuyao/sniplite/releases/latest).
+
 <div align="center">
 
 <img src="../pics/icon.png" width="96" alt="sniplite 아이콘">

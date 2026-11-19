@@ -44,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if a.isOCR && !Prefs.shared.ocrEnabled { return }
         switch a {
         case .capture: CaptureSession.start(.normal)
+        case .quickCapture: QuickCapture.run()
         case .ocr: CaptureSession.start(.ocr)
         case .ocrCopy: CaptureSession.start(.ocrCopy)
         case .pinClipboard: PinWindow.pinClipboard()

@@ -27,6 +27,26 @@ final class Prefs {
         set { d.set(newValue, forKey: "colorIndex") }
     }
     /// The width of the drawing tools (also sets text size, number size and mosaic squares).
+    /// Where ⇧F1 (quick capture) saves: the Desktop unless chosen.
+    var quickFolder: URL {
+        get {
+            if let p = d.string(forKey: "quickFolder") { return URL(fileURLWithPath: p, isDirectory: true) }
+            return FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first
+                ?? URL(fileURLWithPath: NSHomeDirectory())
+        }
+        set { d.set(newValue.path, forKey: "quickFolder") }
+    }
+    /// Ask before leaving a capture that has drawings (Esc, ✕, right-click back).
+    var askBeforeLeaving: Bool {
+        get { d.object(forKey: "askBeforeLeaving") as? Bool ?? true }
+        set { d.set(newValue, forKey: "askBeforeLeaving") }
+    }
+    /// The capture toolbar: "system" (follows macOS), "light" or "dark".
+    var toolbarTheme: String {
+        get { d.string(forKey: "toolbarTheme") ?? "system" }
+        set { d.set(newValue, forKey: "toolbarTheme") }
+    }
+
     /// Each tool has its own size, remembered between captures; one does not change another.
     /// The defaults are on the small side: lines 3 px, text about 17 pt, numbers about 19 pt across.
     static let defaultWidths: [Tool: CGFloat] = [.rect: 3, .ellipse: 3, .line: 3, .arrow: 3, .pen: 3,
@@ -280,10 +300,25 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
             if Prefs.shared.language == code.rawValue { lang.select(lang.lastItem) }
         }
         lang.target = self; lang.action = #selector(pickLang(_:))
+        folderButton.controlSize = .small
+        folderButton.bezelStyle = .push
+        folderButton.target = self
+        folderButton.action = #selector(chooseFolder)
+        folderButton.title = folderTitle()
+        let theme = NSPopUpButton()
+        theme.controlSize = .small
+        for (code, key) in [("system", "themeSystem"), ("light", "themeLight"), ("dark", "themeDark")] {
+            theme.addItem(withTitle: L.t(key)); theme.lastItem?.representedObject = code
+            if Prefs.shared.toolbarTheme == code { theme.select(theme.lastItem) }
+        }
+        theme.target = self; theme.action = #selector(pickTheme(_:))
         let general = group([
             row(L.t("launchAtLogin"), nil, toggle(SMAppService.mainApp.status == .enabled, #selector(toggleLogin(_:)))),
             row(L.t("ocrTitle2"), L.t("ocrDetail"), toggle(Prefs.shared.ocrEnabled, #selector(toggleOCR(_:)))),
             row(L.t("pinTop"), nil, toggle(Prefs.shared.pinOnTop, #selector(togglePinTop(_:)))),
+            row(L.t("quickFolder"), L.t("quickFolderDetail"), folderButton),
+            row(L.t("askLeave"), nil, toggle(Prefs.shared.askBeforeLeaving, #selector(toggleAskLeave(_:)))),
+            row(L.t("toolbarTheme"), nil, theme),
             row(L.t("language"), nil, lang),
         ])
 
@@ -377,6 +412,30 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     }
 
     @objc private func openPermissions() { PermissionsWindow.show() }
+
+    private let folderButton = NSButton(title: "", target: nil, action: nil)
+
+    private func folderTitle() -> String {
+        FileManager.default.displayName(atPath: Prefs.shared.quickFolder.path)
+    }
+
+    @objc private func chooseFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.directoryURL = Prefs.shared.quickFolder
+        panel.prompt = L.t("chooseFolder")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        Prefs.shared.quickFolder = url
+        folderButton.title = folderTitle()
+    }
+
+    @objc private func toggleAskLeave(_ b: NSSwitch) { Prefs.shared.askBeforeLeaving = b.state == .on }
+
+    @objc private func pickTheme(_ p: NSPopUpButton) {
+        Prefs.shared.toolbarTheme = p.selectedItem?.representedObject as? String ?? "system"
+    }
 
     func windowDidBecomeKey(_ notification: Notification) { refreshPermissions() }
 

@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> **sniplite for Mac。** このリポジトリは **macOS** 版のみを管理しています（[`macos`](../macos/README.md)、[Releases](https://github.com/codeime/sniplite/releases/latest) からダウンロード）。**Windows** 版は元のリポジトリからダウンロードしてください：[MrTangLuyao/sniplite](https://github.com/MrTangLuyao/sniplite/releases/latest)。
+
 <div align="center">
 
 <img src="../pics/icon.png" width="96" alt="sniplite のアイコン">

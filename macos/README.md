@@ -26,9 +26,11 @@ The Windows version (`../src`) is unchanged; this folder is a separate program.
 - **Light**: about 15–25 MB of memory while idle.
 - **Languages**: English, 简体中文, 繁體中文, following the system unless one is picked in Settings.
 
+This repository maintains only the macOS version. For Windows, download sniplite from the original repository: [MrTangLuyao/sniplite](https://github.com/MrTangLuyao/sniplite/releases/latest).
+
 ## Install
 
-Build it (below), then copy `build/sniplite.app` to `/Applications` and open it. The scissors icon appears in the menu bar; there is no Dock icon.
+Download `sniplite_<version>_macos.zip` from [Releases](https://github.com/codeime/sniplite/releases/latest), unzip it and move `sniplite.app` to Applications. Or build it (below), then copy `build/sniplite.app` to `/Applications` and open it. The scissors icon appears in the menu bar; there is no Dock icon.
 
 sniplite is not signed with an Apple Developer ID or notarized, so macOS blocks a downloaded copy ("cannot be opened" / "is damaged"). After copying it to `/Applications`, remove the quarantine flag once:
 
@@ -54,6 +56,7 @@ The same as on Windows, with ⌘ in place of Ctrl. They can be changed in Settin
 | Key | What it does |
 | --- | --- |
 | **F1** | Capture |
+| **⇧F1** | Quick capture: the screen under the mouse straight to a file (folder in Settings, the Desktop by default); click the notice to show it in Finder |
 | **F3** | Pin the copied image or text to the screen |
 | **⇧F3** | Hide / show all pins |
 | **F4** | Capture and read the text (when text recognition is on) |

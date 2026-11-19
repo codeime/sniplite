@@ -25,6 +25,7 @@ enum L {
     }
 
     static let en: [String: String] = [
+        "quickCapture": "Quick capture to a file", "quickSaved": "Screenshot saved", "showInFinder": "Click to show it in Finder", "quickFolder": "Quick capture saves to", "quickFolderDetail": "⇧F1: the screen under the mouse, straight to a file.", "chooseFolder": "Choose", "askLeave": "Ask before leaving a capture with drawings", "leaveTitle": "Leave this capture?", "leaveBody": "What was drawn will be lost.", "leaveDiscard": "Leave", "leaveKeep": "Keep editing", "dontAsk": "Don't ask again", "toolbarTheme": "Capture toolbar", "themeSystem": "Same as macOS", "themeLight": "Light", "themeDark": "Dark",
         "capture": "Capture", "pinClipboard": "Pin from clipboard", "togglePins": "Hide / show pins",
         "ocrCapture": "Capture and read text", "ocrCopyCapture": "Capture and copy text",
         "settings": "Settings…", "about": "About sniplite", "quit": "Quit sniplite",
@@ -57,6 +58,7 @@ enum L {
     ]
 
     static let zhHans: [String: String] = [
+        "quickCapture": "快速截图（存为文件）", "quickSaved": "截图已保存", "showInFinder": "点击在访达中显示", "quickFolder": "快速截图保存到", "quickFolderDetail": "⇧F1：把鼠标所在的屏幕直接存成文件。", "chooseFolder": "选择", "askLeave": "关闭有标注的截图前询问", "leaveTitle": "放弃这次截图？", "leaveBody": "画的内容会丢失。", "leaveDiscard": "放弃", "leaveKeep": "继续编辑", "dontAsk": "不再询问", "toolbarTheme": "截图工具栏", "themeSystem": "跟随系统", "themeLight": "浅色", "themeDark": "深色",
         "capture": "截图", "pinClipboard": "贴图（剪贴板）", "togglePins": "隐藏 / 显示贴图",
         "ocrCapture": "截图并识别文字", "ocrCopyCapture": "截图并复制文字",
         "settings": "设置…", "about": "关于 sniplite", "quit": "退出 sniplite",
@@ -89,6 +91,7 @@ enum L {
     ]
 
     static let zhHant: [String: String] = [
+        "quickCapture": "快速截圖（存成檔案）", "quickSaved": "截圖已儲存", "showInFinder": "點擊在 Finder 中顯示", "quickFolder": "快速截圖儲存到", "quickFolderDetail": "⇧F1：把滑鼠所在的螢幕直接存成檔案。", "chooseFolder": "選擇", "askLeave": "關閉有標註的截圖前詢問", "leaveTitle": "放棄這次截圖？", "leaveBody": "畫的內容會遺失。", "leaveDiscard": "放棄", "leaveKeep": "繼續編輯", "dontAsk": "不再詢問", "toolbarTheme": "截圖工具列", "themeSystem": "跟隨系統", "themeLight": "淺色", "themeDark": "深色",
         "capture": "截圖", "pinClipboard": "貼圖（剪貼簿）", "togglePins": "隱藏 / 顯示貼圖",
         "ocrCapture": "截圖並辨識文字", "ocrCopyCapture": "截圖並複製文字",
         "settings": "設定…", "about": "關於 sniplite", "quit": "結束 sniplite",
