@@ -552,7 +552,7 @@ final class PermissionGuide {
             onGranted()
             return
         }
-        guard let f = settingsWindowFrame() else {
+        guard let (f, title) = settingsWindow() else {
             settingsFrame = nil
             let running = !NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.systempreferences").isEmpty
             if sawSettings {
@@ -566,19 +566,34 @@ final class PermissionGuide {
             return
         }
         lastSeen = Date()
+        // on another page of System Settings the guide steps aside, and comes back with the page
+        // (titles can be read once Screen Recording is allowed; before that, every page counts)
+        if let title, let page = pageTitle, title != page { hide(); return }
         if f != settingsFrame { settingsFrame = f; settledSince = Date() }
         // the panel comes after System Settings: once its window has finished opening and stays put
         if !panel.isVisible && Date().timeIntervalSince(settledSince) < 0.35 { return }
         if !measured { measureSidebar(f); return }          // before the panel can cover it
         sawSettings = true
+        if pageTitle == nil, let title { pageTitle = title }   // the page that was opened
         place(below: f)
     }
 
+    /// The title of the System Settings page the guide is for (nil: not known).
+    private var pageTitle: String?
+
+    private var hiding = false
+
+    /// Fades out once (it is asked every tick while System Settings is away), then leaves the screen.
     private func hide() {
-        guard panel.isVisible else { return }
+        guard panel.isVisible, !hiding, panel.alphaValue > 0 else { return }
+        hiding = true
         target = nil
         NSAnimationContext.runAnimationGroup({ $0.duration = 0.15; panel.animator().alphaValue = 0 },
-                                             completionHandler: { [panel] in if panel.alphaValue == 0 { panel.orderOut(nil) } })
+                                             completionHandler: { [weak self] in
+            guard let self else { return }
+            self.hiding = false
+            if self.panel.alphaValue == 0 { self.panel.orderOut(nil) }   // unless it came back meanwhile
+        })
     }
 
     static let size = CGSize(width: 420, height: 176)
@@ -601,7 +616,9 @@ final class PermissionGuide {
         var r = i.map { candidates[$0] }
             ?? CGRect(x: f.minX + sidebar + (f.width - sidebar - size.width) / 2, y: f.minY + 18,
                       width: size.width, height: size.height)
-        // the arrow points at the list: up from below (or over the bottom), left from the right side
+        // the arrow points at the list: up from below, left from the right side, right from the left.
+        // With no room around the window, the panel lies over the bottom of its content: the list is
+        // still above it (kept on screen, it moves up but stays inside the content), so "up" holds.
         let direction: DragPanelView.Direction = i == 1 ? .left : (i == 2 ? .right : .up)
         view.direction = direction
         r.origin.x = min(max(vis.minX + 8, r.minX), vis.maxX - r.width - 8)
@@ -714,19 +731,22 @@ final class PermissionGuide {
     }
 
     /// The main window of System Settings in Cocoa screen coordinates.
-    private func settingsWindowFrame() -> CGRect? {
+    /// Its main window in Cocoa screen coordinates, and its title (the page shown), when that can
+    /// be read.
+    private func settingsWindow() -> (CGRect, String?)? {
         guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.systempreferences").first,
               let info = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)
                 as? [[String: Any]] else { return nil }
         let primaryH = NSScreen.screens.first?.frame.height ?? 0
-        let wins = info.compactMap { w -> CGRect? in
+        let wins = info.compactMap { w -> (CGRect, String?)? in
             guard (w[kCGWindowOwnerPID as String] as? Int32) == app.processIdentifier,
                   (w[kCGWindowLayer as String] as? Int) == 0,
                   let b = w[kCGWindowBounds as String] as? NSDictionary,
                   let r = CGRect(dictionaryRepresentation: b), r.width > 200, r.height > 200 else { return nil }
-            return CGRect(x: r.minX, y: primaryH - r.maxY, width: r.width, height: r.height)
+            let title = (w[kCGWindowName as String] as? String).flatMap { $0.isEmpty ? nil : $0 }
+            return (CGRect(x: r.minX, y: primaryH - r.maxY, width: r.width, height: r.height), title)
         }
-        return wins.max { $0.width * $0.height < $1.width * $1.height }
+        return wins.max { $0.0.width * $0.0.height < $1.0.width * $1.0.height }
     }
 }
 
