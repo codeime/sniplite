@@ -433,7 +433,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
                                                   ("lock.shield", L.t("permissions"), perms)]
         let tabs = SettingsTabs()
         tabs.tabStyle = .toolbar
-        tabs.transitionOptions = [.crossfade, .allowUserInteraction]
+        tabs.transitionOptions = [.allowUserInteraction]   // no crossfade: two pages on top of each other look messy
         for (symbol, name, page) in pageList {
             let host = NSView()
             page.translatesAutoresizingMaskIntoConstraints = false
@@ -442,7 +442,9 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
                 page.leadingAnchor.constraint(equalTo: host.leadingAnchor, constant: 24),
                 page.trailingAnchor.constraint(equalTo: host.trailingAnchor, constant: -24),
                 page.topAnchor.constraint(equalTo: host.topAnchor, constant: 18),
-                page.bottomAnchor.constraint(equalTo: host.bottomAnchor, constant: -24),
+                // pinned to the top only: while the window grows or shrinks to the next page,
+                // the spare height stays below the content instead of stretching it apart
+                page.bottomAnchor.constraint(lessThanOrEqualTo: host.bottomAnchor, constant: -24),
                 host.widthAnchor.constraint(equalToConstant: width),
             ])
             let vc = NSViewController()

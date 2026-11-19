@@ -75,9 +75,10 @@ enum OCR {
                 p.standardOutput = pipe
                 p.standardError = FileHandle.nullDevice
                 if (try? p.run()) != nil {
-                    // a helper that hangs is stopped after 20 s (the recognition then finds nothing)
+                    // a helper that hangs is stopped after 60 s (the recognition then finds nothing);
+                    // the first use after macOS starts can take half a minute while Vision loads
                     let watchdog = DispatchWorkItem { if p.isRunning { p.terminate() } }
-                    DispatchQueue.global().asyncAfter(deadline: .now() + 20, execute: watchdog)
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 60, execute: watchdog)
                     let data = pipe.fileHandleForReading.readDataToEndOfFile()
                     p.waitUntilExit()
                     watchdog.cancel()
