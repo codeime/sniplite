@@ -15,13 +15,11 @@
 
 [**下载**](#下载) · [默认快捷键](#默认快捷键) · [常见问题](#常见问题)
 
-<img src="../pics/zh/demo-edit.png" alt="框选一块区域，直接在上面画圈、箭头、文字和序号" width="66%">
+<img src="../pics/macos/zh/edit.png" alt="框选一块区域，直接在上面画圈、箭头、文字和序号" width="66%">
 <br>
-<img src="../pics/zh/demo-select.png" alt="截图前自动识别鼠标下的窗口和控件，放大镜能看清像素和颜色" width="32.5%"> <img src="../pics/zh/demo-pin.png" alt="把截图或文字钉在屏幕最上层，滚轮缩放" width="32.5%">
+<img src="../pics/macos/zh/select.png" alt="截图前自动识别鼠标下的窗口和控件，放大镜能看清像素和颜色" width="32.5%"> <img src="../pics/macos/zh/pin.png" alt="把截图或文字钉在屏幕最上层，滚轮缩放" width="32.5%">
 <br>
-<img src="../pics/zh/demo-ocr.png" alt="识别选区里的文字，表格保持分列" width="66%">
-<br>
-<img src="../pics/zh/demo-long.png" alt="滚动页面，自动拼成一张长截图" width="66%">
+<img src="../pics/macos/zh/ocr.png" alt="识别选区里的文字，表格保持分列" width="66%">
 
 </div>
 
@@ -126,7 +124,7 @@
 
 ## 首选项
 
-<img src="../pics/ui/zh-CN.png" alt="首选项的六个页面、快捷键列表和安装程序">
+<img src="../pics/macos/zh/settings.png" alt="sniplite for Mac 的设置">
 
 ## 自己编译
 

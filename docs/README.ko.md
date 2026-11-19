@@ -15,13 +15,11 @@
 
 [**다운로드**](#다운로드) | [기본 단축키](#기본-단축키) | [자주 묻는 질문](#자주-묻는-질문)
 
-<img src="../pics/demo-edit.png" alt="영역을 선택하고 그 위에 바로 원, 화살표, 텍스트, 번호를 그립니다" width="66%">
+<img src="../pics/macos/edit.png" alt="영역을 선택하고 그 위에 바로 원, 화살표, 텍스트, 번호를 그립니다" width="66%">
 <br>
-<img src="../pics/demo-select.png" alt="캡처 전에 마우스 아래의 창과 컨트롤을 자동으로 찾아 주고, 돋보기로 픽셀과 색을 확인할 수 있습니다" width="32.5%"> <img src="../pics/demo-pin.png" alt="스크린샷이나 텍스트를 모든 창 위에 고정하고 휠로 확대/축소합니다" width="32.5%">
+<img src="../pics/macos/select.png" alt="캡처 전에 마우스 아래의 창과 컨트롤을 자동으로 찾아 주고, 돋보기로 픽셀과 색을 확인할 수 있습니다" width="32.5%"> <img src="../pics/macos/pin.png" alt="스크린샷이나 텍스트를 모든 창 위에 고정하고 휠로 확대/축소합니다" width="32.5%">
 <br>
-<img src="../pics/demo-ocr.png" alt="선택한 영역의 글자를 읽습니다. 표는 열을 유지합니다" width="66%">
-<br>
-<img src="../pics/demo-long.png" alt="페이지를 스크롤하면 하나의 긴 스크린샷으로 이어집니다" width="66%">
+<img src="../pics/macos/ocr.png" alt="선택한 영역의 글자를 읽습니다. 표는 열을 유지합니다" width="66%">
 
 </div>
 
@@ -126,7 +124,7 @@
 
 ## 설정 화면
 
-<img src="../pics/ui/ko.png" alt="설정의 여섯 탭, 단축키 목록, 설치 프로그램">
+<img src="../pics/macos/settings.png" alt="Mac용 sniplite 설정">
 
 ## 직접 빌드하기
 

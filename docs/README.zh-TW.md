@@ -15,13 +15,11 @@
 
 [**下載**](#下載) | [預設快速鍵](#預設快速鍵) | [常見問題](#常見問題)
 
-<img src="../pics/zh/demo-edit.png" alt="框選一塊區域，直接在上面畫圈、箭頭、文字和序號" width="66%">
+<img src="../pics/macos/zh/edit.png" alt="框選一塊區域，直接在上面畫圈、箭頭、文字和序號" width="66%">
 <br>
-<img src="../pics/zh/demo-select.png" alt="截圖前自動辨識滑鼠下的視窗和控制項，放大鏡能看清像素和顏色" width="32.5%"> <img src="../pics/zh/demo-pin.png" alt="把截圖或文字釘在螢幕最上層，滾輪縮放" width="32.5%">
+<img src="../pics/macos/zh/select.png" alt="截圖前自動辨識滑鼠下的視窗和控制項，放大鏡能看清像素和顏色" width="32.5%"> <img src="../pics/macos/zh/pin.png" alt="把截圖或文字釘在螢幕最上層，滾輪縮放" width="32.5%">
 <br>
-<img src="../pics/zh/demo-ocr.png" alt="辨識選取範圍裡的文字，表格保持分欄" width="66%">
-<br>
-<img src="../pics/zh/demo-long.png" alt="捲動頁面，自動拼成一張長截圖" width="66%">
+<img src="../pics/macos/zh/ocr.png" alt="辨識選取範圍裡的文字，表格保持分欄" width="66%">
 
 </div>
 
@@ -126,7 +124,7 @@
 
 ## 偏好設定
 
-<img src="../pics/ui/zh-TW.png" alt="偏好設定的六個分頁、快速鍵清單和安裝程式">
+<img src="../pics/macos/zh/settings.png" alt="sniplite for Mac 的設定">
 
 ## 自己編譯
 

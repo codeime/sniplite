@@ -15,13 +15,11 @@
 
 [**Download**](#download) | [Default shortcuts](#default-shortcuts) | [FAQ](#faq)
 
-<img src="pics/demo-edit.png" alt="Select an area and draw circles, arrows, text and numbers right on it" width="66%">
+<img src="pics/macos/edit.png" alt="Select an area and draw circles, arrows, text and numbers right on it" width="66%">
 <br>
-<img src="pics/demo-select.png" alt="Before a capture, the window or control under the mouse is found for you; the magnifier shows pixels and colors" width="32.5%"> <img src="pics/demo-pin.png" alt="Pin a screenshot or text on top of the screen; the wheel zooms" width="32.5%">
+<img src="pics/macos/select.png" alt="Before a capture, the window or control under the mouse is found for you; the magnifier shows pixels and colors" width="32.5%"> <img src="pics/macos/pin.png" alt="Pin a screenshot or text on top of the screen; the wheel zooms" width="32.5%">
 <br>
-<img src="pics/demo-ocr.png" alt="Read the text of what you select; a table keeps its columns" width="66%">
-<br>
-<img src="pics/demo-long.png" alt="Scroll a page and it is stitched into one long screenshot" width="66%">
+<img src="pics/macos/ocr.png" alt="Read the text of what you select; a table keeps its columns" width="66%">
 
 </div>
 
@@ -126,7 +124,7 @@ Yes. Run `sniplite help` to see it.
 
 ## Settings
 
-<img src="pics/ui/en.png" alt="The six pages of the settings, the shortcut list and the installer">
+<img src="pics/macos/settings.png" alt="sniplite for Mac: its settings">
 
 ## Build it yourself
 

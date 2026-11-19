@@ -180,6 +180,24 @@ final class OCRPanel: NSPanel {
         TextInput.quiet(textView)
         textView.font = .systemFont(ofSize: 13)
         textView.string = t.plain
+        // a table's columns line up: a tab stop after each column's widest cell
+        let font = NSFont.systemFont(ofSize: 13)
+        var widths: [CGFloat] = []
+        for line in t.plain.split(separator: "\n") {
+            for (i, cell) in line.split(separator: "\t", omittingEmptySubsequences: false).dropLast().enumerated() {
+                let cw = (String(cell) as NSString).size(withAttributes: [.font: font]).width
+                if i < widths.count { widths[i] = max(widths[i], cw) } else { widths.append(cw) }
+            }
+        }
+        if !widths.isEmpty {
+            let ps = NSMutableParagraphStyle()
+            var x: CGFloat = 0
+            ps.tabStops = widths.map { x += $0 + 20; return NSTextTab(textAlignment: .left, location: x) }
+            ps.defaultTabInterval = 40
+            textView.defaultParagraphStyle = ps
+            textView.typingAttributes[.paragraphStyle] = ps
+            textView.textStorage?.addAttribute(.paragraphStyle, value: ps, range: NSRange(location: 0, length: (t.plain as NSString).length))
+        }
         textView.isEditable = true
         textView.textContainerInset = NSSize(width: 8, height: 8)
         textView.autoresizingMask = [.width]

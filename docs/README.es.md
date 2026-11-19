@@ -15,13 +15,11 @@
 
 [**Descargar**](#descargar) | [Atajos predeterminados](#atajos-predeterminados) | [Preguntas frecuentes](#preguntas-frecuentes)
 
-<img src="../pics/demo-edit.png" alt="Selecciona una zona y dibuja encima círculos, flechas, texto y números" width="66%">
+<img src="../pics/macos/edit.png" alt="Selecciona una zona y dibuja encima círculos, flechas, texto y números" width="66%">
 <br>
-<img src="../pics/demo-select.png" alt="Antes de capturar, se detecta la ventana o el control bajo el cursor; la lupa muestra píxeles y colores" width="32.5%"> <img src="../pics/demo-pin.png" alt="Fija en pantalla una captura o un texto; la rueda hace zoom" width="32.5%">
+<img src="../pics/macos/select.png" alt="Antes de capturar, se detecta la ventana o el control bajo el cursor; la lupa muestra píxeles y colores" width="32.5%"> <img src="../pics/macos/pin.png" alt="Fija en pantalla una captura o un texto; la rueda hace zoom" width="32.5%">
 <br>
-<img src="../pics/demo-ocr.png" alt="Lee el texto de la selección; una tabla conserva sus columnas" width="66%">
-<br>
-<img src="../pics/demo-long.png" alt="Desplaza una página y se convierte en una sola captura larga" width="66%">
+<img src="../pics/macos/ocr.png" alt="Lee el texto de la selección; una tabla conserva sus columnas" width="66%">
 
 </div>
 
@@ -126,7 +124,7 @@ Sí. Ejecuta `sniplite help` para ver los comandos.
 
 ## Ajustes
 
-<img src="../pics/ui/es.png" alt="Las seis pestañas de los ajustes, la lista de atajos y el instalador">
+<img src="../pics/macos/settings.png" alt="Los ajustes de sniplite para Mac">
 
 ## Compilarlo tú mismo
 

@@ -15,13 +15,11 @@
 
 [**Télécharger**](#télécharger) | [Raccourcis par défaut](#raccourcis-par-défaut) | [Questions fréquentes](#questions-fréquentes)
 
-<img src="../pics/demo-edit.png" alt="Sélectionnez une zone et dessinez-y directement des cercles, des flèches, du texte et des numéros" width="66%">
+<img src="../pics/macos/edit.png" alt="Sélectionnez une zone et dessinez-y directement des cercles, des flèches, du texte et des numéros" width="66%">
 <br>
-<img src="../pics/demo-select.png" alt="Avant la capture, la fenêtre ou le contrôle sous la souris est repéré pour vous ; la loupe montre les pixels et les couleurs" width="32.5%"> <img src="../pics/demo-pin.png" alt="Épinglez une capture ou du texte à l'écran ; la molette zoome" width="32.5%">
+<img src="../pics/macos/select.png" alt="Avant la capture, la fenêtre ou le contrôle sous la souris est repéré pour vous ; la loupe montre les pixels et les couleurs" width="32.5%"> <img src="../pics/macos/pin.png" alt="Épinglez une capture ou du texte à l'écran ; la molette zoome" width="32.5%">
 <br>
-<img src="../pics/demo-ocr.png" alt="Lire le texte de la sélection ; un tableau garde ses colonnes" width="66%">
-<br>
-<img src="../pics/demo-long.png" alt="Faites défiler une page : elle devient une seule longue capture" width="66%">
+<img src="../pics/macos/ocr.png" alt="Lire le texte de la sélection ; un tableau garde ses colonnes" width="66%">
 
 </div>
 
@@ -126,7 +124,7 @@ Oui. Lancez `sniplite help` pour la découvrir.
 
 ## Préférences
 
-<img src="../pics/ui/fr.png" alt="Les six onglets des préférences, la liste des raccourcis et l'installeur">
+<img src="../pics/macos/settings.png" alt="Les réglages de sniplite pour Mac">
 
 ## Le compiler soi-même
 

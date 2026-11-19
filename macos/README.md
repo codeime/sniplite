@@ -8,6 +8,12 @@
 
 [English](README.md) • [简体中文](README.zh-CN.md)
 
+<img src="../pics/macos/edit.png" alt="Select an area and draw circles, arrows, text and numbers right on it" width="66%">
+<br>
+<img src="../pics/macos/select.png" alt="The window under the mouse is found for you; the magnifier shows pixels and colors" width="32.5%"> <img src="../pics/macos/pin.png" alt="Pin a capture or text above every window" width="32.5%">
+<br>
+<img src="../pics/macos/ocr.png" alt="Read the text of a selection; a table keeps its columns" width="66%">
+
 </div>
 
 A native port of sniplite to macOS, written in Swift and AppKit, with the features and shortcuts of the Windows version. It uses nothing but the system: ScreenCaptureKit to capture, the Accessibility API to find windows and their parts, Vision to read text. The app is under 1 MB, runs natively on Apple Silicon and Intel, and needs macOS 14 Sonoma or later.
@@ -52,6 +58,8 @@ Click **Allow…** on each: System Settings opens at the right page with sniplit
 ## Shortcuts
 
 The same as on Windows, with ⌘ in place of Ctrl. They can be changed in Settings.
+
+<p align="center"><img src="../pics/macos/settings.png" alt="Settings: shortcuts, general and quick capture pages" width="66%"></p>
 
 | Key | What it does |
 | --- | --- |

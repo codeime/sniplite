@@ -15,13 +15,11 @@
 
 [**ダウンロード**](#ダウンロード) | [既定のショートカット](#既定のショートカット) | [よくある質問](#よくある質問)
 
-<img src="../pics/demo-edit.png" alt="範囲を選んで、その上に丸、矢印、文字、番号を直接描けます" width="66%">
+<img src="../pics/macos/edit.png" alt="範囲を選んで、その上に丸、矢印、文字、番号を直接描けます" width="66%">
 <br>
-<img src="../pics/demo-select.png" alt="キャプチャ前にマウスの下のウィンドウやコントロールを自動で検出。拡大鏡でピクセルと色を確認できます" width="32.5%"> <img src="../pics/demo-pin.png" alt="スクリーンショットや文字を画面の最前面にピン留め。ホイールで拡大縮小" width="32.5%">
+<img src="../pics/macos/select.png" alt="キャプチャ前にマウスの下のウィンドウやコントロールを自動で検出。拡大鏡でピクセルと色を確認できます" width="32.5%"> <img src="../pics/macos/pin.png" alt="スクリーンショットや文字を画面の最前面にピン留め。ホイールで拡大縮小" width="32.5%">
 <br>
-<img src="../pics/demo-ocr.png" alt="選択範囲の文字を読み取ります。表は列を保ちます" width="66%">
-<br>
-<img src="../pics/demo-long.png" alt="ページをスクロールすると 1 枚の長いスクリーンショットになります" width="66%">
+<img src="../pics/macos/ocr.png" alt="選択範囲の文字を読み取ります。表は列を保ちます" width="66%">
 
 </div>
 
@@ -126,7 +124,7 @@
 
 ## 設定画面
 
-<img src="../pics/ui/ja.png" alt="設定の 6 つのタブ、ショートカット一覧、インストーラー">
+<img src="../pics/macos/settings.png" alt="Mac 版 sniplite の設定">
 
 ## 自分でビルドする
 

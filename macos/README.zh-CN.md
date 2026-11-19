@@ -8,6 +8,12 @@
 
 [English](README.md) • [简体中文](README.zh-CN.md)
 
+<img src="../pics/macos/zh/edit.png" alt="框选一块区域，直接在上面画圈、箭头、文字和序号" width="66%">
+<br>
+<img src="../pics/macos/zh/select.png" alt="自动识别鼠标下的窗口，放大镜能看清像素和颜色" width="32.5%"> <img src="../pics/macos/zh/pin.png" alt="把截图或文字贴在所有窗口之上" width="32.5%">
+<br>
+<img src="../pics/macos/zh/ocr.png" alt="识别选区里的文字，表格保持分列" width="66%">
+
 </div>
 
 sniplite 在 macOS 上的原生移植，用 Swift 和 AppKit 编写，功能和快捷键与 Windows 版一致。只用系统自带的能力：截图用 ScreenCaptureKit，识别窗口和窗口内元素用辅助功能接口，识别文字用 Vision。应用不到 1 MB，原生支持 Apple 芯片和 Intel，需要 macOS 14 Sonoma 或更高版本。
@@ -52,6 +58,8 @@ xattr -dr com.apple.quarantine "/Applications/sniplite.app"
 ## 快捷键
 
 和 Windows 版一样，Ctrl 换成 ⌘。都可以在设置里修改。
+
+<p align="center"><img src="../pics/macos/zh/settings.png" alt="设置：快捷键、通用和快速截图页面" width="66%"></p>
 
 | 按键 | 作用 |
 | --- | --- |

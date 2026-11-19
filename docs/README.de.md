@@ -15,13 +15,11 @@
 
 [**Download**](#download) | [Standard-Tastenkürzel](#standard-tastenkürzel) | [Häufige Fragen](#häufige-fragen)
 
-<img src="../pics/demo-edit.png" alt="Einen Bereich wählen und direkt darauf Kreise, Pfeile, Text und Nummern zeichnen" width="66%">
+<img src="../pics/macos/edit.png" alt="Einen Bereich wählen und direkt darauf Kreise, Pfeile, Text und Nummern zeichnen" width="66%">
 <br>
-<img src="../pics/demo-select.png" alt="Vor der Aufnahme wird das Fenster oder Element unter der Maus erkannt; die Lupe zeigt Pixel und Farben" width="32.5%"> <img src="../pics/demo-pin.png" alt="Einen Screenshot oder Text über allen Fenstern anheften; das Mausrad zoomt" width="32.5%">
+<img src="../pics/macos/select.png" alt="Vor der Aufnahme wird das Fenster oder Element unter der Maus erkannt; die Lupe zeigt Pixel und Farben" width="32.5%"> <img src="../pics/macos/pin.png" alt="Einen Screenshot oder Text über allen Fenstern anheften; das Mausrad zoomt" width="32.5%">
 <br>
-<img src="../pics/demo-ocr.png" alt="Den Text der Auswahl lesen; eine Tabelle behält ihre Spalten" width="66%">
-<br>
-<img src="../pics/demo-long.png" alt="Eine Seite scrollen: daraus wird ein einziger langer Screenshot" width="66%">
+<img src="../pics/macos/ocr.png" alt="Den Text der Auswahl lesen; eine Tabelle behält ihre Spalten" width="66%">
 
 </div>
 
@@ -126,7 +124,7 @@ Ja. `sniplite help` zeigt alle Befehle.
 
 ## Einstellungen
 
-<img src="../pics/ui/de.png" alt="Die sechs Seiten der Einstellungen, die Liste der Tastenkürzel und der Installer">
+<img src="../pics/macos/settings.png" alt="Die Einstellungen von sniplite für Mac">
 
 ## Selbst bauen
 
