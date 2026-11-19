@@ -237,8 +237,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
             d.preferredMaxLayoutWidth = 280
             d.widthAnchor.constraint(lessThanOrEqualToConstant: 280).isActive = true
             // a window's fitting size counts a wrapped label as one line: say how tall it is
-            let h = d.attributedStringValue.boundingRect(with: NSSize(width: 274, height: 1000), options: [.usesLineFragmentOrigin, .usesFontLeading]).height
-            d.heightAnchor.constraint(greaterThanOrEqualToConstant: ceil(h)).isActive = true
+            d.heightAnchor.constraint(greaterThanOrEqualToConstant: wrappedHeight(d, width: 278)).isActive = true
             texts.append(d)
         }
         let text = NSStackView(views: texts)
@@ -407,6 +406,8 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
                           Prefs.shared.language, #selector(pickLang(_:)))),
             ], generalNote),
         ])
+
+        generalNote.superview?.isHidden = generalNote.stringValue.isEmpty
 
         // quick capture
         folderButton.controlSize = .small
@@ -639,6 +640,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         guard let l else { return }
         l.stringValue = s
         l.textColor = error ? .systemRed : .secondaryLabelColor
+        l.superview?.isHidden = s.isEmpty        // no blank line under the card when there is nothing to say
         refit()
     }
 
@@ -717,8 +719,13 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
     private let folderButton = NSButton(title: "", target: nil, action: nil)
 
+    /// The folder's name; the Desktop in sniplite's own language (the system names it in its own).
     private func folderTitle() -> String {
-        FileManager.default.displayName(atPath: Prefs.shared.quickFolder.path)
+        let folder = Prefs.shared.quickFolder.standardizedFileURL
+        if folder == FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first?.standardizedFileURL {
+            return L.t("desktopName")
+        }
+        return FileManager.default.displayName(atPath: folder.path)
     }
 
     @objc private func chooseFolder() {

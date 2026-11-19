@@ -258,6 +258,7 @@ final class PermissionsWindow: NSWindowController, NSWindowDelegate {
         sub.textColor = .secondaryLabelColor
         sub.alignment = .center
         sub.preferredMaxLayoutWidth = 420
+        sub.heightAnchor.constraint(greaterThanOrEqualToConstant: wrappedHeight(sub, width: 420)).isActive = true
         let header = NSStackView(views: [icon, title, sub])
         header.orientation = .vertical
         header.alignment = .centerX
@@ -292,6 +293,7 @@ final class PermissionsWindow: NSWindowController, NSWindowDelegate {
             why.font = .systemFont(ofSize: 12)
             why.textColor = .secondaryLabelColor
             why.preferredMaxLayoutWidth = 270
+            why.heightAnchor.constraint(greaterThanOrEqualToConstant: wrappedHeight(why, width: 270)).isActive = true
             let text = NSStackView(views: [line, why])
             text.orientation = .vertical
             text.alignment = .leading
@@ -310,6 +312,7 @@ final class PermissionsWindow: NSWindowController, NSWindowDelegate {
             row.spacing = 14
             row.alignment = .centerY
             text.setContentCompressionResistancePriority(.init(1), for: .horizontal)
+            row.heightAnchor.constraint(greaterThanOrEqualTo: text.heightAnchor).isActive = true   // never squeezed under its text
             cards.append(card(row))
             rows[p] = Row(badge: badge, status: status, button: button)
         }
@@ -320,6 +323,8 @@ final class PermissionsWindow: NSWindowController, NSWindowDelegate {
         footer.font = .systemFont(ofSize: 11.5)
         footer.textColor = .secondaryLabelColor
         footer.preferredMaxLayoutWidth = 360
+        footerHeight = footer.heightAnchor.constraint(greaterThanOrEqualToConstant: 14)
+        footerHeight?.isActive = true
         doneButton.target = self
         doneButton.action = #selector(finish)
         doneButton.bezelStyle = .push
@@ -398,7 +403,10 @@ final class PermissionsWindow: NSWindowController, NSWindowDelegate {
 
     /// The window as tall as what it shows (the footer is two lines before, one after), its top
     /// edge staying where it is.
+    private var footerHeight: NSLayoutConstraint?
+
     private func fitToContent() {
+        footerHeight?.constant = wrappedHeight(footer, width: 360)    // its text changes with the state
         guard let w = window, let cv = w.contentView else { return }
         cv.layoutSubtreeIfNeeded()
         let height = ceil(cv.fittingSize.height)
@@ -1003,4 +1011,11 @@ final class AppDragRow: NSView, NSDraggingSource {
 private final class PermissionGuideCloser: NSObject {
     static let shared = PermissionGuideCloser()
     @objc func close() { PermissionGuide.stop(closeSettings: false) }
+}
+
+/// How tall a wrapping label is at a width: a window's fitting size counts it as one line, so the
+/// layout is told.
+func wrappedHeight(_ l: NSTextField, width: CGFloat) -> CGFloat {
+    ceil(l.attributedStringValue.boundingRect(with: NSSize(width: width - 4, height: 2000),
+                                              options: [.usesLineFragmentOrigin, .usesFontLeading]).height)
 }
