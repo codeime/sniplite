@@ -179,7 +179,12 @@ final class OverlayView: NSView, NSTextViewDelegate {
         // Once an area is chosen they have closed: every screen (the one editing and the quiet
         // ones) goes down to just above the menu bar, so what sniplite opens over them while
         // editing (a question, tooltips, the input method's candidates) shows above them.
-        didSet { window?.level = phase == .select ? OverlayWindow.selectLevel : OverlayWindow.editLevel }
+        didSet {
+            window?.level = phase == .select ? OverlayWindow.selectLevel : OverlayWindow.editLevel
+            // the cursor of the old phase goes: the new one's own until the mouse says more
+            cursorShown = nil
+            window?.invalidateCursorRects(for: self)
+        }
     }
     private var drag: Drag = .none
     private var mouse: CGPoint = .zero
@@ -453,37 +458,53 @@ final class OverlayView: NSView, NSTextViewDelegate {
         updateCursor(p)
     }
 
+    /// The cursor for `p`, held by a cursor rect over the whole capture screen: moving views (the
+    /// magnifier, the size preview) make macOS redo cursor rects, and with none of our own it put
+    /// the arrow back between two mouse moves, so the cursor flickered.
     private func updateCursor(_ p: CGPoint) {
+        let c = cursor(at: p)
+        c.set()
+        if c !== cursorShown {
+            cursorShown = c
+            window?.invalidateCursorRects(for: self)
+        }
+    }
+    private var cursorShown: NSCursor?
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: cursorShown ?? (phase == .select ? Cursors.cross : .arrow))
+    }
+
+    private func cursor(at p: CGPoint) -> NSCursor {
         switch phase {
-        case .select: NSCursor.crosshair.set()
-        case .idle: NSCursor.arrow.set()
+        case .select: return Cursors.cross
+        case .idle: return .arrow
         case .edit:
-            if toolbar.frame.contains(p) && !toolbar.isHidden { NSCursor.arrow.set(); return }
+            if toolbar.frame.contains(p) && !toolbar.isHidden { return .arrow }
             let handle = annotationHandle(at: p)
             let e = handle == nil ? edges(at: p) : 0
             if let tv = textView as? TextBox, let c = tv.corner(near: p) {
-                (c % 2 == 0 ? Cursors.resizeNWSE : Cursors.resizeNESW).set()
+                return c % 2 == 0 ? Cursors.resizeNWSE : Cursors.resizeNESW
             } else if let tv = textView as? TextBox, tv.onEdge(p) {
-                Cursors.move.set()
+                return Cursors.move
             } else if let (i, h) = handle {
                 // the ends of a line move freely; a box corner resizes along its diagonal
                 let a = annotations[i]
-                if a.tool == .line || a.tool == .arrow { Cursors.move.set() }
-                else { (h % 2 == 0 ? Cursors.resizeNWSE : Cursors.resizeNESW).set() }
+                if a.tool == .line || a.tool == .arrow { return Cursors.move }
+                return h % 2 == 0 ? Cursors.resizeNWSE : Cursors.resizeNESW
             } else if e != 0 {
-                if e == Self.edgeL || e == Self.edgeR { NSCursor.resizeLeftRight.set() }
-                else if e == Self.edgeT || e == Self.edgeB { NSCursor.resizeUpDown.set() }
-                else if e == Self.edgeL | Self.edgeT || e == Self.edgeR | Self.edgeB { Cursors.resizeNWSE.set() }
-                else { Cursors.resizeNESW.set() }
+                if e == Self.edgeL || e == Self.edgeR { return .resizeLeftRight }
+                if e == Self.edgeT || e == Self.edgeB { return .resizeUpDown }
+                if e == Self.edgeL | Self.edgeT || e == Self.edgeR | Self.edgeB { return Cursors.resizeNWSE }
+                return Cursors.resizeNESW
             } else if annotationIndex(at: p) != nil {
-                Cursors.move.set()                         // a drawing: drag to move it
+                return Cursors.move                        // a drawing: drag to move it
             } else if let t = tool {
-                (t == .text ? NSCursor.iBeam : NSCursor.crosshair).set()
+                return t == .text ? .iBeam : Cursors.cross
             } else if selection.contains(p) {
-                Cursors.move.set()                         // the capture area: drag to move it
-            } else {
-                NSCursor.arrow.set()
+                return Cursors.move                        // the capture area: drag to move it
             }
+            return .arrow
         }
     }
 
@@ -950,6 +971,7 @@ final class OverlayView: NSView, NSTextViewDelegate {
         toolbar.setEnabled(.undo, false); toolbar.setEnabled(.redo, false)
         placeToolbar()
         needsDisplay = true
+        if mouseIsHere { updateCursor(localMouse()) }        // Return or a pin: no mouse move yet
         guard act, let mode = session?.mode else { return }
         if mode == .ocr { command(.ocr) } else if mode == .ocrCopy { command(.ocrCopy) }
     }
@@ -1563,6 +1585,9 @@ private extension OverlayView.Drag {
 /// Drawn as vector paths in the style of the system's cursors (black, an even white outline, a
 /// soft shadow) and rendered into a 1x and a 2x bitmap, so they are sharp on every display.
 enum Cursors {
+    /// Choosing an area and drawing: a small cross, black with a white edge, so it shows on dark
+    /// screens as on light ones (the system's crosshair is a thin black line).
+    static let cross = make { plus() }
     static let move = make { moveArrows() }
     static let resizeNWSE = make { doubleArrow(angle: -.pi / 4) }   // ↖↘ (y grows downward when drawn)
     static let resizeNESW = make { doubleArrow(angle: .pi / 4) }    // ↗↙
@@ -1580,6 +1605,14 @@ enum Cursors {
         }
         p.close()
         return p
+    }
+
+    /// A plus through the middle, thin, as one outline.
+    private static func plus() -> NSBezierPath {
+        let w: CGFloat = 0.6, r: CGFloat = 8
+        return outline([CGPoint(x: w, y: w), CGPoint(x: w, y: r), CGPoint(x: -w, y: r), CGPoint(x: -w, y: w),
+                        CGPoint(x: -r, y: w), CGPoint(x: -r, y: -w), CGPoint(x: -w, y: -w), CGPoint(x: -w, y: -r),
+                        CGPoint(x: w, y: -r), CGPoint(x: w, y: -w), CGPoint(x: r, y: -w), CGPoint(x: r, y: w)])
     }
 
     /// Four arrows from the middle: thin shafts, solid heads, as one outline.
@@ -1802,9 +1835,12 @@ final class TextBox: NSTextView {
 /// mouse swaps one small image and two strings; nothing is painted on the CPU.
 final class MagnifierView: NSView {
     private let cols: Int, rows: Int, cell: CGFloat, info: CGFloat
-    private let pixels = CALayer(), cross = CAShapeLayer(), center = CAShapeLayer(), frameLine = CAShapeLayer()
+    private let pixels = CALayer(), cross = CAShapeLayer(), center = CAShapeLayer(), centerEdge = CAShapeLayer(), frameLine = CAShapeLayer()
     private let infoBack = CALayer(), swatch = CALayer()
     private let coords = CATextLayer(), hex = CATextLayer(), hint = CATextLayer()
+    /// Round the whole magnifier: a soft shadow and a dark line outside the white one, so its
+    /// edge shows on light screens as on dark ones.
+    private let shade = CALayer(), outline = CAShapeLayer()
 
     init(cols: Int, rows: Int, cell: CGFloat, info: CGFloat) {
         self.cols = cols; self.rows = rows; self.cell = cell; self.info = info
@@ -1830,10 +1866,16 @@ final class MagnifierView: NSView {
         cross.path = c
         cross.strokeColor = Palette.accent.withAlphaComponent(0.7).cgColor
         cross.lineWidth = cell
-        center.path = CGPath(rect: CGRect(x: mx - cell / 2, y: my - cell / 2, width: cell, height: cell), transform: nil)
+        // the pixel under the mouse: a white square in a dark one, seen on any color
+        let px = CGRect(x: mx - cell / 2, y: my - cell / 2, width: cell, height: cell)
+        center.path = CGPath(rect: px, transform: nil)
         center.strokeColor = NSColor.white.cgColor
         center.fillColor = nil
         center.lineWidth = 1
+        centerEdge.path = CGPath(rect: px.insetBy(dx: -1, dy: -1), transform: nil)
+        centerEdge.strokeColor = NSColor.black.withAlphaComponent(0.7).cgColor
+        centerEdge.fillColor = nil
+        centerEdge.lineWidth = 1
         frameLine.path = CGPath(rect: box, transform: nil)
         frameLine.strokeColor = NSColor.white.withAlphaComponent(0.9).cgColor
         frameLine.fillColor = nil
@@ -1851,8 +1893,22 @@ final class MagnifierView: NSView {
             t.frame = CGRect(x: box.minX + (i == 1 ? 20 : 6), y: box.maxY + 3 + CGFloat(i) * 15, width: mw - 26, height: 15)
         }
         hint.string = L.t("copyColor")
-        for l in [back, pixels, cross, center, frameLine, infoBack, swatch, coords, hex, hint] as [CALayer] {
-            for s in [cross, center, frameLine] where s === l { s.frame = CGRect(x: 0, y: 0, width: mw + 4, height: mh + 4) }
+        let whole = CGRect(x: box.minX, y: box.minY, width: mw, height: mh + info)
+        shade.frame = whole
+        shade.backgroundColor = NSColor.black.cgColor
+        shade.shadowColor = NSColor.black.cgColor
+        shade.shadowOpacity = 0.35
+        shade.shadowRadius = 3
+        shade.shadowOffset = CGSize(width: 0, height: 1)        // geometry is flipped: downward
+        shade.shadowPath = CGPath(rect: CGRect(origin: .zero, size: whole.size), transform: nil)
+        outline.frame = CGRect(x: 0, y: 0, width: mw + 4, height: mh + info + 4)
+        outline.path = CGPath(rect: whole.insetBy(dx: -0.5, dy: -0.5), transform: nil)
+        outline.strokeColor = NSColor.black.withAlphaComponent(0.55).cgColor
+        outline.fillColor = nil
+        outline.lineWidth = 1
+        root.addSublayer(shade)
+        for l in [back, pixels, cross, centerEdge, center, frameLine, infoBack, swatch, coords, hex, hint, outline] as [CALayer] {
+            for s in [cross, centerEdge, center, frameLine] where s === l { s.frame = CGRect(x: 0, y: 0, width: mw + 4, height: mh + 4) }
             root.addSublayer(l)
         }
     }
@@ -1867,7 +1923,7 @@ final class MagnifierView: NSView {
         if frame != f { frame = f }
         let scale = window?.backingScaleFactor ?? 2
         for t in [coords, hex, hint] { t.contentsScale = scale }
-        for s in [cross, center, frameLine] { s.contentsScale = scale }
+        for s in [cross, centerEdge, center, frameLine, outline] { s.contentsScale = scale }
         let (cx, cy) = centerPixel
         let src = CGRect(x: cx - cols / 2, y: cy - rows / 2, width: cols, height: rows)
         let clipped = src.intersection(CGRect(x: 0, y: 0, width: image.width, height: image.height))
