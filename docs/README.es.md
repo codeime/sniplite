@@ -25,7 +25,7 @@
 
 ## Características
 
-- **Rápida**: pulsa F1 y la captura está lista al instante, en todas las pantallas
+- **Rápida**: pulsa F1 y la captura está lista al instante
 - **Encuentra lo que señalas**: la ventana, o la parte de una ventana (un botón, un campo, una lista) bajo el ratón se selecciona sola; la rueda pasa a partes más grandes
 - **Dibujo**: rectángulos, elipses, líneas, flechas, lápiz, marcador, texto, números y mosaico, cada uno con su tamaño y opacidad; todo lo dibujado se puede seleccionar y cambiar después
 - **Fijar**: fija una captura, o lo que copiaste, sobre todas las ventanas; amplíala, cambia su opacidad, vuelve a dibujar en ella

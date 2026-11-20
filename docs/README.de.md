@@ -25,7 +25,7 @@
 
 ## Merkmale
 
-- **Schnell**: F1 drücken, und die Aufnahme ist sofort bereit, auf allen Bildschirmen
+- **Schnell**: F1 drücken, und die Aufnahme ist sofort bereit
 - **Findet, worauf Sie zeigen**: das Fenster oder der Teil eines Fensters (ein Knopf, ein Feld, eine Liste) unter der Maus wird für Sie ausgewählt; das Mausrad geht zu größeren Teilen
 - **Zeichnen**: Rechtecke, Ellipsen, Linien, Pfeile, Stift, Marker, Text, Nummern und Mosaik, jedes mit eigener Größe und Deckkraft; alles Gezeichnete lässt sich später auswählen und ändern
 - **Pins**: eine Aufnahme oder Kopiertes über allen Fenstern anheften; zoomen, Deckkraft ändern, wieder darauf zeichnen

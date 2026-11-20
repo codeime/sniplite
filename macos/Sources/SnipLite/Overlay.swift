@@ -375,6 +375,16 @@ final class OverlayView: NSView, NSTextViewDelegate {
     override func mouseEntered(with event: NSEvent) {
         if phase == .idle { return }
         if window?.isKeyWindow == false, case .none = drag { window?.makeKey(); window?.makeFirstResponder(self) }
+        needsDisplay = true
+    }
+
+    /// Off to another screen: the magnifier goes (it comes back on the screen the mouse is on).
+    override func mouseExited(with event: NSEvent) { needsDisplay = true }
+
+    /// Whether the mouse is on this screen.
+    private var mouseIsHere: Bool {
+        guard let w = window else { return false }
+        return NSMouseInRect(NSEvent.mouseLocation, w.frame, false)
     }
 
     /// Away from the selected drawing or the text being typed, their marks fade: the screen is
@@ -1398,7 +1408,8 @@ final class OverlayView: NSView, NSTextViewDelegate {
         }
         show(canvas, phase == .edit ? hole.map { $0.insetBy(dx: -16, dy: -16).intersection(bounds) } : nil)
         show(sizeLabel, hole.map { sizeLabelBox($0).insetBy(dx: -1, dy: -1) }, repaint: areaChanged)
-        var showMag = phase == .select
+        // only on the screen with the mouse: the others have no mouse position of their own
+        var showMag = phase == .select && mouseIsHere
         if case .resize = drag { showMag = true }
         if showMag {
             let f = magnifierFrame()

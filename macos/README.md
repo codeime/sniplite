@@ -108,7 +108,7 @@ Diagnostics go to `~/Library/Logs/sniplite.log` (hotkeys, permissions, recogniti
 
 ## Not yet
 
-Long screenshots and the command line of the Windows version.
+Long screenshots and the command line of the Windows version; a selection across two displays (each display is captured on its own).
 
 ## Code
 

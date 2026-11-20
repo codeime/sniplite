@@ -25,7 +25,7 @@
 
 ## Points forts
 
-- **Rapide** : appuyez sur F1, la capture est prête aussitôt, sur tous les écrans
+- **Rapide** : appuyez sur F1, la capture est prête aussitôt
 - **Sélection automatique** : la fenêtre, ou l'élément d'une fenêtre (un bouton, un champ, une liste) sous la souris est sélectionné pour vous ; la molette élargit vers les éléments plus grands
 - **Dessin** : rectangles, ellipses, lignes, flèches, crayon, surligneur, texte, numéros et mosaïque, chacun avec sa taille et son opacité ; tout ce qui est dessiné peut être sélectionné et modifié ensuite
 - **Épingles** : épinglez une capture, ou ce que vous avez copié, au-dessus de toutes les fenêtres ; zoomez, changez l'opacité, dessinez de nouveau dessus

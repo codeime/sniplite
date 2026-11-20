@@ -25,7 +25,7 @@
 
 ## Features
 
-- **Fast**: press F1 and the capture is ready at once, on every display
+- **Fast**: press F1 and the capture is ready at once
 - **Finds what you point at**: the window, or the part of a window (a button, a field, a list) under the mouse is selected for you; the wheel steps out to bigger parts
 - **Draw**: rectangles, ellipses, lines, arrows, pen, marker, text, numbers and mosaic, each with its own size and opacity; anything drawn can be selected and changed again
 - **Pins**: pin a capture, or what you copied, above every window; zoom it, fade it, draw on it again
