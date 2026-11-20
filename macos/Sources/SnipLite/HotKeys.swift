@@ -16,6 +16,29 @@ struct HotKey: Codable, Equatable {
         return s + label
     }
 
+    /// As a menu's key equivalent (the system draws it in the shortcut column): the key's
+    /// character and the modifiers, or nil for a key a menu cannot show.
+    var menuEquivalent: (key: String, mods: NSEvent.ModifierFlags)? {
+        var m: NSEvent.ModifierFlags = []
+        if mods & UInt32(cmdKey) != 0 { m.insert(.command) }
+        if mods & UInt32(shiftKey) != 0 { m.insert(.shift) }
+        if mods & UInt32(optionKey) != 0 { m.insert(.option) }
+        if mods & UInt32(controlKey) != 0 { m.insert(.control) }
+        let fn: [Int: Int] = [kVK_Home: NSHomeFunctionKey, kVK_End: NSEndFunctionKey, kVK_PageUp: NSPageUpFunctionKey,
+                              kVK_PageDown: NSPageDownFunctionKey, kVK_LeftArrow: NSLeftArrowFunctionKey,
+                              kVK_RightArrow: NSRightArrowFunctionKey, kVK_UpArrow: NSUpArrowFunctionKey,
+                              kVK_DownArrow: NSDownArrowFunctionKey, kVK_ForwardDelete: NSDeleteFunctionKey]
+        let other: [Int: String] = [kVK_Space: " ", kVK_Return: "\r", kVK_Tab: "\t", kVK_Delete: "\u{8}"]
+        let code = Int(keyCode)
+        if label.hasPrefix("F"), let n = Int(label.dropFirst()), (1...20).contains(n), Self.fKeys[code] != nil {
+            return (String(UnicodeScalar(UInt32(NSF1FunctionKey + n - 1))!), m)
+        }
+        if let f = fn[code] { return (String(UnicodeScalar(UInt32(f))!), m) }
+        if let o = other[code] { return (o, m) }
+        guard label.count == 1 else { return nil }
+        return (label.lowercased(), m)
+    }
+
     static func carbonMods(_ f: NSEvent.ModifierFlags) -> UInt32 {
         var m: UInt32 = 0
         if f.contains(.command) { m |= UInt32(cmdKey) }

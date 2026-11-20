@@ -4,7 +4,8 @@ import AppKit
 final class CaptureSession {
     /// `editPin`: the capture screen opens on a pin, to draw on it; ✓ puts the result back in it.
     enum Mode: Equatable { case normal, ocr, ocrCopy, editPin(PinWindow) }
-    static var current: CaptureSession?
+    /// The watchdog looks after the main thread while a capture is open (see Watchdog).
+    static var current: CaptureSession? { didSet { if (current == nil) != (oldValue == nil) { Watchdog.shared.watch(current != nil) } } }
 
     let mode: Mode
     private(set) var windows: [OverlayWindow] = []
@@ -12,7 +13,10 @@ final class CaptureSession {
     private init(mode: Mode) { self.mode = mode }
 
     static func start(_ mode: Mode = .normal) {
-        guard current == nil else { return }
+        guard current == nil else {
+            if mode == .normal, Prefs.shared.captureCaptureScreen { grabCaptureScreen() }
+            return
+        }
         // without the permission ScreenCaptureKit would show the system's own dialog: show ours
         guard Permission.screenRecording.granted else { PermissionsWindow.show(); return }
         let s = CaptureSession(mode: mode)
@@ -37,9 +41,34 @@ final class CaptureSession {
         }
     }
 
+    /// The hidden switch (Prefs.captureCaptureScreen): the screen under the mouse with the capture
+    /// screen on it, as it looks, to the Desktop and the clipboard; a sound says it is done.
+    private static func grabCaptureScreen() {
+        let mouse = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main
+        Task { @MainActor in
+            guard let s = screen, let shot = try? await Capture.captureAll(only: s).first else { NSSound.beep(); return }
+            let f = DateFormatter()
+            f.dateFormat = "yyyyMMdd_HHmmss"
+            let rep = NSBitmapImageRep(cgImage: shot.image)
+            rep.size = s.frame.size
+            if let png = rep.representation(using: .png, properties: [:]),
+               let desk = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first {
+                let url = desk.appendingPathComponent("sniplite_capture_screen_\(f.string(from: Date())).png")
+                try? png.write(to: url)
+                Log.write("capture screen saved: \(url.lastPathComponent)")
+            }
+            Clipboard.copy(shot.image, size: s.frame.size)
+            NSSound(named: "Tink")?.play()
+        }
+    }
+
     @MainActor
     private func show(_ shots: [DisplayShot]) {
         let mouse = NSEvent.mouseLocation
+        // sniplite's own menu, open when the shortcut was pressed: it is in the picture already;
+        // closed, so the capture screen gets the mouse
+        AppDelegate.closeMenu()
         for shot in shots {
             let w = OverlayWindow(shot: shot, session: self)
             windows.append(w)
@@ -89,6 +118,11 @@ final class CaptureSession {
 /// same from a hotkey (when another app is active) as from the menu.
 final class OverlayWindow: NSPanel {
     let overlay: OverlayView
+    /// While choosing an area: above open menus too (theirs is the pop-up menu level), so a menu
+    /// open at the shortcut stays in the picture and the live one goes under the capture screen.
+    static let selectLevel = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.popUpMenuWindow)) + 1)
+    /// While editing: just above the menu bar.
+    static let editLevel = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
 
     init(shot: DisplayShot, session: CaptureSession) {
         overlay = OverlayView(shot: shot, session: session)
@@ -97,7 +131,7 @@ final class OverlayWindow: NSPanel {
         becomesKeyOnlyIfNeeded = false
         hidesOnDeactivate = false
         setFrame(shot.screen.frame, display: false)
-        level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
+        level = Self.selectLevel
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         isOpaque = true
         backgroundColor = .black
@@ -140,7 +174,13 @@ final class OverlayView: NSView, NSTextViewDelegate {
 
     let shot: DisplayShot
     weak var session: CaptureSession?
-    private var phase: Phase = .select
+    private var phase: Phase = .select {
+        // Choosing an area, the capture screen is above open menus (they are in the picture).
+        // Once an area is chosen they have closed: every screen (the one editing and the quiet
+        // ones) goes down to just above the menu bar, so what sniplite opens over them while
+        // editing (a question, tooltips, the input method's candidates) shows above them.
+        didSet { window?.level = phase == .select ? OverlayWindow.selectLevel : OverlayWindow.editLevel }
+    }
     private var drag: Drag = .none
     private var mouse: CGPoint = .zero
     private var downAt: CGPoint = .zero
@@ -151,7 +191,8 @@ final class OverlayView: NSView, NSTextViewDelegate {
     private var hover: CGRect? { chain.isEmpty ? nil : chain[min(chainIndex, chain.count - 1)] }
 
     private(set) var selection: CGRect = .zero
-    private var annotations: [Annotation] = []
+    /// Any change shows at once, as it happens (a color, an opacity or a size picked while dragging).
+    private var annotations: [Annotation] = [] { didSet { needsDisplay = true } }
     /// Undo and redo keep whole states, so moving, reshaping, recoloring and resizing undo too.
     private var undoStack: [[Annotation]] = []
     private var redoStack: [[Annotation]] = []
@@ -560,26 +601,6 @@ final class OverlayView: NSView, NSTextViewDelegate {
         needsDisplay = true
     }
 
-    /// Leaving drops what was drawn: with drawings, ask first (unless switched off, here with
-    /// "Don't ask again" or in Settings). Nothing drawn: no question.
-    private func confirmLeave() -> Bool {
-        commitText()
-        guard !annotations.isEmpty, Prefs.shared.askBeforeLeaving else { return true }
-        let a = NSAlert()
-        a.messageText = L.t("leaveTitle")
-        a.informativeText = L.t("leaveBody")
-        a.addButton(withTitle: L.t("leaveDiscard"))
-        a.addButton(withTitle: L.t("leaveKeep"))
-        a.showsSuppressionButton = true
-        a.suppressionButton?.title = L.t("dontAsk")
-        a.layout()
-        a.window.level = NSWindow.Level(rawValue: (window?.level.rawValue ?? 0) + 1)   // above the capture
-        let leave = a.runModal() == .alertFirstButtonReturn
-        if leave, a.suppressionButton?.state == .on { Prefs.shared.askBeforeLeaving = false }
-        window?.makeKey()
-        return leave
-    }
-
     /// One level back, as Esc and right-click do: end typing, let go of the selected drawing,
     /// put the tool down. False when there is nothing left to undo that way.
     private func stepBack() -> Bool {
@@ -594,7 +615,6 @@ final class OverlayView: NSView, NSTextViewDelegate {
         case .edit:
             if stepBack() { return }
             // nothing selected, no tool: back to choosing an area; what was drawn is dropped
-            guard confirmLeave() else { return }
             commitText()
             annotations.removeAll(); undoStack.removeAll(); redoStack.removeAll(); current = nil; selected = nil
             phase = .select; toolbar.isHidden = true; toolbar.select(nil)
@@ -777,7 +797,7 @@ final class OverlayView: NSView, NSTextViewDelegate {
         switch Int(e.keyCode) {
         case 0x35: // Esc: one level back (selection, then tool), then cancel
             if stepBack() { return }
-            if confirmLeave() { session?.finish() }
+            session?.finish()
             return
         case 0x33, 0x75: // Delete, Forward Delete: remove the selected annotation
             if let i = selected { saveUndo(); annotations.remove(at: i); selected = nil; needsDisplay = true }
@@ -1083,9 +1103,21 @@ final class OverlayView: NSView, NSTextViewDelegate {
         ctx.restoreGState()
     }
 
+    /// The capture, blurred, for the toolbar's frosted glass: made small first (a quarter of each
+    /// side), which makes it quick, and a little more colorful, as the system's glass is.
+    private static func frosted(_ img: CGImage) -> CGImage? {
+        let small = CIImage(cgImage: img).transformed(by: CGAffineTransform(scaleX: 0.25, y: 0.25))
+        let soft = small.clampedToExtent().applyingGaussianBlur(sigma: 3)
+            .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: 1.5])
+            .cropped(to: small.extent)
+        return CIContext(options: [.cacheIntermediates: false]).createCGImage(soft, from: small.extent)
+    }
+
     private func placeToolbar() {
         guard phase == .edit else { toolbar.isHidden = true; return }
         toolbar.isHidden = false
+        if toolbar.backdrop == nil { toolbar.backdrop = Self.frosted(shot.image) }
+        toolbar.undimmed = selection
         let w = toolbar.frame.width, h = toolbar.frame.height
         var x = selection.maxX - w
         x = min(max(4, x), bounds.width - w - 4)
@@ -1098,6 +1130,7 @@ final class OverlayView: NSView, NSTextViewDelegate {
         }
         toolbar.setPaletteAbove(above)
         toolbar.frame.origin = CGPoint(x: snap(x), y: snap(y))
+        toolbar.refreshGlass()               // the glass shows what is under it at its new place
         needsDisplay = true                  // the size label moves out of its way
     }
 
@@ -1237,7 +1270,7 @@ final class OverlayView: NSView, NSTextViewDelegate {
             if let next = redoStack.popLast() { undoStack.append(annotations); annotations = next; selected = nil }
             refreshUndo(); needsDisplay = true
         case .close:
-            if confirmLeave() { session?.finish() }
+            session?.finish()
         case .ocr where !Prefs.shared.ocrEnabled, .ocrCopy where !Prefs.shared.ocrEnabled:
             return
         default:

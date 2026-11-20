@@ -94,7 +94,9 @@ final class ToolButton: NSView {
         guard case .symbol(let name) = look else { return nil }
         if name == ToolButton.mosaicIconName { return ToolButton.mosaicIcon }
         if name == "pin" { return ToolButton.tiltedPin }
-        let cfg = NSImage.SymbolConfiguration(pointSize: ToolButton.pointSize(for: name), weight: .regular)
+        // the pen's scribble is drawn finer than the other symbols: one weight up, its lines match
+        let weight: NSFont.Weight = name == "scribble" ? .medium : .regular
+        let cfg = NSImage.SymbolConfiguration(pointSize: ToolButton.pointSize(for: name), weight: weight)
         return NSImage(systemSymbolName: name, accessibilityDescription: toolTip)?.withSymbolConfiguration(cfg)
     }()
 
@@ -227,13 +229,56 @@ final class Toolbar: NSView {
     private func applyAppearance() {
         let dark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         for r in rows {
-            r.layer?.backgroundColor = (dark ? NSColor(white: 0.16, alpha: 0.97) : NSColor(white: 0.98, alpha: 0.98)).cgColor
+            // without the glass (no picture to blur), solid
+            r.layer?.backgroundColor = backdrop == nil
+                ? (dark ? NSColor(white: 0.16, alpha: 0.97) : NSColor(white: 0.98, alpha: 0.98)).cgColor : nil
             r.layer?.borderColor = (dark ? NSColor.white.withAlphaComponent(0.14) : NSColor.black.withAlphaComponent(0.12)).cgColor
         }
+        // over the glass: the screen shows through, softly, the buttons stay clear
+        for t in tints { t.backgroundColor = (dark ? NSColor(white: 0.1, alpha: 0.45) : NSColor(white: 1, alpha: 0.45)).cgColor }
         for v in seps { v.layer?.backgroundColor = (dark ? NSColor.white : NSColor.black).withAlphaComponent(0.16).cgColor }
         for v in rows { v.subviews.forEach { $0.needsDisplay = true } }
     }
     private let paletteRow = NSView()
+    private var glasses: [NSView] = []
+    private var tints: [CALayer] = []
+    private var dims: [CAShapeLayer] = []
+
+    /// The capture area, in the capture screen's coordinates: the screen is dimmed round it, and
+    /// so is the glass, except over it.
+    var undimmed: CGRect = .null { didSet { if undimmed != oldValue { refreshGlass() } } }
+
+    /// The capture screen's picture, blurred, at any size covering the whole screen: each row
+    /// shows the part under it, as frosted glass. Nil: solid rows.
+    var backdrop: CGImage? { didSet { applyAppearance(); refreshGlass() } }
+
+    // moved either way (`frame = …` does not go through setFrameOrigin): the glass follows
+    override func setFrameOrigin(_ p: NSPoint) { super.setFrameOrigin(p); refreshGlass() }
+    override var frame: NSRect { didSet { if frame.origin != oldValue.origin { refreshGlass() } } }
+
+    /// The part of the backdrop under each row (after the toolbar or a row moved or resized).
+    func refreshGlass() {
+        for (i, (row, g)) in zip(rows, glasses).enumerated() {
+            g.isHidden = backdrop == nil
+            guard let img = backdrop, let sv = superview, sv.bounds.width > 0 else { continue }
+            let k = CGFloat(img.width) / sv.bounds.width
+            let r = row.convert(row.bounds, to: sv)                    // the capture screen is flipped, as the picture
+            let px = CGRect(x: r.minX * k, y: r.minY * k, width: r.width * k, height: r.height * k).integral
+                .intersection(CGRect(x: 0, y: 0, width: img.width, height: img.height))
+            g.layer?.contents = px.isEmpty ? nil : img.cropping(to: px)
+            // the dim: the row but the area, in the glass's own (unflipped layer) coordinates
+            let hole = g.convert(undimmed, from: sv)
+            let d = CGMutablePath()
+            d.addRect(g.bounds)
+            if !undimmed.isNull { d.addRect(hole.intersection(g.bounds)) }
+            CATransaction.begin(); CATransaction.setDisableActions(true)
+            dims[i].frame = g.bounds
+            dims[i].path = d
+            CATransaction.commit()
+            // the shadow follows the row's shape (its own layer has no background to cast it)
+            row.layer?.shadowPath = CGPath(roundedRect: row.bounds, cornerWidth: 8, cornerHeight: 8, transform: nil)
+        }
+    }
     private(set) var tool: Tool?
     private let unit: CGFloat = 32
     static let swatchWidth: CGFloat = 28
@@ -250,6 +295,26 @@ final class Toolbar: NSView {
             row.layer?.borderWidth = 0.5
             row.shadow = NSShadow()
             row.layer?.shadowOpacity = 0.25; row.layer?.shadowRadius = 6; row.layer?.shadowOffset = CGSize(width: 0, height: -2)
+            // frosted glass: the capture under the row, blurred (`backdrop`), under a light tint
+            let glass = NSView(frame: row.bounds)
+            glass.autoresizingMask = [.width, .height]
+            glass.wantsLayer = true
+            glass.layer?.cornerRadius = 8
+            glass.layer?.masksToBounds = true
+            glass.layer?.contentsGravity = .resize
+            // the capture screen's dim, where it is dimmed (not over the area), then the tint
+            let dim = CAShapeLayer()
+            dim.fillColor = CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.4)
+            dim.fillRule = .evenOdd
+            glass.layer?.addSublayer(dim)
+            let tint = CALayer()
+            tint.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
+            tint.frame = glass.bounds
+            glass.layer?.addSublayer(tint)
+            glasses.append(glass)
+            dims.append(dim)
+            tints.append(tint)
+            row.addSubview(glass)
             addSubview(row)
         }
         var x: CGFloat = 4
@@ -403,6 +468,7 @@ final class Toolbar: NSView {
             paletteSeps[2].isHidden = true
         }
         paletteRow.frame.size = NSSize(width: x + 4, height: unit + 4)
+        refreshGlass()
         refreshPalette()
     }
 
@@ -453,6 +519,7 @@ final class Toolbar: NSView {
         }
         let rows = paletteRow.isHidden ? [mainRow] : [mainRow, paletteRow]
         setFrameSize(NSSize(width: rows.map(\.frame.maxX).max() ?? 0, height: rows.map(\.frame.maxY).max() ?? 0))
+        refreshGlass()
     }
 
     private var paletteAbove = false

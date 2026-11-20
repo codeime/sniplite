@@ -62,26 +62,52 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(u)
             menu.addItem(.separator())
         }
+        // the shortcuts in the system's own column, as key equivalents. They act only while the
+        // menu is open, where the global shortcut may act too: a key press then does not clear
+        // the guard against acting twice (a click does, so a click right after a shortcut works)
         for a in HotAction.active {
-            let i = ClosureMenuItem(title: a.title, key: "") { AppDelegate.last = nil; AppDelegate.run(a) }
+            let i = ClosureMenuItem(title: a.title, key: "") {
+                if NSApp.currentEvent?.type != .keyDown { AppDelegate.last = nil }
+                AppDelegate.run(a)
+            }
             if let k = Prefs.shared.hotkey(a) {
-                // shown as text: a real key equivalent would only work while the menu is open
-                i.title = a.title + "\t" + k.display
+                if let e = k.menuEquivalent {
+                    i.keyEquivalent = e.key
+                    i.keyEquivalentModifierMask = e.mods
+                } else {
+                    i.title = a.title + "  " + k.display
+                }
             }
             menu.addItem(i)
             if a == .togglePins { menu.addItem(.separator()) }
         }
         menu.addItem(.separator())
         menu.addItem(ClosureMenuItem(title: L.t("settings"), key: ",") { SettingsWindow.show() })
-        let perm = ClosureMenuItem(title: L.t("permissions") + "…", key: "") { PermissionsWindow.show() }
-        if !Permission.allRequiredGranted { perm.title = "⚠︎ " + perm.title }
-        menu.addItem(perm)
+        // only while something sniplite needs is not allowed: marked, with what is missing
+        // (Settings › Permissions shows them all the time)
+        if !Permission.allRequiredGranted {
+            let perm = ClosureMenuItem(title: L.t("permissions") + "…", key: "") { PermissionsWindow.show() }
+            perm.image = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(paletteColors: [.systemOrange]))
+            let missing = Permission.allCases.filter { $0.required && !$0.granted }.map(\.name)
+            if #available(macOS 14.4, *) {
+                perm.subtitle = String(format: L.t("permMissing"), missing.joined(separator: L.t("listSep")))
+            } else {
+                perm.toolTip = String(format: L.t("permMissing"), missing.joined(separator: L.t("listSep")))
+            }
+            menu.addItem(perm)
+        }
         menu.addItem(ClosureMenuItem(title: L.t("about"), key: "") { SettingsWindow.show(tab: SettingsWindow.aboutTab) })
         menu.addItem(.separator())
         menu.addItem(ClosureMenuItem(title: L.t("quit"), key: "q") { NSApp.terminate(nil) })
     }
 
     static func askForPermission() { PermissionsWindow.show() }
+
+    /// Closes the menu bar menu if it is open (its tracking would keep the mouse).
+    static func closeMenu() {
+        (NSApp.delegate as? AppDelegate)?.status?.menu?.cancelTrackingWithoutAnimation()
+    }
 
     /// sniplite's app id was io.github.mrtangluyao.sniplite until 1.0.1. The first start under
     /// the new one takes the settings over and removes the old id's permission entries, which

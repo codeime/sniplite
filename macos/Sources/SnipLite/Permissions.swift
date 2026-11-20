@@ -210,6 +210,8 @@ final class PermissionsWindow: NSWindowController, NSWindowDelegate {
 
     static func show() {
         if shared == nil { shared = PermissionsWindow() }
+        // opened from the menu: it comes to the desktop in use
+        shared?.window?.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
         NSApp.activate(ignoringOtherApps: true)
         shared?.window?.center()
         shared?.showWindow(nil)
@@ -423,8 +425,11 @@ final class PermissionsWindow: NSWindowController, NSWindowDelegate {
         let p = Permission.allCases[b.tag]
         // the panel flies out of this button to its place beside System Settings
         let from = b.window.map { $0.convertPoint(toScreen: b.convert(CGPoint(x: b.bounds.midX, y: b.bounds.midY), to: nil)) }
+        // while System Settings is out (perhaps on another desktop) this page stays on its own desktop,
+        // so coming back to it brings the user back there
+        window?.collectionBehavior = [.fullScreenAuxiliary]
         PermissionGuide.start(p, from: from) { [weak self] in
-            // System Settings has just closed: back to this page for the next permission
+            // System Settings has just closed: back to this page, on its desktop, for the next permission
             self?.refresh()
             NSApp.activate(ignoringOtherApps: true)
             self?.window?.makeKeyAndOrderFront(nil)
@@ -551,6 +556,11 @@ final class PermissionGuide {
             PermissionGuide.stop(closeSettings: true)
             onGranted()
             return
+        }
+        // System Settings open on another desktop: its window is there but not on screen. The guide
+        // waits (hidden) and shows on that desktop once it is on screen (the panel joins every desktop).
+        if let away = settingsWindowAway(), away {
+            lastSeen = Date(); settledSince = Date(); hide(); return
         }
         guard let (f, title) = settingsWindow() else {
             settingsFrame = nil
@@ -733,6 +743,22 @@ final class PermissionGuide {
     /// The main window of System Settings in Cocoa screen coordinates.
     /// Its main window in Cocoa screen coordinates, and its title (the page shown), when that can
     /// be read.
+    /// Whether System Settings has a main window only on another desktop (nil: no window at all).
+    private func settingsWindowAway() -> Bool? {
+        guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.systempreferences").first,
+              let all = CGWindowListCopyWindowInfo([.optionAll, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
+        else { return nil }
+        let mains = all.filter { w in
+            guard (w[kCGWindowOwnerPID as String] as? Int32) == app.processIdentifier,
+                  (w[kCGWindowLayer as String] as? Int) == 0,
+                  let b = w[kCGWindowBounds as String] as? NSDictionary,
+                  let r = CGRect(dictionaryRepresentation: b), r.width > 200, r.height > 200 else { return false }
+            return true
+        }
+        if mains.isEmpty { return nil }
+        return !mains.contains { ($0[kCGWindowIsOnscreen as String] as? Bool) == true }
+    }
+
     private func settingsWindow() -> (CGRect, String?)? {
         guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.systempreferences").first,
               let info = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)

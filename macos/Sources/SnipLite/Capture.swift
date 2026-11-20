@@ -182,7 +182,7 @@ enum Capture {
     }
 
     /// Windows to snap to, front to back, in CG global coordinates: the windows of apps (layer 0)
-    /// and small system ones such as menu bar items and the Dock. Transparent full-screen layers
+    /// and small system ones such as menu bar items, open menus and the Dock. Transparent full-screen layers
     /// (Notification Center, gestures, Stage Manager…) are left out: under the mouse they would
     /// select the whole screen and nothing would be dimmed.
     private static func windowRects() -> [SnapWindow] {
@@ -197,15 +197,48 @@ enum Capture {
                   let r = CGRect(dictionaryRepresentation: b) else { continue }
             let alpha = w[kCGWindowAlpha as String] as? Double ?? 1
             let layer = w[kCGWindowLayer as String] as? Int ?? 0
-            if alpha <= 0.01 || layer < 0 || layer > Int(CGWindowLevelForKey(.mainMenuWindow)) + 1 { continue }
-            if pid == me && layer != NSWindow.Level.floating.rawValue { continue }     // only pins of sniplite
+            // up to open menus (pop-up menu level), above them the cursor, tooltips and such
+            let menuLevel = Int(CGWindowLevelForKey(.popUpMenuWindow))
+            if alpha <= 0.01 || layer < 0 || layer > menuLevel { continue }
+            // of sniplite: its pins, and its menu if open
+            if pid == me && layer != NSWindow.Level.floating.rawValue && layer != menuLevel { continue }
             if layer != 0 {
                 let big = screens.contains { r.width * r.height >= $0.width * $0.height * 0.5 }
                 if big { continue }
             }
-            out.append(SnapWindow(rect: r, pid: pid))
+            // an open menu: the menu itself, not its window
+            let id = w[kCGWindowNumber as String] as? CGWindowID ?? 0
+            out.append(SnapWindow(rect: layer == menuLevel ? visiblePart(of: id, in: r) : r, pid: pid))
         }
         return out
+    }
+
+    /// An open menu's window is much larger than the menu: its shadow is drawn inside it (about
+    /// 75 pt all round on macOS 26). The menu is where the window's picture is opaque. If the
+    /// picture cannot be had, the whole window.
+    private static func visiblePart(of id: CGWindowID, in r: CGRect) -> CGRect {
+        // that window alone (8), its own bounds (1), at 1x (16): small and quick
+        guard id != 0, r.width >= 1, let make = windowListImage,
+              let img = make(.null, 8, id, 1 | 16)?.takeRetainedValue() else { return r }
+        let W = img.width, H = img.height
+        guard W > 0, H > 0,
+              let ctx = CGContext(data: nil, width: W, height: H, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceGray(),
+                                  bitmapInfo: CGImageAlphaInfo.alphaOnly.rawValue),
+              let data = ctx.data else { return r }
+        ctx.draw(img, in: CGRect(x: 0, y: 0, width: W, height: H))
+        let a = data.assumingMemoryBound(to: UInt8.self), row = ctx.bytesPerRow
+        var x0 = W, x1 = -1, y0 = H, y1 = -1
+        for y in 0..<H {
+            for x in 0..<W where a[y * row + x] >= 128 {        // the menu, not its soft shadow
+                if x < x0 { x0 = x }; if x > x1 { x1 = x }
+                if y < y0 { y0 = y }; y1 = y
+            }
+        }
+        guard x1 >= x0, y1 >= y0 else { return r }
+        let k = CGFloat(W) / r.width                             // picture pixels per point
+        let v = CGRect(x: r.minX + CGFloat(x0) / k, y: r.minY + CGFloat(y0) / k,
+                       width: CGFloat(x1 - x0 + 1) / k, height: CGFloat(y1 - y0 + 1) / k)
+        return v.width >= 8 && v.height >= 8 ? v : r
     }
 }
 

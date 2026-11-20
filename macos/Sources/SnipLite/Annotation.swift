@@ -129,14 +129,25 @@ struct Annotation {
     /// Draws into a context whose coordinates are the overlay's flipped points (y down).
     /// `mosaic` gives the blocky copy of the screen for a block size (points), `screenRect` where it goes.
     func draw(in ctx: CGContext, mosaic: (CGFloat) -> CGImage?, screenRect: CGRect) {
+        guard let p0 = points.first else { return }
         ctx.saveGState()
         defer { ctx.restoreGState() }
+        // A see-through drawing is drawn solid into a layer, which is then laid down at its
+        // opacity: where its parts meet (an arrow's shaft and head, a number's circle and digit,
+        // a path crossing itself) nothing shows through twice.
+        let layered = color.alphaComponent < 1 && hasColor && tool != .text
+        let color = layered ? self.color.withAlphaComponent(1) : self.color
+        if layered {
+            ctx.setAlpha(self.color.alphaComponent)
+            let pad = width * 3 + 12
+            ctx.beginTransparencyLayer(in: bounds.insetBy(dx: -pad, dy: -pad), auxiliaryInfo: nil)
+        }
+        defer { if layered { ctx.endTransparencyLayer() } }
         ctx.setStrokeColor(color.cgColor)
         ctx.setFillColor(color.cgColor)
         ctx.setLineWidth(width)
         ctx.setLineCap(.round)
         ctx.setLineJoin(.round)
-        guard let p0 = points.first else { return }
         let p1 = points.last ?? p0
         switch tool {
         case .rect:
@@ -200,19 +211,43 @@ struct Annotation {
     }
 
     private func drawArrow(_ ctx: CGContext, _ a: CGPoint, _ b: CGPoint) {
+        let path = Self.arrowPath(from: a, to: b, width: width)
+        ctx.addPath(path)
+        ctx.fillPath()
+        // its corners a little round: the outline stroked thinly (solid, in the layer when
+        // see-through, so it does not show over the fill)
+        ctx.setLineWidth(max(1, width * 0.15))
+        ctx.setLineJoin(.round)
+        ctx.addPath(path)
+        ctx.strokePath()
+    }
+
+    /// The arrow as one outline: an even shaft of the line's width with a round end, and a
+    /// head whose wings sweep back a little past where the shaft meets it.
+    static func arrowPath(from a: CGPoint, to b: CGPoint, width w: CGFloat) -> CGPath {
+        let path = CGMutablePath()
         let dx = b.x - a.x, dy = b.y - a.y
         let len = hypot(dx, dy)
-        guard len > 1 else { return }
-        let ux = dx / len, uy = dy / len
-        let head = min(len, max(14, width * 4.5))
-        let half = head * 0.45
-        let base = CGPoint(x: b.x - ux * head, y: b.y - uy * head)
-        ctx.strokeLineSegments(between: [a, CGPoint(x: base.x + ux * 1, y: base.y + uy * 1)])
-        ctx.move(to: b)
-        ctx.addLine(to: CGPoint(x: base.x - uy * half, y: base.y + ux * half))
-        ctx.addLine(to: CGPoint(x: base.x + uy * half, y: base.y - ux * half))
-        ctx.closePath()
-        ctx.fillPath()
+        guard len > 1 else { return path }
+        let u = CGPoint(x: dx / len, y: dy / len), n = CGPoint(x: -u.y, y: u.x)
+        func at(_ along: CGFloat, _ side: CGFloat) -> CGPoint {    // from the tip, back and across
+            CGPoint(x: b.x - u.x * along + n.x * side, y: b.y - u.y * along + n.y * side)
+        }
+        let head = min(len * 0.6, max(16, w * 3.3))               // short arrows keep a shaft
+        let half = head * 0.48                                    // the head's half width
+        let neck = head * 0.8                                     // the wings sweep back a little
+        let shaft = min(w / 2, half * 0.6), tail = shaft          // even, with a round end
+        // tip, one wing, the neck, the tail (round), the neck, the other wing
+        path.move(to: b)
+        path.addLine(to: at(head, half))
+        path.addLine(to: at(neck, shaft))
+        path.addLine(to: at(len, tail))
+        path.addArc(tangent1End: at(len + tail, tail), tangent2End: at(len + tail, 0), radius: tail)
+        path.addArc(tangent1End: at(len + tail, -tail), tangent2End: at(len, -tail), radius: tail)
+        path.addLine(to: at(neck, -shaft))
+        path.addLine(to: at(head, -half))
+        path.closeSubpath()
+        return path
     }
 
     static func smoothPath(_ pts: [CGPoint]) -> CGPath {
@@ -365,8 +400,10 @@ extension Annotation {
         switch tool {
         case .text, .number:
             return bounds.insetBy(dx: -3, dy: -3).contains(p)
-        case .line, .arrow:
+        case .line:
             return Self.distance(p, p0, p1) <= max(6, width / 2 + 4)
+        case .arrow:                                       // its head is wider than the line
+            return Self.distance(p, p0, p1) <= max(6, width / 2 + 4) || Self.arrowPath(from: p0, to: p1, width: width).contains(p)
         case .rect:
             let r = CGRect(p0, p1), t = max(6, width / 2 + 4)
             let inner = r.insetBy(dx: t, dy: t)

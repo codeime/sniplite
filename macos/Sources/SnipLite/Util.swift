@@ -105,7 +105,7 @@ enum TextInput {
 enum Log {
     private static let url = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first?
         .appendingPathComponent("Logs/sniplite.log")
-    private static let q = DispatchQueue(label: "sniplite.log")
+    fileprivate static let q = DispatchQueue(label: "sniplite.log")
 
     static func write(_ s: String) {
         guard let url else { return }
@@ -118,6 +118,59 @@ enum Log {
             } else {
                 try? line.data(using: .utf8)?.write(to: url)
             }
+        }
+    }
+}
+
+extension Log {
+    /// Waits until what was written is on disk (before quitting).
+    static func flush() { q.sync {} }
+}
+
+/// The capture screens cover every display: if sniplite stopped responding while they are up,
+/// nothing on the Mac could be used. While a capture is open, a thread of its own checks every
+/// second that the main thread still answers; after 6 s without an answer sniplite quits, which
+/// takes the capture screens away (the system's own Force Quit would be under them), and opens
+/// again.
+final class Watchdog {
+    static let shared = Watchdog()
+    private let queue = DispatchQueue(label: "sniplite.watchdog")
+    private var timer: DispatchSourceTimer?
+    private var lastAnswer = Date()            // read and written on `queue` only
+    private var lastTick = Date()
+
+    /// A capture opened (true) or closed (false).
+    func watch(_ on: Bool) {
+        queue.async { [self] in
+            timer?.cancel(); timer = nil
+            guard on else { return }
+            lastAnswer = Date(); lastTick = Date()
+            let t = DispatchSource.makeTimerSource(queue: queue)
+            t.schedule(deadline: .now() + 1, repeating: 1)
+            t.setEventHandler { [weak self] in self?.tick() }
+            t.resume()
+            timer = t
+        }
+    }
+
+    private func tick() {
+        // a long gap between two checks: the Mac slept (the timer stops with it), not a hang
+        if Date().timeIntervalSince(lastTick) > 3 { lastAnswer = Date() }
+        lastTick = Date()
+        if Date().timeIntervalSince(lastAnswer) > 6 {
+            Log.write("watchdog: no answer from the main thread for 6 s during a capture, quitting")
+            Log.flush()
+            // opens again once this one is gone
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: "/bin/sh")
+            p.arguments = ["-c", "while kill -0 \"$1\" 2>/dev/null; do sleep 0.2; done; /usr/bin/open \"$0\"",
+                           Bundle.main.bundlePath, String(getpid())]
+            try? p.run()
+            exit(3)
+        }
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.queue.async { self.lastAnswer = Date() }
         }
     }
 }

@@ -74,11 +74,10 @@ final class Prefs {
         get { d.string(forKey: "noticePosition") ?? "topRight" }
         set { d.set(newValue, forKey: "noticePosition") }
     }
-    /// Ask before leaving a capture that has drawings (Esc, ✕, right-click back).
-    var askBeforeLeaving: Bool {
-        get { d.object(forKey: "askBeforeLeaving") as? Bool ?? true }
-        set { d.set(newValue, forKey: "askBeforeLeaving") }
-    }
+    /// Hidden (no switch in Settings), for reporting problems with the capture screen:
+    /// `defaults write io.github.codeime.sniplite captureCaptureScreen -bool true`. Then the capture
+    /// shortcut, pressed while the capture screen is open, saves the screen as it looks.
+    var captureCaptureScreen: Bool { d.bool(forKey: "captureCaptureScreen") }
     /// The capture toolbar: "system" (follows macOS), "light" or "dark".
     var toolbarTheme: String {
         get { d.string(forKey: "toolbarTheme") ?? "system" }
@@ -405,7 +404,6 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         let general = stack([
             section(L.t("secCapture"), [
                 row(("text.viewfinder", .systemGreen), L.t("ocrTitle2"), L.t("ocrDetail"), toggle(Prefs.shared.ocrEnabled, #selector(toggleOCR(_:)))),
-                row(("exclamationmark.bubble.fill", .systemYellow), L.t("askLeave"), nil, toggle(Prefs.shared.askBeforeLeaving, #selector(toggleAskLeave(_:)))),
                 row(("circle.lefthalf.filled", .systemGray), L.t("toolbarTheme"), nil,
                     popup([("system", L.t("themeSystem")), ("light", L.t("themeLight")), ("dark", L.t("themeDark"))],
                           Prefs.shared.toolbarTheme, #selector(pickTheme(_:)))),
@@ -788,7 +786,6 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         Prefs.shared.noticePosition = p.selectedItem?.representedObject as? String ?? "topRight"
     }
 
-    @objc private func toggleAskLeave(_ b: NSSwitch) { Prefs.shared.askBeforeLeaving = b.state == .on }
 
     @objc private func pickTheme(_ p: NSPopUpButton) {
         Prefs.shared.toolbarTheme = p.selectedItem?.representedObject as? String ?? "system"
