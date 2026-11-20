@@ -136,41 +136,45 @@ final class Watchdog {
     static let shared = Watchdog()
     private let queue = DispatchQueue(label: "sniplite.watchdog")
     private var timer: DispatchSourceTimer?
-    private var lastAnswer = Date()            // read and written on `queue` only
-    private var lastTick = Date()
+    /// When the main thread last answered, in system uptime: it stops while the Mac sleeps and
+    /// never jumps with the clock, so neither looks like a hang. Read and written on `queue` only.
+    private var lastAnswer: TimeInterval = 0
+    private static var now: TimeInterval { ProcessInfo.processInfo.systemUptime }
 
-    /// A capture opened (true) or closed (false).
+    /// A capture opened (true) or closed (false). Nothing runs while no capture is open.
     func watch(_ on: Bool) {
         queue.async { [self] in
             timer?.cancel(); timer = nil
             guard on else { return }
-            lastAnswer = Date(); lastTick = Date()
+            lastAnswer = Self.now
             let t = DispatchSource.makeTimerSource(queue: queue)
-            t.schedule(deadline: .now() + 1, repeating: 1)
+            t.schedule(deadline: .now() + 1, repeating: 1, leeway: .milliseconds(250))
             t.setEventHandler { [weak self] in self?.tick() }
             t.resume()
             timer = t
         }
     }
 
+    /// Once a second: a tiny task for the main thread, which notes when it ran. While the main
+    /// thread is stuck these wait in its queue (at most about six before the end).
     private func tick() {
-        // a long gap between two checks: the Mac slept (the timer stops with it), not a hang
-        if Date().timeIntervalSince(lastTick) > 3 { lastAnswer = Date() }
-        lastTick = Date()
-        if Date().timeIntervalSince(lastAnswer) > 6 {
-            Log.write("watchdog: no answer from the main thread for 6 s during a capture, quitting")
-            Log.flush()
-            // opens again once this one is gone
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: "/bin/sh")
-            p.arguments = ["-c", "while kill -0 \"$1\" 2>/dev/null; do sleep 0.2; done; /usr/bin/open \"$0\"",
-                           Bundle.main.bundlePath, String(getpid())]
-            try? p.run()
-            exit(3)
-        }
+        if Self.now - lastAnswer > 6 { giveUp() }
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            self.queue.async { self.lastAnswer = Date() }
+            self.queue.async { self.lastAnswer = Self.now }
         }
+    }
+
+    /// Quits at once and opens sniplite again. Nothing here may wait on the stuck main thread:
+    /// the new one is started with posix_spawn, and _exit skips the clean-up an exit would run.
+    private func giveUp() -> Never {
+        Log.write("watchdog: no answer from the main thread for 6 s during a capture, quitting")
+        Log.flush()
+        let script = "while kill -0 \"$1\" 2>/dev/null; do sleep 0.2; done; /usr/bin/open \"$0\""
+        let args = ["/bin/sh", "-c", script, Bundle.main.bundlePath, String(getpid())]
+        var argv = args.map { strdup($0) } + [nil]
+        var pid: pid_t = 0
+        _ = posix_spawn(&pid, "/bin/sh", nil, nil, &argv, environ)
+        _exit(3)
     }
 }
