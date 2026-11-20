@@ -335,9 +335,25 @@ final class OverlayView: NSView, NSTextViewDelegate {
     private var elements: [CGRect] = []          // parts of the top window under the mouse, smallest first
     private var lastLookup: CGPoint = CGPoint(x: -1000, y: -1000)
 
+    /// Where the chain was last worked out: a click elsewhere works it out again first.
+    private var chainPoint = CGPoint(x: -1, y: -1)
+    /// Whether the chain is not for `p` (a click or the wheel right after the mouse came from
+    /// another screen, before any move here).
+    private func chainStale(at p: CGPoint) -> Bool {
+        chain.isEmpty || hypot(p.x - chainPoint.x, p.y - chainPoint.y) > 2
+    }
+
+    /// Nothing under the mouse here (it went to another screen): all dimmed, and the parts of a
+    /// window looked up again wherever it comes back.
+    private func forgetChain() {
+        chain = []; elements = []; animateHole(to: nil)
+        lastLookup = CGPoint(x: -1000, y: -1000)
+    }
+
     /// What the wheel steps through: the element under the mouse and the elements holding it,
     /// then the window, bigger windows behind it, and the screen.
     private func computeChain(_ p: CGPoint, lookUp: Bool = true) {
+        chainPoint = p
         let under = shot.windows.filter { $0.rect.contains(p) }
         var list: [CGRect] = []
         if let top = under.first {
@@ -351,7 +367,8 @@ final class OverlayView: NSView, NSTextViewDelegate {
                 lastLookup = p
                 let o = shot.globalOffset
                 ElementFinder.shared.find(at: CGPoint(x: p.x + o.x, y: p.y + o.y), pid: top.pid) { [weak self] rects in
-                    guard let self, self.phase == .select else { return }
+                    // late, the mouse gone to another screen: nothing to light up here
+                    guard let self, self.phase == .select, self.mouseIsHere else { return }
                     self.elements = rects.map { $0.offsetBy(dx: -o.x, dy: -o.y) }
                     self.computeChain(self.mouse, lookUp: false)
                     self.needsDisplay = true
@@ -365,7 +382,16 @@ final class OverlayView: NSView, NSTextViewDelegate {
     }
 
     func mouseAt(_ p: CGPoint) {
+        // Mouse moves go to the key window: just after the mouse went to another screen, until
+        // that one's capture screen is key, they still come here, from outside. Not ours.
+        guard bounds.contains(p) else {
+            if phase == .select, case .none = drag { forgetChain() }
+            hasMouse = false
+            needsDisplay = true
+            return
+        }
         mouse = p
+        hasMouse = true
         if phase == .select { computeChain(p); needsDisplay = true }   // the highlight and the magnifier follow
         else if Date() < sizeHUDUntil { needsDisplay = true }           // the size preview follows
     }
@@ -374,12 +400,25 @@ final class OverlayView: NSView, NSTextViewDelegate {
 
     override func mouseEntered(with event: NSEvent) {
         if phase == .idle { return }
-        if window?.isKeyWindow == false, case .none = drag { window?.makeKey(); window?.makeFirstResponder(self) }
+        // not while a selection is being dragged on another screen (it keeps the mouse till let go)
+        let busy = session?.windows.contains { $0.overlay !== self && !$0.overlay.drag.isIdle } ?? false
+        if window?.isKeyWindow == false, drag.isIdle, !busy { window?.makeKey(); window?.makeFirstResponder(self) }
+        needsDisplay = true
+        // the screen the mouse came from redraws too (dimmed), even if its own exit was missed
+        for w in session?.windows ?? [] where w.overlay !== self { w.overlay.needsDisplay = true }
+    }
+
+    /// Off to another screen: the magnifier goes (it comes back on the screen the mouse is on),
+    /// and while choosing an area nothing here is under the mouse any more: all of it dimmed.
+    override func mouseExited(with event: NSEvent) {
+        if phase == .select, case .none = drag { forgetChain() }
+        if drag.isIdle { hasMouse = false }
         needsDisplay = true
     }
 
-    /// Off to another screen: the magnifier goes (it comes back on the screen the mouse is on).
-    override func mouseExited(with event: NSEvent) { needsDisplay = true }
+    /// `mouse` is where the mouse is on this screen: it moved here since it came. Until then (and
+    /// while another screen drags a selection, keeping the mouse moves) there is no magnifier.
+    private var hasMouse = false
 
     /// Whether the mouse is on this screen.
     private var mouseIsHere: Bool {
@@ -450,10 +489,12 @@ final class OverlayView: NSView, NSTextViewDelegate {
 
     override func mouseDown(with event: NSEvent) {
         let p = clamp(convert(event.locationInWindow, from: nil))
-        downAt = p; dragged = false; mouse = p
+        downAt = p; dragged = false; mouse = p; hasMouse = true
         switch phase {
         case .idle: return
         case .select:
+            // just come from another screen, no move seen here yet: what is under the mouse first
+            if chainStale(at: p) { computeChain(p, lookUp: false) }
             drag = .newSelection
         case .edit:
             if let tv = textView as? TextBox, let c = tv.corner(near: p) {
@@ -637,7 +678,11 @@ final class OverlayView: NSView, NSTextViewDelegate {
 
     override func otherMouseDown(with event: NSEvent) {
         if phase == .edit { command(.pin) }
-        else if phase == .select, let h = hover { selection = h; enterEdit(); command(.pin) }
+        else if phase == .select {
+            let p = convert(event.locationInWindow, from: nil)
+            if chainStale(at: p) { mouseAt(p) }
+            if let h = hover { selection = h; enterEdit(); command(.pin) }
+        }
     }
 
     override func scrollWheel(with event: NSEvent) {
@@ -646,7 +691,10 @@ final class OverlayView: NSView, NSTextViewDelegate {
             if event.modifierFlags.contains(.option) { scrollOpacity(event) } else { scrollWidth(event) }
             return
         }
-        guard phase == .select, !chain.isEmpty else { return }
+        guard phase == .select else { return }
+        // the wheel right after coming here: the mouse taken as if it had moved (magnifier too)
+        if mouseIsHere, chainStale(at: localMouse()) { mouseAt(localMouse()) }
+        guard !chain.isEmpty else { return }
         // a wheel notch is one step; on a trackpad a step takes a deliberate swipe
         let steps = scrollSteps(event, trackpadDistance: 30)
         guard steps != 0 else { return }
@@ -801,6 +849,16 @@ final class OverlayView: NSView, NSTextViewDelegate {
     // MARK: keys
 
     override func keyDown(with e: NSEvent) {
+        // Choosing an area, keys are for the screen with the mouse. Just after it went to another
+        // screen this one may still be key: hand the key over (else the arrows would pull the
+        // mouse back here, C copy a color from here, Return take what was lit here).
+        if phase == .select, drag.isIdle, !mouseIsHere,
+           let o = session?.windows.map(\.overlay).first(where: { $0 !== self && $0.mouseIsHere }), o.phase == .select {
+            o.window?.makeKey(); o.window?.makeFirstResponder(o)
+            o.mouseAt(o.localMouse())
+            o.keyDown(with: e)
+            return
+        }
         let f = e.modifierFlags.intersection(.deviceIndependentFlagsMask)
         let cmd = f.contains(.command), shift = f.contains(.shift)
         let chars = e.charactersIgnoringModifiers?.lowercased() ?? ""
@@ -1377,7 +1435,10 @@ final class OverlayView: NSView, NSTextViewDelegate {
         let h: CGRect?
         switch phase {
         case .select:
-            if case .newSelection = drag, dragged { h = selection } else { h = holeShown ?? hover }
+            if case .newSelection = drag, dragged { h = selection }
+            // nothing is lit where the mouse is not: asked of the mouse itself, as events from
+            // another screen can still arrive here for a moment (see mouseAt)
+            else { h = mouseIsHere ? holeShown ?? hover : nil }
         case .edit: h = selection
         case .idle: h = nil
         }
@@ -1409,7 +1470,8 @@ final class OverlayView: NSView, NSTextViewDelegate {
         show(canvas, phase == .edit ? hole.map { $0.insetBy(dx: -16, dy: -16).intersection(bounds) } : nil)
         show(sizeLabel, hole.map { sizeLabelBox($0).insetBy(dx: -1, dy: -1) }, repaint: areaChanged)
         // only on the screen with the mouse: the others have no mouse position of their own
-        var showMag = phase == .select && mouseIsHere
+        // while dragging here it follows the drag, kept on this screen, even with the mouse beyond
+        var showMag = phase == .select && (!drag.isIdle || (mouseIsHere && hasMouse))
         if case .resize = drag { showMag = true }
         if showMag {
             let f = magnifierFrame()
