@@ -52,7 +52,7 @@ enum QuickCapture {
     }
 
     /// The folder in sniplite's language (the Desktop), then the file name.
-    private static func place(of file: URL) -> String {
+    static func place(of file: URL) -> String {
         let folder = file.deletingLastPathComponent().standardizedFileURL
         let name = folder == FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first?.standardizedFileURL
             ? L.t("desktopName") : FileManager.default.displayName(atPath: folder.path)

@@ -43,24 +43,30 @@ final class CaptureSession {
     }
 
     /// The hidden switch (Prefs.captureCaptureScreen): the screen under the mouse with the capture
-    /// screen on it, as it looks, to the Desktop and the clipboard; a sound says it is done.
+    /// screen on it, as it looks, to the Desktop and the clipboard; a notice says so.
     private static func grabCaptureScreen() {
         let mouse = NSEvent.mouseLocation
         let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main
+        Notice.hide()                                      // the last one's: not in this picture
         Task { @MainActor in
             guard let s = screen, let shot = try? await Capture.captureAll(only: s).first else { NSSound.beep(); return }
             let f = DateFormatter()
             f.dateFormat = "yyyyMMdd_HHmmss"
             let rep = NSBitmapImageRep(cgImage: shot.image)
             rep.size = s.frame.size
-            if let png = rep.representation(using: .png, properties: [:]),
-               let desk = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first {
-                let url = desk.appendingPathComponent("sniplite_capture_screen_\(f.string(from: Date())).png")
-                try? png.write(to: url)
-                Log.write("capture screen saved: \(url.lastPathComponent)")
-            }
             Clipboard.copy(shot.image, size: s.frame.size)
-            NSSound(named: "Tink")?.play()
+            guard let png = rep.representation(using: .png, properties: [:]),
+                  let desk = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first else { NSSound.beep(); return }
+            let url = desk.appendingPathComponent("sniplite_capture_screen_\(f.string(from: Date())).png")
+            do {
+                try png.write(to: url)
+                Log.write("capture screen saved: \(url.lastPathComponent)")
+                // no click: Finder would open behind the capture screen
+                Notice.show(.picture(shot.image), L.t("quickSaved"), QuickCapture.place(of: url), on: s)
+            } catch {
+                Log.write("capture screen not saved: \(error)")
+                NSSound.beep()
+            }
         }
     }
 

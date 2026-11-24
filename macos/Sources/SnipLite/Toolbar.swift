@@ -93,6 +93,8 @@ final class ToolButton: NSView {
         img.isTemplate = true
         return img
     }()
+    /// What it does, shown by the toolbar while the mouse is on it.
+    private(set) var tip: String?
     var selected = false { didSet { needsDisplay = true } }
     var enabled = true { didSet { needsDisplay = true } }
     var onClick: (() -> Void)?
@@ -104,7 +106,7 @@ final class ToolButton: NSView {
         // the pen's scribble is drawn finer than the other symbols: one weight up, its lines match
         let weight: NSFont.Weight = name == "scribble" ? .medium : .regular
         let cfg = NSImage.SymbolConfiguration(pointSize: ToolButton.pointSize(for: name), weight: weight)
-        return NSImage(systemSymbolName: name, accessibilityDescription: toolTip)?.withSymbolConfiguration(cfg)
+        return NSImage(systemSymbolName: name, accessibilityDescription: tip)?.withSymbolConfiguration(cfg)
     }()
 
     /// The middle of what is drawn of the image. Symbols sit off the middle of their own frames (an
@@ -121,7 +123,8 @@ final class ToolButton: NSView {
     init(_ look: Look, tip: String?, size: CGFloat = 32) {
         self.look = look
         super.init(frame: NSRect(x: 0, y: 0, width: size, height: size))
-        toolTip = tip
+        self.tip = tip
+        setAccessibilityHelp(tip)
         addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
                                        owner: self, userInfo: nil))
     }
@@ -129,7 +132,7 @@ final class ToolButton: NSView {
 
     override func mouseEntered(with event: NSEvent) { hover = true }
     override func mouseExited(with event: NSEvent) { hover = false }
-    override func mouseDown(with event: NSEvent) {}
+    override func mouseDown(with event: NSEvent) { enclosingToolbar?.tipPressed() }
     override func mouseUp(with event: NSEvent) {
         if enabled, bounds.contains(convert(event.locationInWindow, from: nil)) { onClick?() }
     }
@@ -261,6 +264,68 @@ final class Toolbar: NSView {
         for v in rows { v.subviews.forEach { $0.needsDisplay = true } }
     }
     private let paletteRow = NSView()
+
+    // MARK: tips
+
+    private var sliderTips: [(NSView, String)] = []
+    private let tipView = ToolTip()
+    private var tipTarget: NSView?
+    /// Pressed: its tip stays away until the mouse has been elsewhere.
+    private var tipQuiet: NSView?
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        for t in trackingAreas where t.owner === self { removeTrackingArea(t) }
+        addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseMoved, .mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                                       owner: self, userInfo: nil))
+    }
+    override func mouseEntered(with event: NSEvent) { updateTip(at: convert(event.locationInWindow, from: nil)) }
+    override func mouseMoved(with event: NSEvent) { updateTip(at: convert(event.locationInWindow, from: nil)) }
+    override func mouseExited(with event: NSEvent) { updateTip(at: nil) }
+    override var isHidden: Bool { didSet { if isHidden { updateTip(at: nil) } } }
+    override func viewWillMove(toSuperview v: NSView?) { super.viewWillMove(toSuperview: v); if v == nil { tipView.removeFromSuperview() } }
+
+    /// The tip of what is under `p` (in the toolbar), at once: the system's own come after a wait.
+    func updateTip(at p: CGPoint?) {
+        var hit: (NSView, String)?
+        if let p, !isHidden {
+            for row in rows where !row.isHidden {
+                for v in row.subviews where !v.isHidden && v.convert(v.bounds, to: self).contains(p) {
+                    if let s = (v as? ToolButton)?.tip ?? sliderTips.first(where: { $0.0 === v })?.1 { hit = (v, s) }
+                }
+            }
+        }
+        if hit?.0 !== tipQuiet { tipQuiet = nil }
+        guard let (v, s) = hit, v !== tipQuiet, let host = superview else {
+            tipTarget = nil
+            tipView.isHidden = true
+            return
+        }
+        if v === tipTarget, !tipView.isHidden { return }
+        tipTarget = v
+        if tipView.superview !== host { host.addSubview(tipView, positioned: .above, relativeTo: self) }
+        tipView.show(s)
+        // outside the toolbar on its row's side (one row: under it); with no room there, beyond the
+        // other side of the whole toolbar, so it never covers a row
+        let row = v.superview === paletteRow ? paletteRow : mainRow
+        let b = v.convert(v.bounds, to: host), size = tipView.frame.size, gap: CGFloat = 6
+        let room = host.bounds.insetBy(dx: 0, dy: 2)
+        let under = frame.maxY + gap, over = frame.minY - gap - size.height
+        let below = paletteRow.isHidden || row.frame.minY > 0
+        let fits = { (y: CGFloat) in y >= room.minY && y + size.height <= room.maxY }
+        let first = below ? under : over, second = below ? over : under
+        let y = fits(first) || !fits(second) ? first : second
+        let x = min(max(host.bounds.minX + 4, b.midX - size.width / 2), host.bounds.maxX - size.width - 4)
+        tipView.setFrameOrigin(CGPoint(x: x.rounded(), y: y.rounded()))
+        tipView.isHidden = false
+    }
+
+    func tipPressed() {
+        tipQuiet = tipTarget
+        tipTarget = nil
+        tipView.isHidden = true
+    }
+
     private var glasses: [NSView] = []
     private var tints: [CALayer] = []
     private var dims: [CAShapeLayer] = []
@@ -376,7 +441,7 @@ final class Toolbar: NSView {
 
         // second row: sizes | mosaic modes (mosaic tool only) | colors; laid out by layoutPalette()
         sizeSlider.onChange = { [weak self] in self?.slid() }
-        sizeSlider.toolTip = L.t("sizeTip")
+        sliderTips.append((sizeSlider, L.t("sizeTip")))
         sizeValue.font = .monospacedDigitSystemFont(ofSize: 11, weight: .medium)
         sizeValue.textColor = .secondaryLabelColor
         sizeValue.alignment = .left
@@ -413,7 +478,7 @@ final class Toolbar: NSView {
         mosaicSwatch.frame.size.width = Toolbar.swatchWidth
         mosaicSwatch.onClick = { [weak self] in self?.setMosaicSolid(false) }
         paletteRow.addSubview(mosaicSwatch)
-        opacitySlider.toolTip = L.t("opacityTip")
+        sliderTips.append((opacitySlider, L.t("opacityTip")))
         opacitySlider.onChange = { [weak self] in
             guard let self else { return }
             self.showOpacity(self.opacitySlider.value)
@@ -655,7 +720,7 @@ final class SizeSlider: NSView {
         onChange?()
     }
 
-    override func mouseDown(with e: NSEvent) { set(fromX: convert(e.locationInWindow, from: nil).x) }
+    override func mouseDown(with e: NSEvent) { enclosingToolbar?.tipPressed(); set(fromX: convert(e.locationInWindow, from: nil).x) }
     override func mouseDragged(with e: NSEvent) { set(fromX: convert(e.locationInWindow, from: nil).x) }
 }
 
@@ -725,6 +790,47 @@ final class OpacitySlider: NSView {
         onChange?()
     }
 
-    override func mouseDown(with e: NSEvent) { set(fromX: convert(e.locationInWindow, from: nil).x) }
+    override func mouseDown(with e: NSEvent) { enclosingToolbar?.tipPressed(); set(fromX: convert(e.locationInWindow, from: nil).x) }
     override func mouseDragged(with e: NSEvent) { set(fromX: convert(e.locationInWindow, from: nil).x) }
+}
+
+private extension NSView {
+    var enclosingToolbar: Toolbar? {
+        var v = superview
+        while let s = v { if let t = s as? Toolbar { return t }; v = s.superview }
+        return nil
+    }
+}
+
+/// A short label as the system's tooltips are, shown by the toolbar; clicks go through it.
+final class ToolTip: NSView {
+    private var text = NSAttributedString()
+    private static let font = NSFont.systemFont(ofSize: 11.5)
+
+    func show(_ s: String) {
+        text = NSAttributedString(string: s, attributes: [.font: Self.font, .foregroundColor: NSColor.labelColor])
+        let t = text.size()
+        setFrameSize(NSSize(width: ceil(t.width) + 16, height: ceil(t.height) + 8))
+        needsDisplay = true
+    }
+
+    init() {
+        super.init(frame: .zero)
+        isHidden = true
+        wantsLayer = true
+        layer?.shadowOpacity = 0.22; layer?.shadowRadius = 4; layer?.shadowOffset = CGSize(width: 0, height: -1)
+    }
+    required init?(coder: NSCoder) { fatalError() }
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let dark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let p = NSBezierPath(roundedRect: bounds.insetBy(dx: 0.5, dy: 0.5), xRadius: 6, yRadius: 6)
+        (dark ? NSColor(white: 0.2, alpha: 0.98) : NSColor(white: 0.98, alpha: 0.98)).setFill()
+        p.fill()
+        (dark ? NSColor.white.withAlphaComponent(0.16) : NSColor.black.withAlphaComponent(0.14)).setStroke()
+        p.lineWidth = 0.5
+        p.stroke()
+        text.draw(at: NSPoint(x: 8, y: (bounds.height - text.size().height) / 2))
+    }
 }
