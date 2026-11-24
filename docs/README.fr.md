@@ -84,7 +84,7 @@ En général, oui : sniplite est signé ad hoc, donc macOS voit chaque version c
 
 **Comment lire le texte d'une capture ?**
 
-Activez Text recognition dans Settings › General. Utilisez ensuite les boutons de texte de la barre d'outils, ⌘O, ou F4 / ⇧F4. Cela fonctionne avec Vision d'Apple sur ce Mac ; rien n'est envoyé.
+Activez Text recognition dans Settings › Capture. Utilisez ensuite les boutons de texte de la barre d'outils, ⌘O, ou F4 / ⇧F4. Cela fonctionne avec Vision d'Apple sur ce Mac ; rien n'est envoyé.
 
 **Combien de mémoire utilise-t-il ?**
 

@@ -84,7 +84,7 @@ F1–F12 단축키에는 손쉬운 사용 권한이 필요합니다(macOS 27에�
 
 **캡처의 글자는 어떻게 읽나요?**
 
-Settings › General에서 Text recognition을 켠 뒤, 도구 막대의 글자 버튼, ⌘O, 또는 F4 / ⇧F4를 쓰세요. Apple의 Vision으로 이 Mac에서 동작하며 아무것도 보내지 않습니다.
+Settings › Capture에서 Text recognition을 켠 뒤, 도구 막대의 글자 버튼, ⌘O, 또는 F4 / ⇧F4를 쓰세요. Apple의 Vision으로 이 Mac에서 동작하며 아무것도 보내지 않습니다.
 
 **메모리는 얼마나 쓰나요?**
 

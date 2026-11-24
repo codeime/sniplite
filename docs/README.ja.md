@@ -84,7 +84,7 @@ F1–F12 のショートカットにはアクセシビリティの許可が必�
 
 **キャプチャの文字を読み取るには？**
 
-Settings › General で Text recognition をオンにし、ツールバーの文字ボタン、⌘O、または F4 / ⇧F4 を使います。Apple の Vision でこの Mac 上で動き、何も送信しません。
+Settings › Capture で Text recognition をオンにし、ツールバーの文字ボタン、⌘O、または F4 / ⇧F4 を使います。Apple の Vision でこの Mac 上で動き、何も送信しません。
 
 **メモリはどれくらい使いますか？**
 

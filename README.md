@@ -84,7 +84,7 @@ Usually yes: sniplite is signed ad hoc, so macOS sees each version as a new app.
 
 **How do I read the text in a capture?**
 
-Turn on Text recognition in Settings › General. Then use the text buttons on the toolbar, ⌘O, or F4 / ⇧F4. It runs with Apple's Vision on this Mac; nothing is uploaded.
+Turn on Text recognition in Settings › Capture. Then use the text buttons on the toolbar, ⌘O, or F4 / ⇧F4. It runs with Apple's Vision on this Mac; nothing is uploaded.
 
 **How much memory does it use?**
 

@@ -126,7 +126,7 @@ Long screenshots and the command line of the Windows version; a selection across
 | `Permissions.swift` | the permissions page and the drag-to-authorize panel |
 | `Settings.swift` | settings and the shortcut recorder |
 | `Updater.swift` | checking GitHub for a new version and installing it |
-| `L10n.swift`, `Util.swift` | texts; clipboard, saving, notices, log |
+| `L10n.swift`, `Notice.swift`, `Util.swift` | texts; notices; clipboard, saving, log |
 
 ## Credits
 

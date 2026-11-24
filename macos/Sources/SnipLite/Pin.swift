@@ -112,7 +112,7 @@ final class PinWindow: NSPanel {
         setFrame(nf, display: true)
     }
 
-    func copyImage() { Clipboard.copy(image, size: baseSize); Toast.show(L.t("copied")) }
+    func copyImage() { Clipboard.copy(image, size: baseSize); Notice.copied(image) }
 
     /// Draws on the pin with the capture tools; ✓ puts the result back here.
     func edit() {
@@ -132,7 +132,7 @@ final class PinWindow: NSPanel {
         makeKeyAndOrderFront(nil)
     }
     func saveImage() { Saver.save(image, size: baseSize) }
-    func readText() { let f = frame; OCR.recognize(image) { OCRPanel.show($0, near: f) } }
+    func readText() { let f = frame; OCR.recognize(image, on: screen) { OCRPanel.show($0, near: f) } }
     @objc func toggleTop() { Prefs.shared.pinOnTop.toggle(); PinWindow.applyLevelToAll() }
 }
 

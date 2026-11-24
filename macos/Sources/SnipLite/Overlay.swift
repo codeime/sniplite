@@ -19,6 +19,7 @@ final class CaptureSession {
         }
         // without the permission ScreenCaptureKit would show the system's own dialog: show ours
         guard Permission.screenRecording.granted else { PermissionsWindow.show(); return }
+        Notice.hide()                                  // not in the picture
         let s = CaptureSession(mode: mode)
         current = s
         let t0 = CACurrentMediaTime()
@@ -69,6 +70,7 @@ final class CaptureSession {
         // sniplite's own menu, open when the shortcut was pressed: it is in the picture already;
         // closed, so the capture screen gets the mouse
         AppDelegate.closeMenu()
+        Notice.hide()                                  // one that came up meanwhile: they are above this
         for shot in shots {
             let w = OverlayWindow(shot: shot, session: self)
             windows.append(w)
@@ -922,7 +924,7 @@ final class OverlayView: NSView, NSTextViewDelegate {
             if let c = pixelColor(at: mouse) {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(c.hexString, forType: .string)
-                Toast.show(L.t("copied") + " " + c.hexString)
+                Notice.show(.color(c), L.t("colorCopied"), c.hexString, on: shot.screen)
             }
         default: break
         }
@@ -1367,7 +1369,7 @@ final class OverlayView: NSView, NSTextViewDelegate {
             guard phase == .edit, let img = render() else { return }
             let rect = globalSelection()
             let size = selection.size
-            let mode = session?.mode
+            let mode = session?.mode, screen = shot.screen
             session?.finish()
             // editing a pin: ✓ (or pin) puts the result back in it
             if case .editPin(let pin) = mode, c == .ok || c == .pin {
@@ -1375,16 +1377,15 @@ final class OverlayView: NSView, NSTextViewDelegate {
                 return
             }
             switch c {
-            case .ok: Clipboard.copy(img, size: size); Toast.show(L.t("copied"))
+            case .ok: Clipboard.copy(img, size: size); Notice.copied(img)
             case .save: Saver.save(img, size: size)
             case .pin: PinWindow.show(img, frame: rect)
-            case .ocr: OCR.recognize(img) { text in OCRPanel.show(text, near: rect) }
+            case .ocr: OCR.recognize(img, on: screen) { text in OCRPanel.show(text, near: rect) }
             case .ocrCopy:
-                OCR.recognize(img) { text in
-                    if text.plain.isEmpty { Toast.show(L.t("noText")); return }
+                OCR.recognize(img, on: screen) { text in
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(text.plain, forType: .string)
-                    Toast.show(L.t("textCopied"))
+                    Notice.copied(text: text.plain, title: L.t("textCopied"), on: screen)
                 }
             default: break
             }

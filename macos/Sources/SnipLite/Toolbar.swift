@@ -33,36 +33,43 @@ final class ToolButton: NSView {
 
     /// SF Symbols at one point size differ in how big they look (a wide rectangle, a small "A",
     /// a full circle). Each gets the point size that makes its drawn part about as big as the
-    /// others' (the square root of its area near 15.5 pt), kept within 13-17 pt so the line
-    /// weights stay alike.
+    /// others' (the square root of its area near 15.5 pt), no taller than about 16 pt; kept within
+    /// 14.5-15.5 pt, as a symbol's lines grow with its size and theirs should look alike.
     static func pointSize(for name: String) -> CGFloat {
         if let p = pointSizes[name] { return p }
         var p: CGFloat = 15
         if let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
             .withSymbolConfiguration(.init(pointSize: 15, weight: .regular)),
-           let ink = inkSize(img), ink.width > 0, ink.height > 0 {
-            p = min(17, max(13, 15 * 15.5 / sqrt(ink.width * ink.height)))
+           let ink = inkRect(img), ink.width > 0, ink.height > 0 {
+            p = min(15.5, max(14.5, min(15 * 15.5 / sqrt(ink.width * ink.height), 15 * 16 / ink.height)))
+            if name == "xmark" { p = 14.5 }                    // its lines are the thickest
         }
         pointSizes[name] = p
         return p
     }
     private static var pointSizes: [String: CGFloat] = [:]
 
-    /// The size of the drawn (non-transparent) part of an image, in points.
-    private static func inkSize(_ img: NSImage) -> CGSize? {
-        let k: CGFloat = 4
-        let w = Int(img.size.width * k), h = Int(img.size.height * k)
-        guard w > 0, h > 0, let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w,
-                                                 space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.alphaOnly.rawValue),
-              let cg = img.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
-        ctx.draw(cg, in: CGRect(x: 0, y: 0, width: w, height: h))
+    /// The drawn (non-transparent) part of an image, in its own points (y up).
+    private static func inkRect(_ img: NSImage) -> CGRect? {
+        let k: CGFloat = 8
+        let w = Int(ceil(img.size.width * k)), h = Int(ceil(img.size.height * k))
+        guard w > 0, h > 0, let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4,
+                                                 space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        ctx.scaleBy(x: k, y: k)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: ctx, flipped: false)
+        img.draw(in: NSRect(origin: .zero, size: img.size))
+        NSGraphicsContext.restoreGraphicsState()
         guard let data = ctx.data?.assumingMemoryBound(to: UInt8.self) else { return nil }
         var minX = w, minY = h, maxX = -1, maxY = -1
-        for y in 0..<h { for x in 0..<w where data[y * w + x] > 64 {
+        for y in 0..<h { for x in 0..<w where data[(y * w + x) * 4 + 3] > 64 {
             minX = min(minX, x); maxX = max(maxX, x); minY = min(minY, y); maxY = max(maxY, y)
         } }
         guard maxX >= minX, maxY >= minY else { return nil }
-        return CGSize(width: CGFloat(maxX - minX + 1) / k, height: CGFloat(maxY - minY + 1) / k)
+        // the rows run from the top
+        return CGRect(x: CGFloat(minX) / k, y: CGFloat(h - 1 - maxY) / k,
+                      width: CGFloat(maxX - minX + 1) / k, height: CGFloat(maxY - minY + 1) / k)
     }
     static let mosaicIcon: NSImage = {
         let img = NSImage(size: NSSize(width: 18, height: 17), flipped: false) { _ in
@@ -100,6 +107,17 @@ final class ToolButton: NSView {
         return NSImage(systemSymbolName: name, accessibilityDescription: toolTip)?.withSymbolConfiguration(cfg)
     }()
 
+    /// The middle of what is drawn of the image. Symbols sit off the middle of their own frames (an
+    /// arrow below its box, a tilted pin), by up to 1.6 pt: they are lined up by this instead.
+    private lazy var inkMiddle: CGPoint? = {
+        guard case .symbol(let name) = look, let img = image else { return nil }
+        if let p = ToolButton.inkMiddles[name] { return p }
+        let p = ToolButton.inkRect(img).map { CGPoint(x: $0.midX, y: $0.midY) } ?? CGPoint(x: img.size.width / 2, y: img.size.height / 2)
+        ToolButton.inkMiddles[name] = p
+        return p
+    }()
+    private static var inkMiddles: [String: CGPoint] = [:]
+
     init(_ look: Look, tip: String?, size: CGFloat = 32) {
         self.look = look
         super.init(frame: NSRect(x: 0, y: 0, width: size, height: size))
@@ -134,8 +152,11 @@ final class ToolButton: NSView {
             }
             // drawn at their own size: SF Symbols of one size and weight are balanced already, and
             // scaling one would thin its lines
-            let s = img.size
-            tinted.draw(in: NSRect(x: bounds.midX - s.width / 2, y: bounds.midY - s.height / 2, width: s.width, height: s.height))
+            let s = img.size, m = inkMiddle ?? CGPoint(x: s.width / 2, y: s.height / 2)
+            // on whole device pixels: between two, the lines blur (most on a 1x display)
+            let k = max(1, abs(NSGraphicsContext.current?.cgContext.userSpaceToDeviceSpaceTransform.a ?? 2))
+            func snap(_ v: CGFloat) -> CGFloat { (v * k).rounded() / k }
+            tinted.draw(in: NSRect(x: snap(bounds.midX - m.x), y: snap(bounds.midY - m.y), width: s.width, height: s.height))
         case .color(let c):
             let side = min(r.width, r.height) - 8          // square, whatever the button's width
             let d = NSRect(x: bounds.midX - side / 2, y: bounds.midY - side / 2, width: side, height: side)
@@ -334,7 +355,7 @@ final class Toolbar: NSView {
             (.undo, "arrow.uturn.backward", L.t("undo")), (.redo, "arrow.uturn.forward", L.t("redo")),
         ]
         let cmds2: [(Command, String, String)] = [
-            (.ocr, "text.viewfinder", L.t("ocr")), (.ocrCopy, "doc.on.clipboard", L.t("ocrCopy")),
+            (.ocr, "text.viewfinder", L.t("ocr")), (.ocrCopy, "list.clipboard", L.t("ocrCopy")),
         ]
         let cmds3: [(Command, String, String)] = [
             (.pin, "pin", L.t("pin")), (.save, "square.and.arrow.down", L.t("save")),
@@ -408,12 +429,7 @@ final class Toolbar: NSView {
         layoutPalette()
         setFrameSize(NSSize(width: mainRow.frame.width, height: mainRow.frame.height))
         setWidth(Prefs.shared.width(for: .rect))
-        // light, dark, or as macOS is (Settings)
-        switch Prefs.shared.toolbarTheme {
-        case "light": appearance = NSAppearance(named: .aqua)
-        case "dark": appearance = NSAppearance(named: .darkAqua)
-        default: break
-        }
+        // light or dark as the rest of sniplite (Prefs.theme)
         applyAppearance()
     }
 

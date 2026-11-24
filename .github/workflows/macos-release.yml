@@ -18,7 +18,7 @@ permissions:
 jobs:
   release:
     if: github.event_name == 'push'
-    runs-on: macos-15
+    runs-on: macos-26        # its SDK gives the app the current look (with an older one, macOS keeps the old look)
     steps:
       - uses: actions/checkout@v4
 

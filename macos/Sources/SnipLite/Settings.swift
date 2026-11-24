@@ -78,10 +78,19 @@ final class Prefs {
     /// `defaults write io.github.codeime.sniplite captureCaptureScreen -bool true`. Then the capture
     /// shortcut, pressed while the capture screen is open, saves the screen as it looks.
     var captureCaptureScreen: Bool { d.bool(forKey: "captureCaptureScreen") }
-    /// The capture toolbar: "system" (follows macOS), "light" or "dark".
-    var toolbarTheme: String {
+    /// How sniplite looks, all of it: "system" (follows macOS), "light" or "dark". (Until 1.0.8 it
+    /// was the capture toolbar's alone; kept under that name, so the choice made then stays.)
+    var theme: String {
         get { d.string(forKey: "toolbarTheme") ?? "system" }
-        set { d.set(newValue, forKey: "toolbarTheme") }
+        set { d.set(newValue, forKey: "toolbarTheme"); applyTheme() }
+    }
+    /// Every window, panel and menu of sniplite inherits it, at once.
+    func applyTheme() {
+        switch theme {
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+        default: NSApp.appearance = nil
+        }
     }
 
     /// Each tool has its own size, remembered between captures; one does not change another.
@@ -212,7 +221,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     static var shared: SettingsWindow?
 
     /// `tab`: the page to open on.
-    static let updatesTab = 4, aboutTab = 5
+    static let captureTab = 2, updatesTab = 4, aboutTab = 5
     static func show(tab: Int? = nil) {
         if shared == nil { shared = SettingsWindow() }
         if let tab { shared?.tabsController?.selectedTabViewItemIndex = tab }
@@ -361,7 +370,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     private var keyRows: [HotAction: NSStackView] = [:]
     private var keyLinks: [HotAction: LinkButton] = [:]
     private weak var tabsController: NSTabViewController?
-    private var folderRow, noticeRow, placeRow: NSView?
+    private var folderRow, noticeRow: NSView?
     private let keyNote = NSTextField(wrappingLabelWithString: "")
     private let generalNote = NSTextField(wrappingLabelWithString: "")
     private var permRights: [Permission: NSStackView] = [:]
@@ -372,7 +381,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         let keyIcons: [HotAction: (String, NSColor)] = [
             .capture: ("viewfinder", .systemBlue), .quickCapture: ("camera.fill", .systemIndigo),
             .pinClipboard: ("pin.fill", .systemOrange), .togglePins: ("eye.slash.fill", .systemTeal),
-            .ocr: ("text.viewfinder", .systemGreen), .ocrCopy: ("doc.on.doc.fill", .systemMint)]
+            .ocr: ("text.viewfinder", .systemGreen), .ocrCopy: ("list.clipboard.fill", .systemMint)]
         var rows: [NSView] = []
         for a in HotAction.allCases {
             let f = HotKeyField(Prefs.shared.hotkey(a))
@@ -385,8 +394,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
             keyRows[a] = r
             // a shortcut whose feature is off says so, with the way to its switch
             if a == .quickCapture || a == .ocr || a == .ocrCopy, let text = r.arrangedSubviews.dropFirst().first as? NSStackView {
-                let page = a == .quickCapture ? 2 : 1
-                let link = LinkButton(L.t("offState"), L.t("goTurnOn")) { [weak self] in self?.tabsController?.selectedTabViewItemIndex = page }
+                let link = LinkButton(L.t("offState"), L.t("goTurnOn")) { [weak self] in self?.tabsController?.selectedTabViewItemIndex = Self.captureTab }
                 text.addArrangedSubview(link)
                 keyLinks[a] = link
             }
@@ -402,16 +410,17 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
         // general
         let general = stack([
-            section(L.t("secCapture"), [
-                row(("text.viewfinder", .systemGreen), L.t("ocrTitle2"), L.t("ocrDetail"), toggle(Prefs.shared.ocrEnabled, #selector(toggleOCR(_:)))),
-                row(("circle.lefthalf.filled", .systemGray), L.t("toolbarTheme"), nil,
-                    popup([("system", L.t("themeSystem")), ("light", L.t("themeLight")), ("dark", L.t("themeDark"))],
-                          Prefs.shared.toolbarTheme, #selector(pickTheme(_:)))),
-            ]),
-            section(L.t("secPins"), [
-                row(("pin.fill", .systemOrange), L.t("pinTop"), nil, toggle(Prefs.shared.pinOnTop, #selector(togglePinTop(_:)))),
+            section(L.t("secNotice"), [
+                // one place for every notice: quick capture, copying, text recognition
+                row(("macwindow", .systemRed), L.t("noticePosition"), L.t("noticePositionDetail"),
+                    popup([("topRight", L.t("posTopRight")), ("bottomRight", L.t("posBottomRight")),
+                           ("topCenter", L.t("posTopCenter")), ("center", L.t("posCenter"))],
+                          Prefs.shared.noticePosition, #selector(pickNoticePlace(_:)))),
             ]),
             section(L.t("secApp"), [
+                row(("circle.lefthalf.filled", .systemGray), L.t("theme"), nil,
+                    popup([("system", L.t("themeSystem")), ("light", L.t("themeLight")), ("dark", L.t("themeDark"))],
+                          Prefs.shared.theme, #selector(pickTheme(_:)))),
                 row(("power", .systemPink), L.t("launchAtLogin"), nil, toggle(SMAppService.mainApp.status == .enabled, #selector(toggleLogin(_:)))),
                 row(("globe", .systemBlue), L.t("language"), nil,
                     popup([(L.Lang.system.rawValue, L.t("langSystem")), (L.Lang.en.rawValue, "English"),
@@ -422,7 +431,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
         generalNote.superview?.isHidden = generalNote.stringValue.isEmpty
 
-        // quick capture
+        // capture: capturing, quick capture, pins
         folderButton.controlSize = .small
         folderButton.bezelStyle = .push
         folderButton.target = self
@@ -433,18 +442,20 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         let fr = row(("folder.fill", .systemCyan), L.t("quickFolder"), nil, folderButton)
         let nr = row(("bell.badge.fill", .systemRed), L.t("quickNotice"), L.t("quickNoticeDetail"),
                      toggle(Prefs.shared.quickNotice, #selector(toggleQuickNotice(_:))))
-        let pr = row(("macwindow", .systemGray), L.t("noticePosition"), nil,
-                     popup([("topRight", L.t("posTopRight")), ("bottomRight", L.t("posBottomRight")),
-                            ("topCenter", L.t("posTopCenter")), ("center", L.t("posCenter"))],
-                           Prefs.shared.noticePosition, #selector(pickNoticePlace(_:))))
-        (folderRow, noticeRow, placeRow) = (fr, nr, pr)
-        let quick = stack([
+        (folderRow, noticeRow) = (fr, nr)
+        let capture = stack([
             section(nil, [
+                row(("text.viewfinder", .systemGreen), L.t("ocrTitle2"), L.t("ocrDetail"), toggle(Prefs.shared.ocrEnabled, #selector(toggleOCR(_:)))),
+            ]),
+            section(L.t("quickTab"), [
                 row(("camera.fill", .systemIndigo), L.t("quickEnable"), L.t("quickFolderDetail"),
                     toggle(Prefs.shared.quickEnabled, #selector(toggleQuick(_:)))),
                 fr,
+                nr,
             ]),
-            section(L.t("secNotice"), [nr, pr]),
+            section(L.t("secPins"), [
+                row(("pin.fill", .systemOrange), L.t("pinTop"), nil, toggle(Prefs.shared.pinOnTop, #selector(togglePinTop(_:)))),
+            ]),
         ])
 
         // permissions: each one, its state, and the way to allow it
@@ -465,7 +476,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
         let pageList: [(String, String, NSView)] = [("keyboard", L.t("hotkeys"), shortcuts),
                                                   ("gearshape", L.t("general"), general),
-                                                  ("camera.viewfinder", L.t("quickTab"), quick),
+                                                  ("camera.viewfinder", L.t("secCapture"), capture),
                                                   ("lock.shield", L.t("permissions"), perms),
                                                   ("arrow.down.circle", L.t("secUpdate"), updatesView),
                                                   ("info.circle", L.t("aboutTab"), about)]
@@ -696,7 +707,6 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         refit()
         setActive(folderRow, q)
         setActive(noticeRow, q)
-        setActive(placeRow, q && Prefs.shared.quickNotice)
     }
 
     private func refreshPermissions() {
@@ -784,11 +794,11 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
     @objc private func pickNoticePlace(_ p: NSPopUpButton) {
         Prefs.shared.noticePosition = p.selectedItem?.representedObject as? String ?? "topRight"
+        Notice.show(.symbol("checkmark.circle.fill", .systemGreen), L.t("noticePosition"), p.titleOfSelectedItem, on: window?.screen)   // there it is
     }
 
-
     @objc private func pickTheme(_ p: NSPopUpButton) {
-        Prefs.shared.toolbarTheme = p.selectedItem?.representedObject as? String ?? "system"
+        Prefs.shared.theme = p.selectedItem?.representedObject as? String ?? "system"
     }
 
     func windowDidBecomeKey(_ notification: Notification) { refreshPermissions() }

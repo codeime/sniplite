@@ -84,7 +84,7 @@ Meist ja: sniplite ist ad hoc signiert, daher sieht macOS jede Version als neue 
 
 **Wie lese ich den Text einer Aufnahme?**
 
-Schalten Sie Text recognition unter Settings › General ein. Nutzen Sie dann die Textknöpfe der Werkzeugleiste, ⌘O oder F4 / ⇧F4. Das läuft mit Apples Vision auf diesem Mac; nichts wird hochgeladen.
+Schalten Sie Text recognition unter Settings › Capture ein. Nutzen Sie dann die Textknöpfe der Werkzeugleiste, ⌘O oder F4 / ⇧F4. Das läuft mit Apples Vision auf diesem Mac; nichts wird hochgeladen.
 
 **Wie viel Speicher braucht es?**
 

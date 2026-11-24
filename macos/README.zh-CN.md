@@ -126,7 +126,7 @@ Windows 版的长截图和命令行；跨显示器选区（目前每块屏幕单
 | `Permissions.swift` | 权限页和拖拽授权面板 |
 | `Settings.swift` | 设置和快捷键录制 |
 | `Updater.swift` | 在 GitHub 上检查新版本并安装 |
-| `L10n.swift`、`Util.swift` | 文案；剪贴板、保存、提示、日志 |
+| `L10n.swift`、`Notice.swift`、`Util.swift` | 文案；提示；剪贴板、保存、日志 |
 
 ## 致谢
 

@@ -26,11 +26,19 @@ enum OCR {
     private static func request() -> VNRecognizeTextRequest {
         let req = VNRecognizeTextRequest()
         req.recognitionLevel = .accurate
+        // Revision 2 reads Chinese and English as revision 3 does, but is ready in about 2 s the first
+        // time; revision 3 has the Neural Engine compile a model first, about 30 s, on the CPU too
+        // (macOS 27). Where revision 2 lacks a language (Japanese, Korean), the newest one.
+        let newest = req.revision
+        if VNRecognizeTextRequest.supportedRevisions.contains(VNRecognizeTextRequestRevision2) {
+            req.revision = VNRecognizeTextRequestRevision2
+            let known = Set((try? req.supportedRecognitionLanguages()) ?? [])
+            if !languages.allSatisfy(known.contains) { req.revision = newest }
+        }
         req.usesLanguageCorrection = true
         req.automaticallyDetectsLanguage = false
         req.recognitionLanguages = languages
-        // the CPU: the Neural Engine first compiles the model, which takes 30-60 s after every
-        // install or update; on the CPU a recognition starts at once and takes well under a second
+        // the CPU: nothing to prepare for another processor
         if ProcessInfo.processInfo.environment["SNIPLITE_OCR_ANE"] == nil,
            let cpu = MLComputeDevice.allComputeDevices.first(where: { if case .cpu = $0 { return true }; return false }) {
             for stage in [VNComputeStage.main, .postProcessing] { req.setComputeDevice(cpu, for: stage) }
@@ -38,16 +46,19 @@ enum OCR {
         return req
     }
 
-    /// Runs in the helper process (`sniplite --ocr-helper <png>`): prints one line per piece of
+    /// Runs in the helper process (`sniplite --ocr-helper <image>`): prints one line per piece of
     /// text, "x y w h<TAB>text" in pixels from the top left, then exits.
     static func helperMain(_ path: String) -> Int32 {
         guard let src = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil),
               let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return 1 }
         let req = request()
-        try? VNImageRequestHandler(cgImage: img, options: [:]).perform([req])
+        do { try VNImageRequestHandler(cgImage: img, options: [:]).perform([req]) } catch { return 2 }
         var out = ""
         for o in req.results ?? [] {
-            guard let s = o.topCandidates(1).first?.string else { continue }
+            guard let best = o.topCandidates(1).first else { continue }
+            let s = best.string
+            // a character or two, at the lowest confidence there is (0.3): an icon taken for text
+            if best.confidence < 0.31, s.count <= 2 { continue }
             let b = o.boundingBox  // normalized, bottom-left origin
             let w = CGFloat(img.width), h = CGFloat(img.height)
             let line = s.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\t", with: " ")
@@ -59,42 +70,54 @@ enum OCR {
 
     /// Recognizes in a child process: Vision keeps its models (over 100 MB) for the life of the
     /// process that used them, so they go away with the helper instead of staying in sniplite.
-    static func recognize(_ img: CGImage, done: @escaping (OCRText) -> Void) {
-        Toast.show(L.t("reading"))
+    /// A notice says it is reading, until done; no text, or a failure, is said here too, and
+    /// `done` (on the main thread) is only called with text.
+    static func recognize(_ img: CGImage, on screen: NSScreen?, done: @escaping (OCRText) -> Void) {
+        let notice = Notice.busy(L.t("reading"), slow: L.t("readingSlow"), on: screen)
         DispatchQueue.global(qos: .userInteractive).async {
             let t = Date()
-            var items: [(CGRect, String)] = []
-            let url = FileManager.default.temporaryDirectory.appendingPathComponent("sniplite-ocr-\(UUID().uuidString).png")
-            defer { try? FileManager.default.removeItem(at: url) }
-            if let png = NSBitmapImageRep(cgImage: img).representation(using: .png, properties: [:]),
-               (try? png.write(to: url)) != nil, let exe = Bundle.main.executablePath {
-                let p = Process()
-                p.executableURL = URL(fileURLWithPath: exe)
-                p.arguments = ["--ocr-helper", url.path]
-                let pipe = Pipe()
-                p.standardOutput = pipe
-                p.standardError = FileHandle.nullDevice
-                if (try? p.run()) != nil {
-                    // a helper that hangs is stopped after 60 s (the recognition then finds nothing);
-                    // the first use after macOS starts can take half a minute while Vision loads
-                    let watchdog = DispatchWorkItem { if p.isRunning { p.terminate() } }
-                    DispatchQueue.global().asyncAfter(deadline: .now() + 60, execute: watchdog)
-                    let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                    p.waitUntilExit()
-                    watchdog.cancel()
-                    for line in (String(data: data, encoding: .utf8) ?? "").split(separator: "\n") {
-                        let parts = line.split(separator: "\t", maxSplits: 1)
-                        guard parts.count == 2 else { continue }
-                        let n = parts[0].split(separator: " ").compactMap { Double($0) }
-                        guard n.count == 4 else { continue }
-                        items.append((CGRect(x: n[0], y: n[1], width: n[2], height: n[3]), String(parts[1])))
-                    }
-                }
+            let items = runHelper(img)
+            let text = items.map(layout)
+            Log.write(String(format: "OCR %.2fs%@", Date().timeIntervalSince(t), items == nil ? " failed" : ""))
+            DispatchQueue.main.async {
+                guard let text else { Notice.show(.symbol("exclamationmark.triangle.fill", .systemOrange), L.t("ocrFailed"), on: screen); return }
+                guard !text.plain.isEmpty else { Notice.show(.symbol("text.magnifyingglass", .secondaryLabelColor), L.t("noText"), on: screen); return }
+                Notice.done(notice)
+                done(text)
             }
-            let text = layout(items)
-            Log.write(String(format: "OCR %.2fs", Date().timeIntervalSince(t)))
-            DispatchQueue.main.async { Toast.hide(); done(text) }
         }
+    }
+
+    /// The pieces of text the helper found (pixels from the top left), or nil if it failed.
+    private static func runHelper(_ img: CGImage) -> [(CGRect, String)]? {
+        // uncompressed: a whole screen as PNG takes 150 ms to write and read, as TIFF 15
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("sniplite-ocr-\(UUID().uuidString).tiff")
+        defer { try? FileManager.default.removeItem(at: url) }
+        guard let data = NSBitmapImageRep(cgImage: img).representation(using: .tiff, properties: [.compressionMethod: NSBitmapImageRep.TIFFCompression.none.rawValue]),
+              (try? data.write(to: url)) != nil, let exe = Bundle.main.executablePath else { return nil }
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: exe)
+        p.arguments = ["--ocr-helper", url.path]
+        let pipe = Pipe()
+        p.standardOutput = pipe
+        p.standardError = FileHandle.nullDevice
+        guard (try? p.run()) != nil else { return nil }
+        // a helper that hangs is stopped after 60 s
+        let watchdog = DispatchWorkItem { if p.isRunning { p.terminate() } }
+        DispatchQueue.global().asyncAfter(deadline: .now() + 60, execute: watchdog)
+        let out = pipe.fileHandleForReading.readDataToEndOfFile()
+        p.waitUntilExit()
+        watchdog.cancel()
+        guard p.terminationReason == .exit, p.terminationStatus == 0 else { return nil }
+        var items: [(CGRect, String)] = []
+        for line in (String(data: out, encoding: .utf8) ?? "").split(separator: "\n") {
+            let parts = line.split(separator: "\t", maxSplits: 1)
+            guard parts.count == 2 else { continue }
+            let n = parts[0].split(separator: " ").compactMap { Double($0) }
+            guard n.count == 4 else { continue }
+            items.append((CGRect(x: n[0], y: n[1], width: n[2], height: n[3]), String(parts[1])))
+        }
+        return items
     }
 
     /// Puts the pieces into lines (by vertical overlap) and columns (by wide gaps).
@@ -149,7 +172,6 @@ final class OCRPanel: NSPanel {
     private let result: OCRText
 
     static func show(_ t: OCRText, near r: CGRect) {
-        if t.plain.isEmpty { Toast.show(L.t("noText")); return }
         let p = OCRPanel(t, near: r)
         open.append(p)
         NSApp.activate(ignoringOtherApps: true)
@@ -231,14 +253,14 @@ final class OCRPanel: NSPanel {
             ? (textView.string as NSString).substring(with: textView.selectedRange()) : textView.string
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(s, forType: .string)
-        Toast.show(L.t("copied"))
+        Notice.copied(text: s, title: L.t("textCopied"), on: screen)
     }
 
     @objc private func copyMarkdown() {
         guard let md = result.markdown else { return }
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(md, forType: .string)
-        Toast.show(L.t("copied"))
+        Notice.copied(text: md, title: L.t("textCopied"), on: screen)
     }
 
     override func cancelOperation(_ sender: Any?) { close() }

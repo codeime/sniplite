@@ -38,50 +38,6 @@ enum Saver {
     }
 }
 
-/// A short message at the bottom of the screen under the mouse.
-enum Toast {
-    private static var panel: NSPanel?
-    private static var work: DispatchWorkItem?
-
-    static func hide() {
-        work?.cancel()
-        panel?.orderOut(nil)
-    }
-
-    static func show(_ s: String) {
-        work?.cancel()
-        panel?.orderOut(nil)
-        let label = NSTextField(labelWithString: s)
-        label.font = .systemFont(ofSize: 13, weight: .medium)
-        label.textColor = .white
-        label.sizeToFit()
-        let size = NSSize(width: label.frame.width + 32, height: 34)
-        let m = NSEvent.mouseLocation
-        let scr = (NSScreen.screens.first { NSMouseInRect(m, $0.frame, false) } ?? NSScreen.main)?.visibleFrame ?? .zero
-        let p = NSPanel(contentRect: NSRect(x: scr.midX - size.width / 2, y: scr.minY + 80, width: size.width, height: size.height),
-                        styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
-        p.level = .statusBar
-        p.isOpaque = false
-        p.backgroundColor = .clear
-        p.ignoresMouseEvents = true
-        p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        let v = NSView(frame: NSRect(origin: .zero, size: size))
-        v.wantsLayer = true
-        v.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.78).cgColor
-        v.layer?.cornerRadius = 10
-        label.frame.origin = NSPoint(x: 16, y: (size.height - label.frame.height) / 2)
-        v.addSubview(label)
-        p.contentView = v
-        p.orderFrontRegardless()
-        panel = p
-        let w = DispatchWorkItem {
-            NSAnimationContext.runAnimationGroup({ $0.duration = 0.25; p.animator().alphaValue = 0 }) { p.orderOut(nil) }
-        }
-        work = w
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2, execute: w)
-    }
-}
-
 enum TextInput {
     /// Plain typing: no completion, spelling, substitutions, predictions or Writing Tools,
     /// so the system's AutoFill / text services have nothing to attach to.

@@ -5,6 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationDidFinishLaunching(_ n: Notification) {
         AppDelegate.moveFromOldID()
+        Prefs.shared.applyTheme()
         status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let b = status.button {
             b.image = MenuBarIcon.image()
