@@ -98,6 +98,8 @@ final class ToolButton: NSView {
     var selected = false { didSet { needsDisplay = true } }
     var enabled = true { didSet { needsDisplay = true } }
     var onClick: (() -> Void)?
+    /// Only a picture of itself (the preview in Settings): nothing under the mouse.
+    var inert = false
     private var hover = false { didSet { needsDisplay = true } }
     private lazy var image: NSImage? = {
         guard case .symbol(let name) = look else { return nil }
@@ -130,7 +132,7 @@ final class ToolButton: NSView {
     }
     required init?(coder: NSCoder) { fatalError() }
 
-    override func mouseEntered(with event: NSEvent) { hover = true }
+    override func mouseEntered(with event: NSEvent) { hover = !inert }
     override func mouseExited(with event: NSEvent) { hover = false }
     override func mouseDown(with event: NSEvent) { enclosingToolbar?.tipPressed() }
     override func mouseUp(with event: NSEvent) {
@@ -250,6 +252,11 @@ final class Toolbar: NSView {
         applyAppearance()
     }
 
+    /// The tint over the glass, as dense as Settings says (Prefs.toolbarGlass).
+    static func tint(dark: Bool) -> CGColor {
+        NSColor(white: dark ? 0.1 : 1, alpha: 1 - Prefs.shared.toolbarGlass).cgColor
+    }
+
     private func applyAppearance() {
         let dark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         for r in rows {
@@ -259,7 +266,7 @@ final class Toolbar: NSView {
             r.layer?.borderColor = (dark ? NSColor.white.withAlphaComponent(0.14) : NSColor.black.withAlphaComponent(0.12)).cgColor
         }
         // over the glass: the screen shows through, softly, the buttons stay clear
-        for t in tints { t.backgroundColor = (dark ? NSColor(white: 0.1, alpha: 0.45) : NSColor(white: 1, alpha: 0.45)).cgColor }
+        for t in tints { t.backgroundColor = Self.tint(dark: dark) }
         for v in seps { v.layer?.backgroundColor = (dark ? NSColor.white : NSColor.black).withAlphaComponent(0.16).cgColor }
         for v in rows { v.subviews.forEach { $0.needsDisplay = true } }
     }
@@ -443,7 +450,7 @@ final class Toolbar: NSView {
         sizeSlider.onChange = { [weak self] in self?.slid() }
         sliderTips.append((sizeSlider, L.t("sizeTip")))
         sizeValue.font = .monospacedDigitSystemFont(ofSize: 11, weight: .medium)
-        sizeValue.textColor = .secondaryLabelColor
+        sizeValue.textColor = .labelColor                  // readable over the glass too
         sizeValue.alignment = .left
         sizeValue.frame = NSRect(x: 0, y: 0, width: 38, height: 16)
         paletteRow.addSubview(sizeSlider)
@@ -485,7 +492,7 @@ final class Toolbar: NSView {
             self.onOpacity?(self.opacitySlider.value)
         }
         opacityValue.font = .monospacedDigitSystemFont(ofSize: 11, weight: .medium)
-        opacityValue.textColor = .secondaryLabelColor
+        opacityValue.textColor = .labelColor                  // readable over the glass too
         opacityValue.frame = NSRect(x: 0, y: 0, width: 36, height: 16)
         paletteRow.addSubview(opacitySlider)
         paletteRow.addSubview(opacityValue)

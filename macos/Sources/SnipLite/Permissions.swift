@@ -255,7 +255,7 @@ final class PermissionsWindow: NSWindowController, NSWindowDelegate {
         icon.heightAnchor.constraint(equalToConstant: 72).isActive = true
         let title = NSTextField(labelWithString: L.t("permTitle2"))
         title.font = .systemFont(ofSize: 22, weight: .bold)
-        let sub = NSTextField(wrappingLabelWithString: L.t("permSubtitle"))
+        let sub = NSTextField(wrappingLabelWithString: (Prefs.shared.hotkey(.capture).map { String(format: L.t("permSubtitle"), $0.display) } ?? L.t("permSubtitle0")))
         sub.font = .systemFont(ofSize: 13)
         sub.textColor = .secondaryLabelColor
         sub.alignment = .center

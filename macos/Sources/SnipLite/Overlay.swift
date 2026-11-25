@@ -1202,11 +1202,12 @@ final class OverlayView: NSView, NSTextViewDelegate {
     }
 
     /// The capture, blurred, for the toolbar's frosted glass: made small first (a quarter of each
-    /// side), which makes it quick, and a little more colorful, as the system's glass is.
-    private static func frosted(_ img: CGImage) -> CGImage? {
+    /// side), which makes it quick. Blurred enough that an icon under it (the Dock's) is a soft
+    /// shade, not a blob.
+    static func frosted(_ img: CGImage) -> CGImage? {
         let small = CIImage(cgImage: img).transformed(by: CGAffineTransform(scaleX: 0.25, y: 0.25))
-        let soft = small.clampedToExtent().applyingGaussianBlur(sigma: 3)
-            .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: 1.5])
+        let soft = small.clampedToExtent().applyingGaussianBlur(sigma: 8)
+            .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: 1.15])
             .cropped(to: small.extent)
         return CIContext(options: [.cacheIntermediates: false]).createCGImage(soft, from: small.extent)
     }

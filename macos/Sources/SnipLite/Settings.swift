@@ -78,6 +78,21 @@ final class Prefs {
     /// `defaults write io.github.codeime.sniplite captureCaptureScreen -bool true`. Then the capture
     /// shortcut, pressed while the capture screen is open, saves the screen as it looks.
     var captureCaptureScreen: Bool { d.bool(forKey: "captureCaptureScreen") }
+    /// How much of the screen shows through the capture toolbar: 0 (solid) to 0.35. Beyond that
+    /// its icons are hard to see over a colorful screen (under 4.5:1 at worst). Solid where macOS
+    /// is told to reduce transparency.
+    static let glassRange: ClosedRange<Double> = 0...0.35
+    static var reduceTransparency: () -> Bool = { NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency }
+    var toolbarGlass: Double {
+        get {
+            Self.reduceTransparency() ? 0 : storedGlass
+        }
+        set { d.set(min(max(newValue, Self.glassRange.lowerBound), Self.glassRange.upperBound), forKey: "toolbarGlass") }
+    }
+    /// As chosen, whatever macOS says.
+    var storedGlass: Double {
+        min(max(d.object(forKey: "toolbarGlass") as? Double ?? 0.2, Self.glassRange.lowerBound), Self.glassRange.upperBound)
+    }
     /// How sniplite looks, all of it: "system" (follows macOS), "light" or "dark". (Until 1.0.8 it
     /// was the capture toolbar's alone; kept under that name, so the choice made then stays.)
     var theme: String {
@@ -371,6 +386,23 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     private var keyLinks: [HotAction: LinkButton] = [:]
     private weak var tabsController: NSTabViewController?
     private var folderRow, noticeRow: NSView?
+    private var ocrRow, quickRow: NSStackView?
+
+    /// What the shortcuts are now (they can be changed, or cleared).
+    private static func keyed(_ key: String, _ actions: [HotAction]) -> String {
+        let keys = actions.compactMap { Prefs.shared.hotkey($0)?.display }.joined(separator: " / ")
+        return keys.isEmpty ? L.t(key + "0") : String(format: L.t(key), keys)
+    }
+    private static var ocrDetail: String { keyed("ocrDetail", [.ocr, .ocrCopy]) }
+    private static var quickDetail: String { keyed("quickDetail", [.quickCapture]) }
+
+    /// A shortcut was changed on this page's neighbor: the texts that name it follow.
+    private func showKeys() {
+        for (r, s) in [(ocrRow, Self.ocrDetail), (quickRow, Self.quickDetail)] {
+            let text = r?.arrangedSubviews.compactMap { $0 as? NSStackView }.first
+            (text?.arrangedSubviews.last as? NSTextField)?.stringValue = s
+        }
+    }
     private let keyNote = NSTextField(wrappingLabelWithString: "")
     private let generalNote = NSTextField(wrappingLabelWithString: "")
     private var permRights: [Permission: NSStackView] = [:]
@@ -387,6 +419,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
             let f = HotKeyField(Prefs.shared.hotkey(a))
             f.onChange = { [weak self] k in
                 Prefs.shared.setHotkey(a, k)
+                self?.showKeys()
                 let failed = HotKeyCenter.shared.registerAll()
                 self?.say(failed.contains(a) ? L.t("hkConflict") : L.t("hkFoot"), in: self?.keyNote, error: failed.contains(a))
             }
@@ -410,6 +443,14 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
         // general
         let general = stack([
+            // how sniplite looks: the preview under them shows both
+            section(L.t("secLook"), [
+                row(("circle.lefthalf.filled", .systemGray), L.t("theme"), nil,
+                    popup([("system", L.t("themeSystem")), ("light", L.t("themeLight")), ("dark", L.t("themeDark"))],
+                          Prefs.shared.theme, #selector(pickTheme(_:)))),
+                glassRow(),
+                glassPreviewRow(),
+            ]),
             section(L.t("secNotice"), [
                 // one place for every notice: quick capture, copying, text recognition
                 row(("macwindow", .systemRed), L.t("noticePosition"), L.t("noticePositionDetail"),
@@ -418,9 +459,6 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
                           Prefs.shared.noticePosition, #selector(pickNoticePlace(_:)))),
             ]),
             section(L.t("secApp"), [
-                row(("circle.lefthalf.filled", .systemGray), L.t("theme"), nil,
-                    popup([("system", L.t("themeSystem")), ("light", L.t("themeLight")), ("dark", L.t("themeDark"))],
-                          Prefs.shared.theme, #selector(pickTheme(_:)))),
                 row(("power", .systemPink), L.t("launchAtLogin"), nil, toggle(SMAppService.mainApp.status == .enabled, #selector(toggleLogin(_:)))),
                 row(("globe", .systemBlue), L.t("language"), nil,
                     popup([(L.Lang.system.rawValue, L.t("langSystem")), (L.Lang.en.rawValue, "English"),
@@ -443,13 +481,14 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         let nr = row(("bell.badge.fill", .systemRed), L.t("quickNotice"), L.t("quickNoticeDetail"),
                      toggle(Prefs.shared.quickNotice, #selector(toggleQuickNotice(_:))))
         (folderRow, noticeRow) = (fr, nr)
+        ocrRow = row(("text.viewfinder", .systemGreen), L.t("ocrTitle2"), Self.ocrDetail, toggle(Prefs.shared.ocrEnabled, #selector(toggleOCR(_:))))
+        quickRow = row(("camera.fill", .systemIndigo), L.t("quickEnable"), Self.quickDetail, toggle(Prefs.shared.quickEnabled, #selector(toggleQuick(_:))))
         let capture = stack([
             section(nil, [
-                row(("text.viewfinder", .systemGreen), L.t("ocrTitle2"), L.t("ocrDetail"), toggle(Prefs.shared.ocrEnabled, #selector(toggleOCR(_:)))),
+                ocrRow!,
             ]),
             section(L.t("quickTab"), [
-                row(("camera.fill", .systemIndigo), L.t("quickEnable"), L.t("quickFolderDetail"),
-                    toggle(Prefs.shared.quickEnabled, #selector(toggleQuick(_:)))),
+                quickRow!,
                 fr,
                 nr,
             ]),
@@ -797,6 +836,47 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         Notice.show(.symbol("checkmark.circle.fill", .systemGreen), L.t("noticePosition"), p.titleOfSelectedItem, on: window?.screen)   // there it is
     }
 
+    // MARK: the toolbar's transparency
+
+    private let glassValue = NSTextField(labelWithString: "")
+    private let glassPreview = GlassPreview()
+
+    private func glassRow() -> NSView {
+        let r = Prefs.glassRange
+        let s = NSSlider(value: Prefs.shared.storedGlass, minValue: r.lowerBound, maxValue: r.upperBound, target: self, action: #selector(pickGlass(_:)))
+        s.controlSize = .small
+        s.isContinuous = true
+        s.setAccessibilityLabel(L.t("toolbarGlass"))
+        s.widthAnchor.constraint(equalToConstant: 130).isActive = true
+        glassValue.font = .monospacedDigitSystemFont(ofSize: 12, weight: .regular)
+        glassValue.textColor = .secondaryLabelColor
+        glassValue.alignment = .right
+        glassValue.widthAnchor.constraint(equalToConstant: 34).isActive = true
+        showGlass()
+        let c = NSStackView(views: [s, glassValue])
+        c.spacing = 8
+        // macOS reduces transparency: the toolbar is solid whatever is chosen here
+        let off = Prefs.reduceTransparency()
+        s.isEnabled = !off
+        return row(("drop.halffull", .systemCyan), L.t("toolbarGlass"), off ? L.t("glassReduced") : nil, c)
+    }
+
+    private func glassPreviewRow() -> NSView {
+        let r = NSStackView(views: [glassPreview])
+        r.edgeInsets = NSEdgeInsets(top: 10, left: 12, bottom: 10, right: 12)
+        glassPreview.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        return r
+    }
+
+    private func showGlass() { glassValue.stringValue = "\(Int((Prefs.shared.storedGlass * 100).rounded()))%" }
+
+    @objc private func pickGlass(_ s: NSSlider) {
+        Prefs.shared.toolbarGlass = (s.doubleValue * 20).rounded() / 20          // steps of 5 %
+        s.doubleValue = Prefs.shared.storedGlass
+        showGlass()
+        glassPreview.refresh()
+    }
+
     @objc private func pickTheme(_ p: NSPopUpButton) {
         Prefs.shared.theme = p.selectedItem?.representedObject as? String ?? "system"
     }
@@ -866,4 +946,97 @@ final class LinkButton: NSButton {
     required init?(coder: NSCoder) { fatalError() }
     @objc private func fire() { run() }
     override func resetCursorRects() { addCursorRect(bounds, cursor: .pointingHand) }
+}
+
+/// The capture toolbar as it will look, over a colorful screen (as the Dock): the same glass and
+/// tint as the real one.
+private final class GlassPreview: NSView {
+    private let screen = CALayer(), around = CALayer(), glass = CALayer(), dim = CALayer(), tint = CALayer()
+    private let bar = NSView()
+    private var buttons: [ToolButton] = []
+    private var made: CGSize = .zero
+    override var isFlipped: Bool { true }
+
+    init() {
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.cornerRadius = 8
+        layer?.cornerCurve = .continuous
+        layer?.masksToBounds = true
+        layer?.addSublayer(screen)
+        around.backgroundColor = CGColor(gray: 0, alpha: 0.4)                // dimmed, as round a capture area
+        layer?.addSublayer(around)
+        bar.wantsLayer = true
+        bar.layer?.cornerRadius = 8
+        bar.layer?.masksToBounds = true
+        bar.layer?.borderWidth = 0.5
+        for l in [glass, dim, tint] { bar.layer?.addSublayer(l) }
+        dim.backgroundColor = CGColor(gray: 0, alpha: 0.4)
+        addSubview(bar)
+        for n in ["rectangle", "circle", "arrow.up.right", "scribble", "character", "1.circle", "pin", "square.and.arrow.down", "xmark", "square.on.square"] {
+            let b = ToolButton(.symbol(n), tip: nil, size: 32)
+            b.prominent = n == "square.on.square"
+            b.inert = true
+            buttons.append(b)
+            bar.addSubview(b)
+        }
+        setAccessibilityElement(false)
+    }
+    required init?(coder: NSCoder) { fatalError() }
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }                  // only a picture
+    override func viewDidChangeEffectiveAppearance() { super.viewDidChangeEffectiveAppearance(); refresh() }
+
+    override func layout() {
+        super.layout()
+        guard bounds.width > 1 else { return }
+        let w = CGFloat(buttons.count) * 32 + 8
+        bar.frame = NSRect(x: (bounds.width - w) / 2, y: (bounds.height - 36) / 2, width: w, height: 36)
+        for (i, b) in buttons.enumerated() { b.frame.origin = CGPoint(x: 4 + CGFloat(i) * 32, y: 2) }
+        if made != bounds.size, let img = Self.sample(bounds.size) {
+            made = bounds.size
+            let soft = OverlayView.frosted(img)
+            CATransaction.begin(); CATransaction.setDisableActions(true)
+            screen.contents = img
+            if let soft {
+                let k = CGFloat(soft.width) / bounds.width
+                glass.contents = soft.cropping(to: CGRect(x: bar.frame.minX * k, y: bar.frame.minY * k, width: bar.frame.width * k, height: bar.frame.height * k).integral)
+            }
+            CATransaction.commit()
+        }
+        CATransaction.begin(); CATransaction.setDisableActions(true)
+        screen.frame = bounds
+        around.frame = bounds
+        for l in [glass, dim, tint] { l.frame = bar.bounds }
+        CATransaction.commit()
+        refresh()
+    }
+
+    func refresh() {
+        let dark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        CATransaction.begin(); CATransaction.setDisableActions(true)
+        tint.backgroundColor = Toolbar.tint(dark: dark)
+        bar.layer?.borderColor = (dark ? NSColor.white.withAlphaComponent(0.14) : NSColor.black.withAlphaComponent(0.12)).cgColor
+        CATransaction.commit()
+        buttons.forEach { $0.needsDisplay = true }
+    }
+
+    /// App icons in a row on a dusk sky, as the Dock has them.
+    private static func sample(_ size: CGSize) -> CGImage? {
+        let k: CGFloat = 2
+        guard let c = CGContext(data: nil, width: Int(size.width * k), height: Int(size.height * k), bitsPerComponent: 8, bytesPerRow: 0,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        c.scaleBy(x: k, y: k)
+        let sky = CGGradient(colorsSpace: nil, colors: [CGColor(srgbRed: 0.16, green: 0.20, blue: 0.42, alpha: 1), CGColor(srgbRed: 0.45, green: 0.22, blue: 0.40, alpha: 1)] as CFArray, locations: [0, 1])!
+        c.drawLinearGradient(sky, start: .zero, end: CGPoint(x: size.width, y: 0), options: [])
+        let colors: [NSColor] = [.systemBlue, .systemYellow, .white, .systemRed, .black, .systemGreen, .systemOrange, .systemPurple, .systemTeal, .systemPink]
+        let side = size.height - 18, gap: CGFloat = 9
+        var x: CGFloat = 8, i = 0
+        while x < size.width {
+            c.setFillColor(colors[i % colors.count].cgColor)
+            c.addPath(CGPath(roundedRect: CGRect(x: x, y: 9, width: side, height: side), cornerWidth: 10, cornerHeight: 10, transform: nil))
+            c.fillPath()
+            x += side + gap; i += 1
+        }
+        return c.makeImage()
+    }
 }

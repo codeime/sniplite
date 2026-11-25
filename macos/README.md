@@ -30,6 +30,7 @@ The Windows version (`../src`) is unchanged; this folder is a separate program.
 - **Copy, save, pin**: Enter copies, ⌘S saves (PNG or JPEG), ⌘T pins the capture above other windows. Pins move, zoom with the wheel, change opacity with ⌥ + wheel, copy, save and read their text, and can be drawn on again (Edit, ⌘E: the capture tools open on the pin, the copy button (or Enter) puts the result back).
 - **Text recognition** (optional, off by default): read the text of a capture; tables keep their columns (tab-separated, or Markdown). It runs on this Mac with Apple's Vision, in a short-lived helper process, so its models do not stay in memory.
 - **Light**: about 15–25 MB of memory while idle.
+- **Looks**: light, dark or as macOS is; how much shows through the toolbar can be set, with a preview. Notices (copied, saved, text recognition) all show at one place you choose.
 - **Languages**: English, 简体中文, 繁體中文, following the system unless one is picked in Settings.
 
 This repository maintains only the macOS version. For Windows, download sniplite from the original repository: [MrTangLuyao/sniplite](https://github.com/MrTangLuyao/sniplite/releases/latest).
@@ -59,7 +60,7 @@ Click **Allow…** on each: System Settings opens at the right page with sniplit
 
 The same as on Windows, with ⌘ in place of Ctrl. They can be changed in Settings.
 
-<p align="center"><img src="../pics/macos/settings.png" alt="Settings: shortcuts, general and quick capture pages" width="66%"></p>
+<p align="center"><img src="../pics/macos/settings.png" alt="Settings: shortcuts, general and capture pages" width="66%"></p>
 
 | Key | What it does |
 | --- | --- |

@@ -30,6 +30,7 @@ Windows 版（`../src`）没有任何改动；这个文件夹是一个独立的�
 - **复制、保存、贴图**：Enter 复制，⌘S 保存（PNG 或 JPEG），⌘T 把截图贴在所有窗口之上。贴图可以拖动、滚轮缩放、⌥+滚轮调透明度，可以复制、保存、识别文字，还能再次编辑（右键"编辑"或 ⌘E：在贴图上打开截图工具，点复制按钮（或按 Enter）写回贴图）。
 - **文字识别**（可选，默认关闭）：识别截图里的文字，表格保持分列（制表符分隔，或 Markdown）。用苹果的 Vision 在本机运行，并放在一个用完即退的辅助进程里，模型不会一直占着内存。
 - **轻量**：空闲时内存约 15–25 MB。
+- **外观**：浅色、深色或跟随系统；工具栏的透明度可以调节，带预览。复制、保存、文字识别等提示统一显示在你选的位置。
 - **多语言**：English、简体中文、繁體中文，默认跟随系统，也可以在设置里选。
 
 本仓库只维护 macOS 版。Windows 版请到原仓库下载：[MrTangLuyao/sniplite](https://github.com/MrTangLuyao/sniplite/releases/latest)。
@@ -59,7 +60,7 @@ xattr -dr com.apple.quarantine "/Applications/sniplite.app"
 
 和 Windows 版一样，Ctrl 换成 ⌘。都可以在设置里修改。
 
-<p align="center"><img src="../pics/macos/zh/settings.png" alt="设置：快捷键、通用和快速截图页面" width="66%"></p>
+<p align="center"><img src="../pics/macos/zh/settings.png" alt="设置：快捷键、通用和截图页面" width="66%"></p>
 
 | 按键 | 作用 |
 | --- | --- |
