@@ -78,6 +78,11 @@ final class Prefs {
     /// `defaults write io.github.codeime.sniplite captureCaptureScreen -bool true`. Then the capture
     /// shortcut, pressed while the capture screen is open, saves the screen as it looks.
     var captureCaptureScreen: Bool { d.bool(forKey: "captureCaptureScreen") }
+    /// The version the user chose to skip: not offered by itself.
+    var skippedVersion: String? {
+        get { d.string(forKey: "skippedVersion") }
+        set { d.set(newValue, forKey: "skippedVersion") }
+    }
     /// How much of the screen shows through the capture toolbar: 0 (solid) to 0.35. Beyond that
     /// its icons are hard to see over a colorful screen (under 4.5:1 at worst). Solid where macOS
     /// is told to reduce transparency.
@@ -557,7 +562,6 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
 
     private let updateDetail = NSTextField(labelWithString: "")
     private let updateButton = NSButton(title: "", target: nil, action: nil)
-    private var notesLink: LinkButton?
 
     private func buildAbout() -> NSView {
         // the app: its icon, then its name over its version
@@ -589,12 +593,7 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         updateButton.bezelStyle = .push
         updateButton.target = self
         updateButton.action = #selector(updateClicked)
-        let notes = LinkButton("", L.t("releaseNotes")) { if let r = Updater.shared.latest { NSWorkspace.shared.open(r.page) } }
-        notesLink = notes
-        let controls = NSStackView(views: [notes, updateButton])
-        controls.spacing = 10
-        controls.alignment = .centerY
-        let updateRow = row(("arrow.down.circle.fill", .systemBlue), L.t("softwareUpdate"), nil, controls)
+        let updateRow = row(("arrow.down.circle.fill", .systemBlue), L.t("softwareUpdate"), nil, updateButton)
         (updateRow.arrangedSubviews.dropFirst().first as? NSStackView)?.addArrangedSubview(updateDetail)
         let interval = row(("calendar", .systemOrange), L.t("checkEvery"), nil,
                            popup([("daily", L.t("everyDay")), ("weekly", L.t("everyWeek")), ("monthly", L.t("everyMonth"))],
@@ -630,7 +629,6 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     private var updatesPage: NSView?
 
     private func showUpdate(_ st: Updater.State) {
-        notesLink?.isHidden = true
         updateButton.isEnabled = true
         updateDetail.textColor = .secondaryLabelColor
         switch st {
@@ -647,18 +645,20 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
         case .available(let v):
             updateDetail.stringValue = String(format: L.t("updAvailable"), v)
             updateDetail.textColor = .controlAccentColor
-            notesLink?.isHidden = false
-            updateButton.title = L.t("updInstall")
+            updateButton.title = L.t("updSee")
         case .downloading(let f):
             updateDetail.stringValue = String(format: L.t("updDownloading"), Int(f * 100))
-            updateButton.title = L.t("updInstall"); updateButton.isEnabled = false
+            updateButton.title = L.t("updSee")
         case .installing:
             updateDetail.stringValue = L.t("updInstalling")
-            updateButton.title = L.t("updInstall"); updateButton.isEnabled = false
+            updateButton.title = L.t("updSee")
+        case .waiting:
+            updateDetail.stringValue = L.t("updWaiting")
+            updateButton.title = L.t("updSee")
         case .failed(let m):
             updateDetail.stringValue = m
             updateDetail.textColor = .systemRed
-            updateButton.title = Updater.shared.latest.map { Updater.newer($0.version, than: Updater.current) } == true ? L.t("updInstall") : L.t("checkUpdates")
+            updateButton.title = Updater.shared.latest.map { Updater.newer($0.version, than: Updater.current) } == true ? L.t("updSee") : L.t("checkUpdates")
         }
         updateDetail.toolTip = updateDetail.stringValue
         // the update is the thing to do: the button in the accent color
@@ -675,9 +675,10 @@ final class SettingsWindow: NSWindowController, NSWindowDelegate {
     }
 
     @objc private func updateClicked() {
-        if case .available = Updater.shared.state { Updater.shared.install(); return }
-        if case .failed = Updater.shared.state, let r = Updater.shared.latest, Updater.newer(r.version, than: Updater.current) {
-            Updater.shared.install(); return
+        switch Updater.shared.state {
+        case .idle, .checking, .upToDate: break
+        case .failed where Updater.shared.latest.map({ Updater.newer($0.version, than: Updater.current) }) != true: break   // the check failed
+        default: UpdateWindow.show(activate: true); return
         }
         Updater.shared.check()
     }

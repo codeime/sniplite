@@ -57,8 +57,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         if case .available(let v) = Updater.shared.state {
-            // a newer version was found: to the About page, where it installs
-            let u = ClosureMenuItem(title: String(format: L.t("updMenu"), v), key: "") { SettingsWindow.show(tab: SettingsWindow.updatesTab) }
+            // a newer version was found: what is in it, and installing it
+            let u = ClosureMenuItem(title: String(format: L.t("updMenu"), v), key: "") { UpdateWindow.show(activate: true) }
             u.image = NSImage(systemSymbolName: "arrow.down.circle.fill", accessibilityDescription: nil)
             menu.addItem(u)
             menu.addItem(.separator())

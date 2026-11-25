@@ -4,6 +4,7 @@ import AppKit
 /// double-click or Esc to close, right-click for more.
 final class PinWindow: NSPanel {
     private static var all: [PinWindow] = []
+    static var count: Int { all.count }
     private static var hidden = false
 
     private(set) var image: CGImage
