@@ -50,14 +50,12 @@ final class CaptureSession {
         Notice.hide()                                      // the last one's: not in this picture
         Task { @MainActor in
             guard let s = screen, let shot = try? await Capture.captureAll(only: s).first else { NSSound.beep(); return }
-            let f = DateFormatter()
-            f.dateFormat = "yyyyMMdd_HHmmss"
             let rep = NSBitmapImageRep(cgImage: shot.image)
             rep.size = s.frame.size
             Clipboard.copy(shot.image, size: s.frame.size)
             guard let png = rep.representation(using: .png, properties: [:]),
                   let desk = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first else { NSSound.beep(); return }
-            let url = desk.appendingPathComponent("sniplite_capture_screen_\(f.string(from: Date())).png")
+            let url = desk.appendingPathComponent("sniplite_capture_screen_\(FileName.stamp()).png")
             do {
                 try png.write(to: url)
                 Log.write("capture screen saved: \(url.lastPathComponent)")

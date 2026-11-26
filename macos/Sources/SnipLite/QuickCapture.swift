@@ -34,9 +34,7 @@ enum QuickCapture {
     static func save(_ shot: DisplayShot) throws -> URL {
         let folder = Prefs.shared.quickFolder
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let f = DateFormatter()
-        f.dateFormat = "yyyyMMdd_HHmmss"
-        let base = "sniplite_\(f.string(from: Date()))"
+        let base = "sniplite_\(FileName.stamp())"
         var url = folder.appendingPathComponent(base + ".png")
         var n = 2
         while FileManager.default.fileExists(atPath: url.path) {

@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 @testable import SnipLite
 
 /// The notes as releases have them: both languages in one body, each with other sections after.
@@ -48,4 +49,11 @@ private let body = """
     #expect(!Updater.newer("1.0.11", than: "1.0.11"))
     #expect(!Updater.newer("1.0", than: "1.0.0"))
     #expect(!Updater.newer("1.0.9", than: "1.0.10"))
+}
+
+@Test func fileNamesUseTheGregorianCalendarWhateverTheRegion() {
+    var c = Calendar(identifier: .gregorian)
+    c.timeZone = .current
+    let d = c.date(from: DateComponents(year: 2026, month: 11, day: 26, hour: 9, minute: 5, second: 7))!
+    #expect(FileName.stamp(d) == "20261126_090507")
 }

@@ -20,10 +20,8 @@ enum Saver {
     }
 
     static func save(_ img: CGImage, size: CGSize) {
-        let f = DateFormatter()
-        f.dateFormat = "yyyyMMdd_HHmmss"
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "sniplite_\(f.string(from: Date())).png"
+        panel.nameFieldStringValue = "sniplite_\(FileName.stamp()).png"
         panel.allowedContentTypes = [.png, .jpeg]
         panel.directoryURL = lastDir ?? FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first
         panel.level = .floating
@@ -35,6 +33,18 @@ enum Saver {
         let jpeg = ["jpg", "jpeg"].contains(url.pathExtension.lowercased())
         let data = rep.representation(using: jpeg ? .jpeg : .png, properties: jpeg ? [.compressionFactor: 0.92] : [:])
         do { try data?.write(to: url) } catch { NSAlert(error: error).runModal() }
+    }
+}
+
+/// File names with the date and time, the same whatever the region and calendar macOS is set to
+/// (a Buddhist or Japanese calendar, Arabic digits would change them).
+enum FileName {
+    static func stamp(_ d: Date = Date()) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.calendar = Calendar(identifier: .gregorian)
+        f.dateFormat = "yyyyMMdd_HHmmss"
+        return f.string(from: d)
     }
 }
 

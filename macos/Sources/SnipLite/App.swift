@@ -143,11 +143,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    /// Starts a new sniplite and quits this one (a new Screen Recording permission needs it).
+    /// Starts a new sniplite and quits this one (a new Screen Recording permission needs it). The
+    /// new one opens once this one is gone: earlier, `open` would only bring this one forward.
     static func relaunch() {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/bin/sh")
-        p.arguments = ["-c", "sleep 0.5; /usr/bin/open \"$0\"", Bundle.main.bundlePath]
+        p.arguments = ["-c", "while kill -0 \"$1\" 2>/dev/null; do sleep 0.2; done; /usr/bin/open \"$0\"",
+                       Bundle.main.bundlePath, String(ProcessInfo.processInfo.processIdentifier)]
         try? p.run()
         NSApp.terminate(nil)
     }

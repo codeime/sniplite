@@ -37,7 +37,7 @@ enum Capture {
         guard hasPermission else { return }
         Task {
             if #available(macOS 15.2, *) {
-                _ = try? await SCScreenshotManager.captureImage(in: CGRect(x: 0, y: 0, width: 16, height: 16))
+                _ = await SCK.image(in: CGRect(x: 0, y: 0, width: 16, height: 16))
                 return
             }
             guard let d = try? await displays().first else { return }
@@ -45,7 +45,7 @@ enum Capture {
                 let cfg = SCStreamConfiguration()
                 cfg.width = 16; cfg.height = 16; cfg.showsCursor = false
                 cfg.sourceRect = CGRect(x: 0, y: 0, width: 16, height: 16)
-                _ = try? await SCScreenshotManager.captureImage(contentFilter: SCContentFilter(display: d, excludingWindows: []), configuration: cfg)
+                _ = await SCK.image(SCContentFilter(display: d, excludingWindows: []), cfg)
             }
         }
     }
@@ -55,7 +55,7 @@ enum Capture {
     private static func displays() async throws -> [SCDisplay] {
         if let d = cachedDisplays { return d }
         do {
-            let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+            let content = try await SCK.shareableContent()
             cachedDisplays = content.displays
             return content.displays
         } catch {
@@ -84,7 +84,7 @@ enum Capture {
         let rects = screens.map { CGDisplayBounds(displayID($0)) }
         let images: [CGImage?] = await withTaskGroup(of: (Int, CGImage?).self) { group in
             for (i, r) in rects.enumerated() {
-                group.addTask { (i, try? await SCScreenshotManager.captureImage(in: r)) }
+                group.addTask { (i, await SCK.image(in: r)) }
             }
             var out = [CGImage?](repeating: nil, count: rects.count)
             for await (i, img) in group { out[i] = img }
@@ -152,7 +152,7 @@ enum Capture {
                         // 8-bit color: otherwise the image can come as 16-bit floats, twice the memory
                         // and slow to sample for the magnifier and the colors
                         cfg.pixelFormat = kCVPixelFormatType_32BGRA
-                        let img = try? await SCScreenshotManager.captureImage(contentFilter: filter, configuration: cfg)
+                        let img = await SCK.image(filter, cfg)
                         return (i, img)
                     }
                 }

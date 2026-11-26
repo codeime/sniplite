@@ -671,7 +671,7 @@ final class PermissionGuide {
         let primaryH = NSScreen.screens.first?.frame.height ?? 0
         let area = CGRect(x: f.minX, y: primaryH - f.maxY, width: f.width, height: f.height)
         Task { @MainActor [weak self] in
-            let img = try? await SCScreenshotManager.captureImage(in: area)
+            let img = await SCK.image(in: area)
             guard let self else { return }
             if let img, let x = PermissionGuide.sidebarEdge(img) { self.sidebarWidth = x / (CGFloat(img.width) / area.width) }
             Log.write("System Settings sidebar \(self.sidebarWidth.map { String(format: "%.1f pt", $0) } ?? "unknown")")
